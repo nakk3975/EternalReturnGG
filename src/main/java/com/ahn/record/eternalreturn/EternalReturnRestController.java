@@ -29,12 +29,17 @@ public class EternalReturnRestController {
 	}
 	
 	@GetMapping("/character")
-	public String characterInfo(@RequestParam("characterCode") int characterCode) throws IOException, URISyntaxException {
-		return erBo.searchCharacter(characterCode);
+	public String characterInfo() throws IOException, URISyntaxException {
+		return erBo.searchCharacter();
 	}
 	
 	@GetMapping("/weapon/info")
-	public String weaponInfo(@RequestParam("weaponCodes") int weaponCodes) throws IOException, URISyntaxException {
-		return erBo.searchWeapon(weaponCodes);
+	public String weaponInfo() throws IOException, URISyntaxException {
+		return erBo.searchWeapon();
+	}
+	
+	@GetMapping("/user/detail")
+	public String userDetail(@RequestParam("userNum") int userNum) {
+		
 	}
 }

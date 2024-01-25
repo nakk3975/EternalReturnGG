@@ -14,20 +14,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 @Service
 public class EternalReturnBO {
 
 	private final String apiKey = "x-api-key";
     private final String apiValue = "Z3NP8HwkfB9L6Pqjjh3b12l0bzBDsNnuNsxhEQj4";
     private final String acceptHeader = "application/json";
-    private final String apiUrl = "https://open-api.bser.io/v1";
+    private final String apiUrl = "https://open-api.bser.io";
 
     public String searchNickname(String nickName) throws IOException, URISyntaxException {
 
-        String apiEndpoint = apiUrl + "/user/nickname";
+        String apiEndpoint = apiUrl + "/v1/user/nickname";
         String queryParam = "query=" + URLEncoder.encode(nickName, StandardCharsets.UTF_8.toString());
         String requestUrl = apiEndpoint + "?" + queryParam;
 
@@ -51,7 +48,7 @@ public class EternalReturnBO {
 
     public String searchAllRoute() throws IOException, URISyntaxException {
 
-        String apiEndpoint = apiUrl + "/weaponRoutes/recommend";
+        String apiEndpoint = apiUrl + "/v1/weaponRoutes/recommend?next=1";
         String requestUrl = apiEndpoint;
 
         URI uri = new URI(requestUrl);
@@ -71,8 +68,8 @@ public class EternalReturnBO {
         return response;
     }
     
-    public String searchCharacter(int characterCode) throws IOException, URISyntaxException {
-        String apiEndpoint = apiUrl + "/data/Character";
+    public String searchCharacter() throws IOException, URISyntaxException {
+        String apiEndpoint = apiUrl + "/v2/data/Character";
         String requestUrl = apiEndpoint;
 
         URI uri = new URI(requestUrl);
@@ -89,26 +86,12 @@ public class EternalReturnBO {
         ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
         String response = responseEntity.getBody();
 
-        // JSON 파싱
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode rootNode = objectMapper.readTree(response);
-        // 여기서 특정 "code" 값에 해당하는 데이터를 추출
-        JsonNode dataArray = rootNode.get("data");
-        if (dataArray.isArray()) {
-            // 전달받은 characterCode와 "code" 값을 비교하여 해당하는 데이터 추출
-            for (JsonNode characterNode : dataArray) {
-                int code = characterNode.get("code").asInt();
-                if (code == characterCode) {
-                    return characterNode.toString();
-                }
-            }
-        }
-        return null; // 특정 "code" 값에 해당하는 데이터를 찾지 못한 경우
+        return response;
     }
     
-    public String searchWeapon(int weaponCodes) throws IOException, URISyntaxException {
+    public String searchWeapon() throws IOException, URISyntaxException {
 
-        String apiEndpoint = apiUrl + "/data/ItemWeapon";
+        String apiEndpoint = apiUrl + "/v2/data/WeaponTypeInfo";
         String requestUrl = apiEndpoint;
 
         URI uri = new URI(requestUrl);
@@ -125,20 +108,6 @@ public class EternalReturnBO {
         ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
         String response = responseEntity.getBody();
 
-        // JSON 파싱
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode rootNode = objectMapper.readTree(response);
-        // 여기서 특정 "code" 값에 해당하는 데이터를 추출
-        JsonNode dataArray = rootNode.get("data");
-        if (dataArray.isArray()) {
-            // 전달받은 characterCode와 "code" 값을 비교하여 해당하는 데이터 추출
-            for (JsonNode weaponNode : dataArray) {
-                int code = weaponNode.get("code").asInt();
-                if (code == weaponCodes) {
-                    return weaponNode.toString();
-                }
-            }
-        }
-        return null; // 특정 "code" 값에 해당하는 데이터를 찾지 못한 경우
+        return response;
     }
 }

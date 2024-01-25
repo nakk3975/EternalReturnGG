@@ -18,4 +18,9 @@ public class EternalReturnController {
 		return "main/detail";
 	}
 	
+	@GetMapping("/user/detail/view")
+	public String userView() {
+		return "main/usersearch";
+	}
+	
 }

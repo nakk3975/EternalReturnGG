@@ -59,21 +59,24 @@
 					let characterCode = items[i].recommendWeaponRoute.characterCode;
 					let weaponCodes = items[i].recommendWeaponRoute.weaponType;
 					
-					var characterName = "";
-					var weaponName = "";
+					let characterName = "";
+					let weaponName = "";
 					
 					$.ajax({
 						type:"get"
 						, url:"/er/character"
 						, dataType:"json"
-						, data:{"characterCode":characterCode}
+						, async:false
 						, success:function(characterData) {
-							for(let j = 0; j < characterData.length; j++) {
-								if(characterCode == characterData[j].code){
-									characterName = characterData[j].name;
+							let charItems = characterData.data;
+							for(let j = 0; j < charItems.length; j++) {
+								if(characterCode == charItems[j].code){
+									characterName = charItems[j].name;
 								}	
 							}
-							
+						}
+						, error:function() {
+							alert("캐릭터 불러오기 오류");
 						}
 					});
 					
@@ -81,31 +84,47 @@
 						type:"get"
 						, url:"/er/weapon/info"
 						, dataType:"json"
-						, data:{"weaponCodes":weaponCodes}
+						, async:false
 						, success:function(weaponData) {
-							for(let j = 0; j < characterData.length; j++) {
-								if(weaponCodes == weaponData[j].code){
-									weaponName = weaponData[j].name;
-								}	
+							let weeponItems = weaponData.data;
+							if(weaponCodes < 4) {
+								weaponCodes = weaponCodes+1;
+							} else if(weaponCodes < 12) {
+								weaponCodes = weaponCodes+2;
+							}
+							if(weaponCodes > 16) {
+								weaponCodes = weaponCodes-1;
+							}
+							console.log(weaponCodes);
+							for(let j = 0; j < weeponItems.length; j++) {
+								if((weaponCodes-2) == j) {
+									weaponName = weeponItems[j].type;
+								}
 							}
 						}
 					});
+					
 					
 					let html 
 					= "<div class='recommendRoute d-flex'>"
 						 + "<div>"
 						 	+ "<div class='route d-flex justify-content-between align-items-center'>"
-						 		+ "<div class='d-flex align-items-end'>"
-							 	 	+ "<img class='character-image image-all' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + characterName + "_S000.png' width='36' height='36'>"
-							 	 	+ "<img class='image-all weapon-image absolute' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + weaponName + ".png' width='16' height='16'>"
-						 	 	+ "</div>"
-					 	 		+ "<div class='destination-title' data-routeId=" + id + ">" + title + "</div>"
-					 	 		+ "<div class='text-secondary' id='recommendRouteNickName'>" + userNickname + "</div>"
+						 		+"<div class='col-2'>"
+							 		+ "<div class='d-flex align-items-end'>"
+								 	 	+ "<img class='character-image image-all' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + characterName + "_S000.png' width='36' height='36'>"
+								 	 	+ "<img class='image-all weapon-image absolute' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + weaponName + ".png' width='16' height='16'>"
+							 	 	+ "</div>"
+							 	+"</div>"
+							 	+"<div class='col-6 text-center'>"
+						 	 		+ "<div class='destination-title' data-routeId=" + id + ">" + title + "</div>"
+					 	 		+"</div>"
+						 	 	+"<div class='col-2 text-center'>"
+						 	 		+ "<div class='text-secondary' id='recommendRouteNickName'>" + userNickname + "</div>"
+					 	 		+"</div>"
 						 	+ "</div>"
 						 + "</div>"
 					 + "</div>";
 					$("#recommendRouteBox").append(html);
-					
 				}
 			}
 		});
@@ -123,7 +142,7 @@
 	             , success: function(data) {
 	                 if (data && data.user) {
 	                     let items = data.user;
-	                     location.href = "/er/detail/view?userNum=" + items.userNum;
+	                     location.href = "/er/user/detail/view?userNum=" + items.userNum;
 	                 } else {
 	                     alert("존재하지 않는 닉네임입니다.");
 	                 }

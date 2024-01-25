@@ -118,8 +118,8 @@ nav {
 	border: 1px black solid;
 	margin: 4px;
 	padding:5px;
-	width: 900px;
-	background-color: yellow;
+	width: 700px;
+
 }
 
 #recommendRouteTitle {
@@ -139,9 +139,11 @@ nav {
 	right:8px;
 }
 
-
-
 .image-all {
 	border-radius: 50%;
 }
 
+#infoBox {
+	padding: 10px;
+	margin-top: 20px;
+}
