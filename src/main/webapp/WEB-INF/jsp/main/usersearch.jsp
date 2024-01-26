@@ -18,12 +18,12 @@
 	<div id="wrap">
 		<c:import url="/WEB-INF/jsp/include/header.jsp" />
 		<section>
-			<div id="infoBox" class="bg-secondary d-flex">
-				<img src="#">
-				<div>
-					<p>레벨</p>
-					<p>닉네임</p>
-					<button type="button" id="refresh" class="btn btn-block btn-primary">최신 정보</button>
+			<div id="infoBox" class="bg-secondary d-flex text-white">
+				<img id="detailImage" src="#">
+				<div class="ml-3">
+					<h6 id="userLevel"></h6>
+					<h2 id="nickname"></h2>
+					<button type="button" id="refresh" class="btn btn-primary mt-5">최신 정보</button>
 					
 				</div>
 			</div>
@@ -33,8 +33,94 @@
 	
 	<script>
 		$(document).ready(function() {
-			
-		});
+			function getParameterByName(name, url) {
+	            if (!url) url = window.location.href;
+	            name = name.replace(/[\[\]]/g, "\\$&");
+	            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+	                results = regex.exec(url);
+	            if (!results) return null;
+	            if (!results[2]) return '';
+	            return decodeURIComponent(results[2].replace(/\+/g, " "));
+	    	}
+
+			$("#refresh").on("click", function() {
+				location.reload();
+			});
+			 
+	        // Get userNum from query parameters
+	        let userNum = getParameterByName("userNum");
+	        // Make AJAX request to fetch user details
+	       
+						
+	        $.ajax({
+	            type: "get"
+	            , url: "/er/user/detail"
+	            , data: {"userNum":userNum}
+	            , dataType: "json"
+	            , success: function(data){
+	            	let items = data.userGames;
+	
+	                // 첫 번째 사용자의 닉네임 가져오기
+	                let firstUserNickname = items[0].nickname;
+	                let level = items[0].accountLevel;
+					let characterName = "";
+					let skinImageCode = "";
+					let characterCodes = items.map(item => item.characterNum);
+					let skinCodes = items.map(item => item.skinCode);
+					$.ajax({
+						type:"get"
+						, url:"/er/character"
+						, dataType:"json"
+						, async:false
+						, success:function(characterData) {
+							let charItems = characterData.data;
+							
+							let duplicatedSkinInfo = characterCodes
+                            .filter((value, index, self) => self.indexOf(value) !== index)
+                            .map(duplicatedCode => {
+                            	return charItems.find(item => item.code === duplicatedCode);
+                            });
+							characterName = duplicatedSkinInfo[0].name;
+
+						}
+						, error:function() {
+							alert("캐릭터 불러오기 오류");
+						}
+					});
+					
+					$.ajax({
+						type:"get"
+						, url:"/er/skin/info"
+						, dataType:"json"
+						, async:false
+						, success:function(skinData) {
+							let skinItems = skinData.data;
+							
+							let duplicatedSkinInfo = skinCodes
+                            .filter((value, index, self) => self.indexOf(value) !== index)
+                            .map(duplicatedCode => {
+                            	return skinItems.find(item => item.code === duplicatedCode);
+                            });
+							skinImageCode = duplicatedSkinInfo[0].code;
+							skinImageCode = skinImageCode + "";
+							skinImageCode = skinImageCode.substring(4,7);
+							
+						}
+						, error:function() {
+							alert("스킨 불러오기 오류");
+						}
+					});
+					
+
+					let image = "https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + characterName + "_S" + skinImageCode + ".png";
+					
+					$("#detailImage").attr("src",image);
+                    // HTML에 닉네임 적용
+                    $("#userLevel").append("레벨 " + level);
+                    $("#nickname").append(firstUserNickname);
+	            }
+	        });
+	    });
 	</script>
 </body>
 </html>

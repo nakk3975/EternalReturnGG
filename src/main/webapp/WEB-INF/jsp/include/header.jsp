@@ -16,7 +16,7 @@
 		</header>
 		<nav>
 			<ul class="nav justify-content-around">
-				<li class="nav-item"><a href="#" class="nav-link font-weight-bold text-white">메인</a></li>
+				<li class="nav-item"><a href="/er/search/view" class="nav-link font-weight-bold text-white">메인</a></li>
 				<li class="nav-item"><a href="#" class="nav-link font-weight-bold text-white">랭킹</a></li>
 				<li class="nav-item"><a href="#" class="nav-link font-weight-bold text-white">가이드</a></li>
 				<li class="nav-item"><a href="#" class="nav-link font-weight-bold text-white">루트추천</a></li>
@@ -40,7 +40,7 @@
 	                success: function(data) {
 	                    if (data && data.user) {
 	                        var items = data.user;
-	                        location.href = "/er/detail/view?userNum=" + items.userNum;
+	                        location.href = "/er/user/detail/view?userNum=" + items.userNum;
 	                    } else {
 	                        alert("존재하지 않는 닉네임입니다.");
 	                    }
