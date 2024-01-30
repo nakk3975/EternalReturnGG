@@ -131,18 +131,25 @@ nav {
 }
 
 .item-back {
-	width: 51px;
-    height: 32px;
-	background: url(//cdn.dak.gg/er/images/item/ico-itemgradebg-04.svg) no-repeat center/100%;
+	width: 45px;
+    height: 27px;
+	position: absolute;
+    inset: 0px;
+    object-fit: cover;
+    object-position: center center;
+    z-index: 1;
 }
 
 .route-item {
-	max-width: 75%;
-    max-height: 75%;
-    
+	width: 28px;
+    height: 16px;
+    object-fit: contain;
+    z-index: 2;
+    position: relative;
+    bottom: 29px;
 }
 
-.weapon-image {
+.cook-image {
 	background-color: black;
 	position: relative;
 	z-index: 2;
@@ -166,4 +173,90 @@ nav {
 	border-radius: 40px 40px 40px 40px;
 	text-align: center;
 	width:100px;
+}
+
+.oneRecord {
+	border:1px black solid;
+	border-radius:10px 10px 10px 10px;
+	margin:15px;	
+}
+
+.modeText {
+	font-size:14px;
+}
+
+.timeText {
+	font-size:12px;
+}
+
+.character-level {
+    width: 25px;
+    height: 25px;
+    position: relative;
+    bottom: -48px;
+    right: 32px;
+    background: rgb(255, 255, 255);
+    display: flex;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 14px;
+    color: rgb(128, 128, 128);
+    border: 1px solid rgb(230, 230, 230);
+}
+
+.user-rank {
+	width:60px;
+}
+
+.image-weapon {
+	background:black;
+}
+
+.image-group {
+	display: flex;
+}
+
+.er_button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    border-radius: 6px;
+    background-color: #0a0d14;
+    border: 1px solid #384761;
+    width : 20%;
+    margin-right: 10px;
+}
+
+.er_button:hover {
+	background-color: #00BCE5;
+}
+
+.kill-record {
+	font-weight: bold;
+}
+
+.total-kill{
+	width:70px;
+}
+
+.kill {
+	width:70px;
+}
+.kda {
+	width: 80px;
+}
+
+.one {
+	margin: 10px;
+}
+
+.finish-items {
+	width:280px;
+	margin-top: 26px;
 }

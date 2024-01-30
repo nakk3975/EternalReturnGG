@@ -35,9 +35,14 @@ public class EternalReturnRestController {
 		return erBo.searchCharacter();
 	}
 	
-	@GetMapping("/weapon/info")
+	@GetMapping("/weapon")
 	public String weaponInfo() throws URISyntaxException {
 		return erBo.searchWeapon();
+	}
+	
+	@GetMapping("/armor")
+	public String armorInfo() throws URISyntaxException {
+		return erBo.searchArmor();
 	}
 	
 	@GetMapping("/user/detail")
@@ -53,6 +58,21 @@ public class EternalReturnRestController {
 	@GetMapping("/loadTextFile")
 	public ResponseEntity<Resource> characterName() throws IOException {
 		return erBo.loadTextFile();
+	}
+	
+	@GetMapping("/tacticalSkill")
+	public String tacticalSkill() throws URISyntaxException {
+		return erBo.tacticalSkill();
+	}
+	
+	@GetMapping("/skillInfo")
+	public String skillInfo() throws URISyntaxException {
+		return erBo.skillInfo();
+	}
+	
+	@GetMapping("/trait")
+	public String traitSkill() throws URISyntaxException {
+		return erBo.traitSkill();
 	}
    
 }

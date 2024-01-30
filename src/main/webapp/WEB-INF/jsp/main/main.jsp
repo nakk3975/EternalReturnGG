@@ -27,7 +27,6 @@
 				        </svg>
 				    </button>
 				</form>
-				<div id="errorMessage" style="color: red;"></div>
 			</div>
 			<div class="d-flex justify-content-center">
 				<div class="m-4">
@@ -43,181 +42,239 @@
 		<c:import url="/WEB-INF/jsp/include/footer.jsp" />
 	</div>
 	
+	<script src="/static/js/getCharacterName.js"></script>
+	<script src="/static/js/getWeaponName.js"></script>
 	<script>
+		$(document).ready(function() {
+			
+			$.ajax({
+				type:"get"
+				, url:"/er/main"
+				, dataType:"json"
+				, success:function(data) {
+					let items = data.result;
+					for(let i = 0; i < 10; i++) {
+						let id = items[i].recommendWeaponRoute.id;
+						let title = items[i].recommendWeaponRoute.title;
+						let userNickname = items[i].recommendWeaponRoute.userNickname;
+						let characterCode = items[i].recommendWeaponRoute.characterCode;
+						let weaponCodes = items[i].recommendWeaponRoute.weaponType;
+						let itemCode = items[i].recommendWeaponRoute.weaponCodes;
+						
+						let item0 = itemCode.substring(1,7);
+						let item1 = itemCode.substring(8,14);
+						let item2 = itemCode.substring(15,21);
+						let item3 = itemCode.substring(22,28);
+						let item4 = itemCode.substring(29,35);
+
+						let itemArray = [item0, item1, item2, item3, item4];
+						let weaponItem = "";
+						let armorArray = [];
+						for(let j = 0; j < itemArray.length; j++) {
+							if(itemArray[j].charAt(0) == 1) {
+								weaponItem = itemArray[j];
+							} else {
+								armorArray.push(itemArray[j]);
+							}
+						}
+						let characterName = getCharacterName(characterCode);
+						let weaponName = getWeaponName(weaponCodes);
+						
+						let korName = "";
+						
+				        $.ajax({
+				            type: "get",
+				            url: "/er/loadTextFile",
+				            async:false,
+				            success: function (data) {
+				            	let lines = data.split("\n");
 	
-	$(document).ready(function() {
-		$.ajax({
-			type:"get"
-			, url:"/er/main"
-			, dataType:"json"
-			, success:function(data) {
-				let items = data.result;
-				for(let i = 0; i < 10; i++) {
-					let id = items[i].recommendWeaponRoute.id;
-					let title = items[i].recommendWeaponRoute.title;
-					let userNickname = items[i].recommendWeaponRoute.userNickname;
-					let characterCode = items[i].recommendWeaponRoute.characterCode;
-					let weaponCodes = items[i].recommendWeaponRoute.weaponType;
-					let itemCode = items[i].recommendWeaponRoute.weaponCodes;
-					item1 = itemCode.substring(1,7);
-					item2 = itemCode.substring(8,14);
-					item3 = itemCode.substring(15,21);
-					item4 = itemCode.substring(22,28);
-					item5 = itemCode.substring(29,35)
-
-					let characterName = getCharacterName(characterCode);
-					let weaponName = getWeaponName(weaponCodes);
-					
-					let korName = "";
-					
-			        $.ajax({
-			            type: "get",
-			            url: "/er/loadTextFile",
-			            async:false,
-			            success: function (data) {
-			            	let lines = data.split("\n");
-
-			                for (let line of lines) {
-			                    if (line.startsWith("Character/Name/")) {
-				                    let parts = line.split("┃");
-				                    if (parts.length === 2) {
-				                        let lineNumericPart = parts[0].split("/")[2].trim();
-				                        // Compare the numeric parts
-				                        let korCharacterCode = characterCode + "";
-				                        if (lineNumericPart === korCharacterCode) {
-				                        	korName = parts[1].trim(); // Extract name after the |
-				                            break;
-				                        }
+				                for (let line of lines) {
+				                    if (line.startsWith("Character/Name/")) {
+					                    let parts = line.split("┃");
+					                    if (parts.length === 2) {
+					                        let lineNumericPart = parts[0].split("/")[2].trim();
+					                        // Compare the numeric parts
+					                        let korCharacterCode = characterCode + "";
+					                        if (lineNumericPart === korCharacterCode) {
+					                        	korName = parts[1].trim(); // Extract name after the |
+					                            break;
+					                        }
+					                    }
 				                    }
-			                    }
-			                }
-			            },
-			            error: function () {
-			                alert("텍스트 파일 불러오기 오류");
-			            },
-			        });
-
-			        
-					let html 
-					= "<div class='recommend-route d-flex'>"
-						 + "<div>"
-						 	+ "<div class='route d-flex justify-content-between align-items-center'>"
-						 		+"<div>"
-							 		+ "<div class='d-flex align-items-end'>"
-								 	 	+ "<img class='character-image image-all' id='mainCharacterImage' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + characterName + "_S000.png' width='36' height='36'>"
-								 	 	+ "<img class='image-all weapon-image absolute' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + weaponName + ".png' width='16' height='16'>"
-							 	 	+ "</div>"
-							 	+ "</div>"
-							 	+ "<div id='textFileContent' class='col-3'>"+ korName + "</div>"
-							 	+ "<div class='col-6 text-center'>"
-						 	 		+ "<div class='destination-title' data-routeId=" + id + ">" + title + "</div>"
-						 	 		+ "<div class='d-flex justify-content-around'>"
-						 	 			+ "<div class='item-back'>"
-							 	 			+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + item1 + ".png'>"
+				                }
+				            },
+				            error: function () {
+				                alert("텍스트 파일 불러오기 오류");
+				            },
+				        });
+				        
+				        let weaponBgImg = "";
+						// 장비 등급
+						$.ajax({
+							type:"get"
+							, url:"/er/weapon"
+							, dataType:"json"
+							, async:false
+							, success:function(data) {
+								let weaponItems = data.data;
+								for(let j = 0; j < weaponItems.length; j++) {
+									if(weaponItem == weaponItems[j].code){
+										if(weaponItems[j].itemGrade == "Common") {
+											weaponBgImg = "1";
+										} else if(weaponItems[j].itemGrade == "Uncommon") {
+											weaponBgImg = "2";
+										} else if(weaponItems[j].itemGrade == "Rare") {
+											weaponBgImg = "3";
+										} else if(weaponItems[j].itemGrade == "Epic") {
+											weaponBgImg = "4";
+										} else if(weaponItems[j].itemGrade == "Legend") {
+											weaponBgImg = "5";
+										}
+									}
+								}
+							}
+						});
+						let armorBgImg1 = "";
+						let armorBgImg2 = "";
+						let armorBgImg3 = "";
+						let armorBgImg4 = "";
+						// 장비 등급
+						$.ajax({
+							type:"get"
+							, url:"/er/armor"
+							, dataType:"json"
+							, async:false
+							, success:function(data) {
+								let weaponItems = data.data;
+								for(let j = 0; j < weaponItems.length; j++) {
+									if(armorArray[0] == weaponItems[j].code){
+										if(weaponItems[j].itemGrade == "Common") {
+											armorBgImg1 = "1";
+										} else if(weaponItems[j].itemGrade == "Uncommon") {
+											armorBgImg1 = "2";
+										} else if(weaponItems[j].itemGrade == "Rare") {
+											armorBgImg1 = "3";
+										} else if(weaponItems[j].itemGrade == "Epic") {
+											armorBgImg1 = "4";
+										} else if(weaponItems[j].itemGrade == "Legend") {
+											armorBgImg1 = "5";
+										}
+									}
+									
+									if(armorArray[1] == weaponItems[j].code){
+										if(weaponItems[j].itemGrade == "Common") {
+											armorBgImg2 = "1";
+										} else if(weaponItems[j].itemGrade == "Uncommon") {
+											armorBgImg2 = "2";
+										} else if(weaponItems[j].itemGrade == "Rare") {
+											armorBgImg2 = "3";
+										} else if(weaponItems[j].itemGrade == "Epic") {
+											armorBgImg2 = "4";
+										} else if(weaponItems[j].itemGrade == "Legend") {
+											armorBgImg2 = "5";
+										}
+									}
+									
+									if(armorArray[2] == weaponItems[j].code){
+										if(weaponItems[j].itemGrade == "Common") {
+											armorBgImg3 = "1";
+										} else if(weaponItems[j].itemGrade == "Uncommon") {
+											armorBgImg3 = "2";
+										} else if(weaponItems[j].itemGrade == "Rare") {
+											armorBgImg3 = "3";
+										} else if(weaponItems[j].itemGrade == "Epic") {
+											armorBgImg3 = "4";
+										} else if(weaponItems[j].itemGrade == "Legend") {
+											armorBgImg3 = "5";
+										}
+									}
+									
+									if(armorArray[3] == weaponItems[j].code){
+										if(weaponItems[j].itemGrade == "Common") {
+											armorBgImg4 = "1";
+										} else if(weaponItems[j].itemGrade == "Uncommon") {
+											armorBgImg4 = "2";
+										} else if(weaponItems[j].itemGrade == "Rare") {
+											armorBgImg4 = "3";
+										} else if(weaponItems[j].itemGrade == "Epic") {
+											armorBgImg4 = "4";
+										} else if(weaponItems[j].itemGrade == "Legend") {
+											armorBgImg4 = "5";
+										}
+									}
+								}
+							}
+						});
+	  
+						let html = 
+							"<div class='recommend-route d-flex'>"
+							 + "<div>"
+							 	+ "<div class='route d-flex justify-content-between align-items-center'>"
+							 		+"<div>"
+								 		+ "<div class='d-flex align-items-end'>"
+									 	 	+ "<img class='character-image image-all' id='mainCharacterImage' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + characterName + "_S000.png' width='36' height='36'>"
+									 	 	+ "<img class='image-all cook-image absolute' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + weaponName + ".png' width='16' height='16'>"
+								 	 	+ "</div>"
+								 	+ "</div>"
+								 	+ "<div id='textFileContent' class='col-3'>"+ korName + "</div>"
+								 	+ "<div class='col-6 text-center'>"
+							 	 		+ "<div class='destination-title' data-routeId=" + id + ">" + title + "</div>"
+							 	 		+ "<div class='d-flex justify-content-around align-items-center text-center finish-items'>"
+						 	 			+ "<div>"
+						 	 				+ "<img class='.item-back' src='https://cdn.dak.gg/er/images/item/ico-itemgradebg-0" + weaponBgImg + ".svg'>"
+							 	 			+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + weaponItem + ".png'>"
 							 	 		+ "</div>"
-							 	 		+ "<div class='item-back'>"
-						 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + item2 + ".png'>"
+							 	 		+ "<div>"
+					 	 					+ "<img class='.item-back' src='https://cdn.dak.gg/er/images/item/ico-itemgradebg-0" + armorBgImg1 + ".svg'>"
+						 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + armorArray[0] + ".png'>"
 						 	 			+ "</div>"
-						 	 			+ "<div class='item-back'>"
-						 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + item3 + ".png'>"
+						 	 			+ "<div>"
+					 	 					+ "<img class='.item-back' src='https://cdn.dak.gg/er/images/item/ico-itemgradebg-0" + armorBgImg2 + ".svg'>"
+						 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + armorArray[1] + ".png'>"
 						 	 			+ "</div>"
-						 	 			+ "<div class='item-back'>"
-						 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + item4 + ".png'>"
+						 	 			+ "<div>"
+					 	 					+ "<img class='.item-back' src='https://cdn.dak.gg/er/images/item/ico-itemgradebg-0" + armorBgImg3 + ".svg'>"
+						 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + armorArray[2] + ".png'>"
 						 	 			+ "</div>"
-						 	 			+ "<div class='item-back'>"
-						 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + item5 + ".png'>"
+						 	 			+ "<div>"
+					 	 					+ "<img class='.item-back' src='https://cdn.dak.gg/er/images/item/ico-itemgradebg-0" + armorBgImg4 + ".svg'>"
+						 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + armorArray[3] + ".png'>"
 						 	 			+ "</div>"
 						 	 		+ "</div>"
-					 	 		+"</div>"
-						 	 	+"<div class='col-2 text-center'>"
-						 	 		+ "<div class='text-secondary' id='recommendRouteNickName'>" + userNickname + "</div>"
-					 	 		+"</div>"
-						 	+ "</div>"
-						 + "</div>"
-					 + "</div>";
-					$("#recommendRouteBox").append(html);
+						 	 		+"</div>"
+							 	 	+"<div class='col-2 text-center'>"
+							 	 		+ "<div class='text-secondary' id='recommendRouteNickName'>" + userNickname + "</div>"
+						 	 		+"</div>"
+							 	+ "</div>"
+							 + "</div>"
+						 + "</div>";
+						$("#recommendRouteBox").append(html);
+					}
 				}
-			}
+			});
+			
+			$("#searchForm").on("submit", function(event) {
+		         event.preventDefault();
+		
+		         let nickName = $("#searchInput").val();
+		
+		         $.ajax({
+		             type: "get"
+		             , url: "/er/search/nickname"
+		             , dataType: "json"
+		             , data: {"nickname": nickName}
+		             , success: function(data) {
+		                 if (data && data.user) {
+		                     let items = data.user;
+		                     location.href = "/er/user/detail/view?userNum=" + items.userNum;
+		                 } else {
+		                     alert("존재하지 않는 닉네임입니다.");
+		                 }
+		             }
+		         });
+		    });
 		});
-		
-		$("#searchForm").on("submit", function(event) {
-	         event.preventDefault();
-	
-	         let nickName = $("#searchInput").val();
-	
-	         $.ajax({
-	             type: "get"
-	             , url: "/er/search/nickname"
-	             , dataType: "json"
-	             , data: {"nickname": nickName}
-	             , success: function(data) {
-	                 if (data && data.user) {
-	                     let items = data.user;
-	                     location.href = "/er/user/detail/view?userNum=" + items.userNum;
-	                 } else {
-	                     alert("존재하지 않는 닉네임입니다.");
-	                 }
-	             }
-	         });
-	    });
-
-        function showErrorMessage(message) {
-            $("#errorMessage").text(message);
-        }
-   
-        function getCharacterName(code) {
-			let characterName = "";
-			$.ajax({
-				type: "get",
-				url: "/er/character",
-				dataType: "json",
-				async: false,
-				success: function(characterData) {
-					let charItems = characterData.data;
-					for (let j = 0; j < charItems.length; j++) {
-						if (code == charItems[j].code) {
-							characterName = charItems[j].name;
-						}
-					}
-				},
-				error: function() {
-					alert("캐릭터 불러오기 오류");
-				},
-			});
-			return characterName;
-		}
-        
-        function getWeaponName(code) {
-			let weaponName = "";
-			$.ajax({
-				type: "get",
-				url: "/er/weapon/info",
-				dataType: "json",
-				async: false,
-				success: function(weaponData) {
-					let weeponItems = weaponData.data;
-					if (code < 4) {
-						code = code + 1;
-					} else if (code < 12) {
-						code = code + 2;
-					}
-					if (code > 16) {
-						code = code - 1;
-					}
-					for (let j = 0; j < weeponItems.length; j++) {
-						if (code - 2 == j) {
-							weaponName = weeponItems[j].type;
-						}
-					}
-				},
-			});
-			return weaponName;
-		}
-        
-	});
-        
-		
-
 	</script>
 </body>
 </html>

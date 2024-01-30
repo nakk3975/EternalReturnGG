@@ -52,7 +52,7 @@ public class EternalReturnBO {
 
     public String searchAllRoute() throws URISyntaxException {
 
-        String apiEndpoint = apiUrl + "/v1/weaponRoutes/recommend?next=1";
+        String apiEndpoint = apiUrl + "/v1/weaponRoutes/recommend";
         String requestUrl = apiEndpoint;
 
         URI uri = new URI(requestUrl);
@@ -93,9 +93,29 @@ public class EternalReturnBO {
         return response;
     }
     
-    public String searchWeapon() throws URISyntaxException {
+    public String searchArmor() throws URISyntaxException {
+    	String apiEndpoint = apiUrl + "/v2/data/ItemArmor";
+        String requestUrl = apiEndpoint;
 
-        String apiEndpoint = apiUrl + "/v2/data/WeaponTypeInfo";
+        URI uri = new URI(requestUrl);
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(apiKey, apiValue);
+        headers.set(HttpHeaders.ACCEPT, acceptHeader);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+        String response = responseEntity.getBody();
+
+        return response;
+    }
+    
+    public String searchWeapon() throws URISyntaxException {
+    	String apiEndpoint = apiUrl + "/v2/data/ItemWeapon";
         String requestUrl = apiEndpoint;
 
         URI uri = new URI(requestUrl);
@@ -135,6 +155,26 @@ public class EternalReturnBO {
         String response = responseEntity.getBody();
         return response;
     }
+  
+    public String tacticalSkill() throws URISyntaxException {
+    	String apiEndpoint = apiUrl + "/v2/data/TacticalSkillSetGroup";
+    	String requestUrl = apiEndpoint;
+    	
+    	URI uri = new URI(requestUrl);
+    	
+    	RestTemplate restTemplate = new RestTemplate();
+    	HttpHeaders headers = new HttpHeaders();
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(apiKey, apiValue);
+        headers.set(HttpHeaders.ACCEPT, acceptHeader);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+        String response = responseEntity.getBody();
+        return response;
+    }
     
     public String characterSkin() throws URISyntaxException {
 	        String apiEndpoint = apiUrl + "/v2/data/CharacterSkin";
@@ -157,6 +197,49 @@ public class EternalReturnBO {
 	        return response;
     }
     
+    public String skillInfo() throws URISyntaxException {
+    	String apiEndpoint = apiUrl + "/v1/data/SkillGroup";
+        String requestUrl = apiEndpoint;
+
+        URI uri = new URI(requestUrl);
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(apiKey, apiValue);
+        headers.set(HttpHeaders.ACCEPT, acceptHeader);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+        String response = responseEntity.getBody();
+
+        return response;
+    }
+    
+    public String traitSkill() throws URISyntaxException {
+    	String apiEndpoint = apiUrl + "/v2/data/Trait";
+        String requestUrl = apiEndpoint;
+
+        URI uri = new URI(requestUrl);
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(apiKey, apiValue);
+        headers.set(HttpHeaders.ACCEPT, acceptHeader);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+        String response = responseEntity.getBody();
+
+        return response;
+    }
+    
+    // 텍스트 파일 불러오기
     public ResponseEntity<Resource> loadTextFile() throws IOException {
     	Path filePath = Paths.get("src/main/resources/static/text/l10n-Korean-20240124065525.txt");
 
