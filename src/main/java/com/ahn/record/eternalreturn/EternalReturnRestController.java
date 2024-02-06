@@ -74,5 +74,10 @@ public class EternalReturnRestController {
 	public String traitSkill() throws URISyntaxException {
 		return erBo.traitSkill();
 	}
+	
+	@GetMapping("/userRank")
+	public String userRank(@RequestParam("userNum") int userNum) throws URISyntaxException {
+		return erBo.userRank(userNum);
+	}
    
 }

@@ -239,6 +239,27 @@ public class EternalReturnBO {
         return response;
     }
     
+    public String userRank(int userNum) throws URISyntaxException {
+    	String apiEndpoint = apiUrl + "/v1/user/stats/" + userNum + "/21";
+        String requestUrl = apiEndpoint;
+
+        URI uri = new URI(requestUrl);
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(apiKey, apiValue);
+        headers.set(HttpHeaders.ACCEPT, acceptHeader);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+        String response = responseEntity.getBody();
+
+        return response;
+    }
+    
     // 텍스트 파일 불러오기
     public ResponseEntity<Resource> loadTextFile() throws IOException {
     	Path filePath = Paths.get("src/main/resources/static/text/l10n-Korean-20240124065525.txt");

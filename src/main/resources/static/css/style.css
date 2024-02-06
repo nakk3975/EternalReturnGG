@@ -116,8 +116,8 @@ nav {
 
 .route {
 	border: 1px black solid;
-	margin: 4px;
-	padding:5px;
+	margin: 10px;
+	height:80px;
 	width: 700px;
 	background-color: #ebedee;
 }
@@ -130,10 +130,30 @@ nav {
 	font-size: 10px;
 }
 
+.main-item-back {
+	width: 45px;
+    height: 27px;
+	position: relative;
+    inset: 0px;
+    object-fit: cover;
+    object-position: center center;
+    z-index: 1;
+}
+
+.main-route-item {
+	width: 28px;
+    height: 16px;
+    object-fit: contain;
+    z-index: 2;
+    position: relative;
+    right:0px;
+    bottom : 27px;
+}
+
 .item-back {
 	width: 45px;
     height: 27px;
-	position: absolute;
+	position: relative;
     inset: 0px;
     object-fit: cover;
     object-position: center center;
@@ -146,7 +166,12 @@ nav {
     object-fit: contain;
     z-index: 2;
     position: relative;
-    bottom: 29px;
+    right:37px;
+}
+
+.plus-btn { 
+	height:120px;
+	border-radius:10px 10px 10px 10px;
 }
 
 .cook-image {
@@ -163,7 +188,6 @@ nav {
 }
 
 #infoBox {
-	padding: 10px;
 	margin-top: 20px;
 	background-image: url('https://previews.123rf.com/images/marisamanee/marisamanee2204/marisamanee220400072/186710970-%EC%96%B4%EB%91%90%EC%9A%B4-%EB%B0%B0%EA%B2%BD%EC%97%90%EC%84%9C-%EB%B0%98%EC%A7%9D%EC%9D%B4%EB%8A%94-%EB%84%A4%EC%98%A8-%ED%9A%A8%EA%B3%BC%EA%B0%80-%EC%9E%88%EB%8A%94-%EB%88%84%EC%88%98-%EC%A1%B0%EB%AA%85.jpg');
 }
@@ -175,18 +199,35 @@ nav {
 	width:100px;
 }
 
+#detailImage{
+	width:240px;
+	height:100%;
+}
+
 .oneRecord {
-	border:1px black solid;
+	border:0.3px black solid;
 	border-radius:10px 10px 10px 10px;
-	margin:15px;	
+}
+
+.rank {
+	font-size:20px;
 }
 
 .modeText {
 	font-size:14px;
+	font-weight: bold;
 }
 
 .timeText {
 	font-size:12px;
+}
+
+.date {
+	font-size: 10px;
+}
+
+.character-image {
+	background-color: #DCDCDC;
 }
 
 .character-level {
@@ -194,7 +235,7 @@ nav {
     height: 25px;
     position: relative;
     bottom: -48px;
-    right: 32px;
+    right: 20px;
     background: rgb(255, 255, 255);
     display: flex;
     -webkit-box-align: center;
@@ -259,4 +300,116 @@ nav {
 .finish-items {
 	width:280px;
 	margin-top: 26px;
+}
+
+.user-record {
+	border:0.1px rgb(192, 192, 192) solid;
+}
+
+#rankText {
+	padding: 12px 16px;
+    background: rgb(76, 79, 93);
+    color: rgb(255, 255, 255);
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 12px;
+    margin:0;
+}
+
+#charPlayText{
+	padding: 12px 16px;
+    background: rgb(76, 79, 93);
+    color: rgb(255, 255, 255);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 12px;
+    margin:0;
+}
+
+#rankImg {
+	width: 60px;
+	height:60px;
+}
+
+#rank{
+	font-size: 13px;
+}
+
+#rp{
+	color: rgb(202, 147, 114);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 16px;
+}
+
+#tier{
+    font-weight: 600;
+    font-size:13px;
+    color: rgb(100, 100, 100);
+}
+
+.percent-bar {
+    position: relative;
+    width: 70px;
+    background: rgb(230, 230, 230);
+    border-radius: 4px;
+    height: 4px;
+}
+
+.percent-bar > div {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    height: 100%;
+    border-radius: 4px;
+    background: rgb(102, 106, 122);
+}
+.percent-bar > .percent {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    height: 100%;
+    border-radius: 4px;
+    background: rgb(17, 178, 136);
+}
+
+th{
+	font-size: 14px;
+}
+
+.side-total-games {
+	font-size: 14px;
+	color:gray;
+}
+
+table {
+    width: 100%;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 12px;
+}
+
+thead {
+    color: rgb(255, 255, 255);
+    background: rgb(54, 57, 68);
+    border: 1px solid rgb(54, 57, 68);
+}
+
+.image-wrapper{
+	display: flex;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    justify-content: center;
+    overflow: hidden;
+    width: 46px;
+    height: 46px;
+    border-radius: 25px;
+    object-fit: cover;
+    object-position: center center;
+    background: rgb(214, 214, 214);
+}
+
+.side-main {
+	height:70px;
 }
