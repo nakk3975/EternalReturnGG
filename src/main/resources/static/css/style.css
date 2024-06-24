@@ -204,7 +204,7 @@ nav {
 	height:100%;
 }
 
-.oneRecord {
+.one-record {
 	border:0.3px black solid;
 	border-radius:10px 10px 10px 10px;
 }
@@ -306,6 +306,13 @@ nav {
 	border:0.1px rgb(192, 192, 192) solid;
 }
 
+#sideUserInfo{
+	width:350px;
+}
+
+#recordDetail {
+	width:660px;
+}
 #rankText {
 	padding: 12px 16px;
     background: rgb(76, 79, 93);
@@ -412,4 +419,12 @@ thead {
 
 .side-main {
 	height:70px;
+}
+
+.detail-box{
+	background-color: yellow;
+	border:0.3px black solid;
+	border-radius:10px 10px 10px 10px;
+	width:845px;
+
 }

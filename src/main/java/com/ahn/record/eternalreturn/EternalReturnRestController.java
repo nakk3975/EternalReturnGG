@@ -79,5 +79,10 @@ public class EternalReturnRestController {
 	public String userRank(@RequestParam("userNum") int userNum) throws URISyntaxException {
 		return erBo.userRank(userNum);
 	}
+	
+	@GetMapping("/game")
+	public String gameRecord(@RequestParam("gameId") int gameId) throws IOException, URISyntaxException {
+		return erBo.searchGame(gameId);
+	}
    
 }

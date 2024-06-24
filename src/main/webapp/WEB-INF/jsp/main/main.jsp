@@ -47,7 +47,7 @@
 	<script>
 		$(document).ready(async function() {
 			try {
-		        let data = await $.ajax({
+		    	let data = await $.ajax({
 		            type: "get",
 		            url: "/er/main",
 		            dataType: "json"

@@ -26,6 +26,29 @@ public class EternalReturnBO {
     private final String acceptHeader = "application/json";
     private final String apiUrl = "https://open-api.bser.io";
 
+    public String searchGame(int gameId) throws IOException, URISyntaxException {
+
+        String apiEndpoint = apiUrl + "/v1/games/" + gameId;
+        String requestUrl = apiEndpoint;
+
+        URI uri = new URI(requestUrl);
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(apiKey, apiValue);
+        headers.set(HttpHeaders.ACCEPT, acceptHeader);
+        headers.set("metaType", "hash");
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+        String response = responseEntity.getBody();
+
+        return response;
+    }
+    
     public String searchNickname(String nickName) throws IOException, URISyntaxException {
 
         String apiEndpoint = apiUrl + "/v1/user/nickname";

@@ -31,19 +31,22 @@ async function fetchWeaponBgImg(item, weaponItems) {
             if (item == weaponItems[j].code) {
                 switch (weaponItems[j].itemGrade) {
                     case "Common":
-                        weaponBgImg = "1";
+                        weaponBgImg = "https://cdn.dak.gg/er/images/item/ico-itemgradebg-01.svg";
                         break;
                     case "Uncommon":
-                        weaponBgImg = "2";
+                        weaponBgImg = "https://cdn.dak.gg/er/images/item/ico-itemgradebg-02.svg";
                         break;
                     case "Rare":
-                        weaponBgImg = "3";
+                        weaponBgImg = "https://cdn.dak.gg/er/images/item/ico-itemgradebg-03.svg";
                         break;
                     case "Epic":
-                        weaponBgImg = "4";
+                        weaponBgImg = "https://cdn.dak.gg/er/images/item/ico-itemgradebg-04.svg";
                         break;
                     case "Legend":
-                        weaponBgImg = "5";
+                        weaponBgImg = "https://cdn.dak.gg/er/images/item/ico-itemgradebg-05.svg";
+                        break;
+                    case "Mythic":
+						weaponBgImg = "https://cdn.dak.gg/er/images/item/ico-itemgradebg-06.svg";
                         break;
                     default:
                         break;
