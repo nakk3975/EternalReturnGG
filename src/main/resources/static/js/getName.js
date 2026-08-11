@@ -8,55 +8,82 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-async function getCharacterName(characterCode) {
-    let result = "";
-    try {
-        let data = await $.ajax({
+let characterDataPromise = null;
+let koreanCharacterNamePromise = null;
+
+function loadCharacterData() {
+    if (!characterDataPromise) {
+        characterDataPromise = $.ajax({
             type: "get",
             url: "/er/character",
             dataType: "json"
+        }).then(function(data) {
+            return data.data || [];
+        }).catch(function(error) {
+            characterDataPromise = null;
+            throw error;
         });
-
-        let charItems = data.data;
-        for (let j = 0; j < charItems.length; j++) {
-            if (characterCode == charItems[j].code) {
-                result = charItems[j].name;
-            }
-        }
-    } catch (error) {
-        console.error("Error fetching character data: ", error);
     }
-    return result;
+
+    return characterDataPromise;
 }
 
-
-async function getKoreanCharacterName(characterCode) {
-    let result = "";
-    try {
-        let data = await $.ajax({
+function loadKoreanCharacterNames() {
+    if (!koreanCharacterNamePromise) {
+        koreanCharacterNamePromise = $.ajax({
             type: "get",
             url: "/er/loadTextFile",
             dataType: "text"
+        }).then(function(data) {
+            let nameMap = new Map();
+            let lines = data.split("\n");
+
+            for (let line of lines) {
+                if (!line.startsWith("Character/Name/")) {
+                    continue;
+                }
+
+                let parts = line.split("┃");
+                if (parts.length !== 2) {
+                    continue;
+                }
+
+                let characterCode = parts[0].split("/")[2].trim();
+                nameMap.set(characterCode, parts[1].trim());
+            }
+
+            return nameMap;
+        }).catch(function(error) {
+            koreanCharacterNamePromise = null;
+            throw error;
+        });
+    }
+
+    return koreanCharacterNamePromise;
+}
+
+async function getCharacterName(characterCode) {
+    try {
+        let charItems = await loadCharacterData();
+        let character = charItems.find(function(item) {
+            return characterCode == item.code;
         });
 
-        let lines = data.split("\n");
-        for (let line of lines) {
-            if (line.startsWith("Character/Name/")) {
-                let parts = line.split("┃");
-                if (parts.length === 2) {
-                    let lineNumericPart = parts[0].split("/")[2].trim();
-                    let korCharacterCode = characterCode + "";
-                    if (lineNumericPart === korCharacterCode) {
-                        result = parts[1].trim();
-                        break;
-                    }
-                }
-            }
-        }
+        return character ? character.name : "";
+    } catch (error) {
+        console.error("Error fetching character data: ", error);
+        return "";
+    }
+}
+
+async function getKoreanCharacterName(characterCode) {
+    try {
+        let nameMap = await loadKoreanCharacterNames();
+        return nameMap.get(String(characterCode)) || "";
     } catch (error) {
         console.error("Error fetching Korean character name data: ", error);
+        return "";
     }
-    return result;
 }
 
 function getWeaponName(code) {
@@ -96,6 +123,6 @@ function getWeaponName(code) {
     if (codeToEnglish.hasOwnProperty(code)) {
         return codeToEnglish[code];
     } else {
-        return "Unknown"; // If the code is not found in the mapping
+        return "Unknown";
     }
 }
