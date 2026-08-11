@@ -14,8 +14,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -40,8 +38,11 @@ public class EternalReturnBO {
     private static final String API_URL = "https://open-api.bser.io";
 
     private static final long STATIC_CACHE_MS = Duration.ofHours(12).toMillis();
+    private static final long SEASON_CACHE_MS = Duration.ofHours(1).toMillis();
     private static final long GAME_CACHE_MS = Duration.ofHours(24).toMillis();
     private static final long USER_CACHE_MS = Duration.ofSeconds(30).toMillis();
+
+    private static final int RANKED_MODE = 3;
 
     @Value("${eternal-return.api-key:}")
     private String apiValue;
@@ -55,14 +56,16 @@ public class EternalReturnBO {
 
     @PostConstruct
     public void warmStaticCache() {
-        // 애플리케이션 시작 직후 자주 사용하는 정적 데이터를 병렬로 미리 적재한다.
-        prefetchStatic("/v2/data/Character");
-        prefetchStatic("/v2/data/CharacterSkin");
-        prefetchStatic("/v2/data/ItemWeapon");
-        prefetchStatic("/v2/data/ItemArmor");
-        prefetchStatic("/v2/data/TacticalSkillSetGroup");
-        prefetchStatic("/v2/data/Trait");
-        prefetchStatic("/v1/data/SkillGroup");
+        // 서버 시작 시 자주 사용하는 최신 메타 데이터를 미리 적재한다.
+        prefetchStatic("/v2/data/Season", SEASON_CACHE_MS);
+        prefetchStatic("/v2/data/Character", STATIC_CACHE_MS);
+        prefetchStatic("/v2/data/CharacterSkin", STATIC_CACHE_MS);
+        prefetchStatic("/v2/data/ItemWeapon", STATIC_CACHE_MS);
+        prefetchStatic("/v2/data/ItemArmor", STATIC_CACHE_MS);
+        prefetchStatic("/v2/data/TacticalSkillSetGroup", STATIC_CACHE_MS);
+        prefetchStatic("/v2/data/Trait", STATIC_CACHE_MS);
+        prefetchStatic("/v2/data/SkillGroup", STATIC_CACHE_MS);
+        prefetchStatic("/v1/l10n/Korean", STATIC_CACHE_MS);
     }
 
     @PreDestroy
@@ -95,8 +98,8 @@ public class EternalReturnBO {
         return requestCached("/v2/data/ItemWeapon", false, STATIC_CACHE_MS);
     }
 
-    public String userInfo(int userNum) throws URISyntaxException {
-        String response = requestCached("/v1/user/games/" + userNum, false, USER_CACHE_MS);
+    public String userInfo(String userId) throws URISyntaxException {
+        String response = requestCached("/v1/user/games/uid/" + encodePathSegment(userId), false, USER_CACHE_MS);
         prefetchRecentGames(response);
         return response;
     }
@@ -110,34 +113,87 @@ public class EternalReturnBO {
     }
 
     public String skillInfo() throws URISyntaxException {
-        return requestCached("/v1/data/SkillGroup", false, STATIC_CACHE_MS);
+        return requestCached("/v2/data/SkillGroup", false, STATIC_CACHE_MS);
     }
 
     public String traitSkill() throws URISyntaxException {
         return requestCached("/v2/data/Trait", false, STATIC_CACHE_MS);
     }
 
-    public String userRank(int userNum) throws URISyntaxException {
-        // 현재 JSP가 이 API를 가장 먼저 호출하므로, 랭크 응답을 기다리는 동안
-        // 다음 단계에서 필요한 최근 전적/게임 상세를 미리 병렬 조회한다.
-        prefetchUserInfo(userNum);
-        return requestCached("/v1/user/stats/" + userNum + "/21", false, USER_CACHE_MS);
+    public String userRank(String userId) throws URISyntaxException {
+        // 랭크 요청과 동시에 최근 전적/게임 상세를 미리 조회한다.
+        prefetchUserInfo(userId);
+
+        int currentSeasonId = getCurrentSeasonId();
+        String path = "/v2/user/stats/uid/" + encodePathSegment(userId)
+                + "/" + currentSeasonId + "/" + RANKED_MODE;
+
+        return requestCached(path, false, USER_CACHE_MS);
     }
 
-    private void prefetchUserInfo(int userNum) {
+    public int getCurrentSeasonId() throws URISyntaxException {
+        String response = requestCached("/v2/data/Season", false, SEASON_CACHE_MS);
+
+        try {
+            JsonNode root = objectMapper.readTree(response);
+            JsonNode seasons = root.path("data");
+            Integer latestSeasonId = null;
+
+            if(seasons.isArray()) {
+                for(JsonNode season : seasons) {
+                    int seasonId = readSeasonId(season);
+                    if(seasonId <= 0) {
+                        continue;
+                    }
+
+                    if(latestSeasonId == null || seasonId > latestSeasonId) {
+                        latestSeasonId = seasonId;
+                    }
+
+                    if(season.path("isCurrent").asInt(0) == 1 || season.path("isCurrent").asBoolean(false)) {
+                        return seasonId;
+                    }
+                }
+            }
+
+            // 프리시즌 등으로 isCurrent가 비어 있는 경우 가장 최신 시즌을 사용한다.
+            if(latestSeasonId != null) {
+                return latestSeasonId;
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("Current Eternal Return season data could not be parsed.", e);
+        }
+
+        throw new IllegalStateException("Current Eternal Return season could not be determined.");
+    }
+
+    private int readSeasonId(JsonNode season) {
+        if(season.has("seasonID")) {
+            return season.path("seasonID").asInt();
+        }
+        if(season.has("seasonId")) {
+            return season.path("seasonId").asInt();
+        }
+        if(season.has("id")) {
+            return season.path("id").asInt();
+        }
+        return 0;
+    }
+
+    private void prefetchUserInfo(String userId) {
         prefetchExecutor.submit(() -> {
             try {
-                userInfo(userNum);
+                userInfo(userId);
             } catch (Exception e) {
                 // 선조회 실패는 실제 /er/user/detail 요청에서 다시 시도한다.
             }
         });
     }
 
-    private void prefetchStatic(String path) {
+    private void prefetchStatic(String path, long ttlMillis) {
         prefetchExecutor.submit(() -> {
             try {
-                requestCached(path, false, STATIC_CACHE_MS);
+                requestCached(path, false, ttlMillis);
             } catch (Exception e) {
                 // 정적 데이터 선조회 실패 시 실제 요청에서 다시 시도한다.
             }
@@ -186,6 +242,10 @@ public class EternalReturnBO {
         HttpEntity<String> entity = new HttpEntity<>(headers);
         ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
         return responseEntity.getBody();
+    }
+
+    private String encodePathSegment(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     private void prefetchRecentGames(String userGameResponse) {
@@ -241,22 +301,35 @@ public class EternalReturnBO {
         return gameIds;
     }
 
-    // 텍스트 파일 불러오기
-    public ResponseEntity<Resource> loadTextFile() throws IOException {
-        Resource resource = new ClassPathResource("static/text/l10n-Korean-20240124065525.txt");
+    public ResponseEntity<byte[]> loadTextFile() throws IOException, URISyntaxException {
+        String l10nInfo = requestCached("/v1/l10n/Korean", false, STATIC_CACHE_MS);
+        String l10nPath;
 
-        if(!resource.exists()) {
-            throw new IOException("Localization text resource not found.");
+        try {
+            JsonNode root = objectMapper.readTree(l10nInfo);
+            l10nPath = root.path("data").path("l10Path").asText();
+        } catch (Exception e) {
+            throw new IOException("Localization download information could not be parsed.", e);
+        }
+
+        if(!StringUtils.hasText(l10nPath)) {
+            throw new IOException("Localization download URL was not returned by the API.");
+        }
+
+        ResponseEntity<byte[]> localizationResponse = restTemplate.getForEntity(l10nPath, byte[].class);
+        byte[] body = localizationResponse.getBody();
+
+        if(body == null) {
+            throw new IOException("Localization data could not be downloaded.");
         }
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("text", "plain", StandardCharsets.UTF_8));
-        headers.setContentDispositionFormData("attachment", "l10n-Korean-20240124065525.txt");
         headers.setCacheControl(CacheControl.maxAge(Duration.ofHours(12)).cachePublic());
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .body(resource);
+                .body(body);
     }
 
     private static class CacheEntry {
