@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,8 +45,8 @@ public class EternalReturnRestController {
 	}
 	
 	@GetMapping("/user/detail")
-	public String userDetail(@RequestParam("userNum") int userNum) throws URISyntaxException {
-		return erBo.userInfo(userNum);
+	public String userDetail(@RequestParam("userNum") String userId) throws URISyntaxException {
+		return erBo.userInfo(userId);
 	}
 	
 	@GetMapping("/skin/info")
@@ -56,7 +55,7 @@ public class EternalReturnRestController {
 	}
 	
 	@GetMapping("/loadTextFile")
-	public ResponseEntity<Resource> characterName() throws IOException {
+	public ResponseEntity<byte[]> characterName() throws IOException, URISyntaxException {
 		return erBo.loadTextFile();
 	}
 	
@@ -76,8 +75,8 @@ public class EternalReturnRestController {
 	}
 	
 	@GetMapping("/userRank")
-	public String userRank(@RequestParam("userNum") int userNum) throws URISyntaxException {
-		return erBo.userRank(userNum);
+	public String userRank(@RequestParam("userNum") String userId) throws URISyntaxException {
+		return erBo.userRank(userId);
 	}
 	
 	@GetMapping("/game")
