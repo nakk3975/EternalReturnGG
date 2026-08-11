@@ -37,7 +37,23 @@
 
 ## 실행 방법
 
-Java 17과 프로젝트에서 사용하는 MySQL 및 외부 API 설정을 준비한 뒤 프로젝트 루트에서 실행합니다.
+Java 17과 프로젝트에서 사용하는 MySQL 설정을 준비합니다.
+
+이터널 리턴 Open API 키는 소스 코드에 직접 저장하지 않고 `ETERNAL_RETURN_API_KEY` 환경변수로 전달합니다.
+
+Windows PowerShell:
+
+```powershell
+$env:ETERNAL_RETURN_API_KEY="YOUR_API_KEY"
+```
+
+macOS / Linux:
+
+```bash
+export ETERNAL_RETURN_API_KEY="YOUR_API_KEY"
+```
+
+이후 프로젝트 루트에서 실행합니다.
 
 ```bash
 ./gradlew bootRun
@@ -49,7 +65,7 @@ Windows:
 gradlew.bat bootRun
 ```
 
-> 외부 API 사용에 필요한 인증 정보와 DB 계정은 로컬 환경에 별도로 설정해야 합니다.
+> DB 계정 등 개발 환경별 설정은 로컬 환경에 맞게 변경해야 합니다.
 
 ## 목적
 
