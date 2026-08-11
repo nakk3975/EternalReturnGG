@@ -9,8 +9,9 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -28,6 +29,9 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+
 @Service
 public class EternalReturnBO {
 
@@ -44,9 +48,27 @@ public class EternalReturnBO {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ExecutorService prefetchExecutor = Executors.newFixedThreadPool(6);
 
     private final Map<String, CacheEntry> responseCache = new ConcurrentHashMap<>();
     private final Map<String, Object> cacheLocks = new ConcurrentHashMap<>();
+
+    @PostConstruct
+    public void warmStaticCache() {
+        // 애플리케이션 시작 직후 자주 사용하는 정적 데이터를 병렬로 미리 적재한다.
+        prefetchStatic("/v2/data/Character");
+        prefetchStatic("/v2/data/CharacterSkin");
+        prefetchStatic("/v2/data/ItemWeapon");
+        prefetchStatic("/v2/data/ItemArmor");
+        prefetchStatic("/v2/data/TacticalSkillSetGroup");
+        prefetchStatic("/v2/data/Trait");
+        prefetchStatic("/v1/data/SkillGroup");
+    }
+
+    @PreDestroy
+    public void shutdownPrefetchExecutor() {
+        prefetchExecutor.shutdownNow();
+    }
 
     public String searchGame(int gameId) throws IOException, URISyntaxException {
         return requestCached("/v1/games/" + gameId, true, GAME_CACHE_MS);
@@ -96,7 +118,30 @@ public class EternalReturnBO {
     }
 
     public String userRank(int userNum) throws URISyntaxException {
+        // 현재 JSP가 이 API를 가장 먼저 호출하므로, 랭크 응답을 기다리는 동안
+        // 다음 단계에서 필요한 최근 전적/게임 상세를 미리 병렬 조회한다.
+        prefetchUserInfo(userNum);
         return requestCached("/v1/user/stats/" + userNum + "/21", false, USER_CACHE_MS);
+    }
+
+    private void prefetchUserInfo(int userNum) {
+        prefetchExecutor.submit(() -> {
+            try {
+                userInfo(userNum);
+            } catch (Exception e) {
+                // 선조회 실패는 실제 /er/user/detail 요청에서 다시 시도한다.
+            }
+        });
+    }
+
+    private void prefetchStatic(String path) {
+        prefetchExecutor.submit(() -> {
+            try {
+                requestCached(path, false, STATIC_CACHE_MS);
+            } catch (Exception e) {
+                // 정적 데이터 선조회 실패 시 실제 요청에서 다시 시도한다.
+            }
+        });
     }
 
     private String requestCached(String path, boolean useMetaHash, long ttlMillis) throws URISyntaxException {
@@ -154,11 +199,11 @@ public class EternalReturnBO {
                 continue;
             }
 
-            CompletableFuture.runAsync(() -> {
+            prefetchExecutor.submit(() -> {
                 try {
                     requestCached(path, true, GAME_CACHE_MS);
                 } catch (Exception e) {
-                    // 선조회 실패는 실제 /er/game 요청에서 다시 시도하므로 화면 요청에는 영향을 주지 않는다.
+                    // 선조회 실패는 실제 /er/game 요청에서 다시 시도한다.
                 }
             });
         }
