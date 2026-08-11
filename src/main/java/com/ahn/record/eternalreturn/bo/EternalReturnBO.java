@@ -5,296 +5,110 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 public class EternalReturnBO {
 
-	private final String apiKey = "x-api-key";
-    private final String apiValue = "Z3NP8HwkfB9L6Pqjjh3b12l0bzBDsNnuNsxhEQj4";
-    private final String acceptHeader = "application/json";
-    private final String apiUrl = "https://open-api.bser.io";
+    private static final String API_KEY_HEADER = "x-api-key";
+    private static final String ACCEPT_HEADER = "application/json";
+    private static final String API_URL = "https://open-api.bser.io";
+
+    @Value("${eternal-return.api-key:}")
+    private String apiValue;
+
+    private final RestTemplate restTemplate = new RestTemplate();
 
     public String searchGame(int gameId) throws IOException, URISyntaxException {
-
-        String apiEndpoint = apiUrl + "/v1/games/" + gameId;
-        String requestUrl = apiEndpoint;
-
-        URI uri = new URI(requestUrl);
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(apiKey, apiValue);
-        headers.set(HttpHeaders.ACCEPT, acceptHeader);
-        headers.set("metaType", "hash");
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-        String response = responseEntity.getBody();
-
-        return response;
+        return request("/v1/games/" + gameId, true);
     }
     
     public String searchNickname(String nickName) throws IOException, URISyntaxException {
-
-        String apiEndpoint = apiUrl + "/v1/user/nickname";
         String queryParam = "query=" + URLEncoder.encode(nickName, StandardCharsets.UTF_8.toString());
-        String requestUrl = apiEndpoint + "?" + queryParam;
-
-        URI uri = new URI(requestUrl);
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(apiKey, apiValue);
-        headers.set(HttpHeaders.ACCEPT, acceptHeader);
-        headers.set("metaType", "hash");
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-        String response = responseEntity.getBody();
-
-        return response;
+        return request("/v1/user/nickname?" + queryParam, true);
     }
 
     public String searchAllRoute() throws URISyntaxException {
-
-        String apiEndpoint = apiUrl + "/v1/weaponRoutes/recommend";
-        String requestUrl = apiEndpoint;
-
-        URI uri = new URI(requestUrl);
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(apiKey, apiValue);
-        headers.set(HttpHeaders.ACCEPT, acceptHeader);
-        
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-        String response = responseEntity.getBody();
-
-        return response;
+        return request("/v1/weaponRoutes/recommend", false);
     }
     
     public String searchCharacter() throws URISyntaxException {
-        String apiEndpoint = apiUrl + "/v2/data/Character";
-        String requestUrl = apiEndpoint;
-
-        URI uri = new URI(requestUrl);
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(apiKey, apiValue);
-        headers.set(HttpHeaders.ACCEPT, acceptHeader);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-        String response = responseEntity.getBody();
-
-        return response;
+        return request("/v2/data/Character", false);
     }
     
     public String searchArmor() throws URISyntaxException {
-    	String apiEndpoint = apiUrl + "/v2/data/ItemArmor";
-        String requestUrl = apiEndpoint;
-
-        URI uri = new URI(requestUrl);
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(apiKey, apiValue);
-        headers.set(HttpHeaders.ACCEPT, acceptHeader);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-        String response = responseEntity.getBody();
-
-        return response;
+        return request("/v2/data/ItemArmor", false);
     }
     
     public String searchWeapon() throws URISyntaxException {
-    	String apiEndpoint = apiUrl + "/v2/data/ItemWeapon";
-        String requestUrl = apiEndpoint;
-
-        URI uri = new URI(requestUrl);
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(apiKey, apiValue);
-        headers.set(HttpHeaders.ACCEPT, acceptHeader);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-        String response = responseEntity.getBody();
-
-        return response;
+        return request("/v2/data/ItemWeapon", false);
     }
     
     public String userInfo(int userNum) throws URISyntaxException {
-
-        String apiEndpoint = apiUrl + "/v1/user/games/" + userNum;
-        String requestUrl = apiEndpoint;
-
-        URI uri = new URI(requestUrl);
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(apiKey, apiValue);
-        headers.set(HttpHeaders.ACCEPT, acceptHeader);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-        String response = responseEntity.getBody();
-        return response;
+        return request("/v1/user/games/" + userNum, false);
     }
   
     public String tacticalSkill() throws URISyntaxException {
-    	String apiEndpoint = apiUrl + "/v2/data/TacticalSkillSetGroup";
-    	String requestUrl = apiEndpoint;
-    	
-    	URI uri = new URI(requestUrl);
-    	
-    	RestTemplate restTemplate = new RestTemplate();
-    	HttpHeaders headers = new HttpHeaders();
-
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(apiKey, apiValue);
-        headers.set(HttpHeaders.ACCEPT, acceptHeader);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-        String response = responseEntity.getBody();
-        return response;
+        return request("/v2/data/TacticalSkillSetGroup", false);
     }
     
     public String characterSkin() throws URISyntaxException {
-	        String apiEndpoint = apiUrl + "/v2/data/CharacterSkin";
-	        String requestUrl = apiEndpoint;
-
-	        URI uri = new URI(requestUrl);
-
-	        RestTemplate restTemplate = new RestTemplate();
-	        HttpHeaders headers = new HttpHeaders();
-
-	        headers.setContentType(MediaType.APPLICATION_JSON);
-	        headers.set(apiKey, apiValue);
-	        headers.set(HttpHeaders.ACCEPT, acceptHeader);
-
-	        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-	        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-	        String response = responseEntity.getBody();
-
-	        return response;
+        return request("/v2/data/CharacterSkin", false);
     }
     
     public String skillInfo() throws URISyntaxException {
-    	String apiEndpoint = apiUrl + "/v1/data/SkillGroup";
-        String requestUrl = apiEndpoint;
-
-        URI uri = new URI(requestUrl);
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(apiKey, apiValue);
-        headers.set(HttpHeaders.ACCEPT, acceptHeader);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-        String response = responseEntity.getBody();
-
-        return response;
+        return request("/v1/data/SkillGroup", false);
     }
     
     public String traitSkill() throws URISyntaxException {
-    	String apiEndpoint = apiUrl + "/v2/data/Trait";
-        String requestUrl = apiEndpoint;
-
-        URI uri = new URI(requestUrl);
-
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(apiKey, apiValue);
-        headers.set(HttpHeaders.ACCEPT, acceptHeader);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-        String response = responseEntity.getBody();
-
-        return response;
+        return request("/v2/data/Trait", false);
     }
     
     public String userRank(int userNum) throws URISyntaxException {
-    	String apiEndpoint = apiUrl + "/v1/user/stats/" + userNum + "/21";
-        String requestUrl = apiEndpoint;
+        return request("/v1/user/stats/" + userNum + "/21", false);
+    }
 
-        URI uri = new URI(requestUrl);
+    private String request(String path, boolean useMetaHash) throws URISyntaxException {
+        if(!StringUtils.hasText(apiValue)) {
+            throw new IllegalStateException("ETERNAL_RETURN_API_KEY environment variable is not configured.");
+        }
 
-        RestTemplate restTemplate = new RestTemplate();
+        URI uri = new URI(API_URL + path);
         HttpHeaders headers = new HttpHeaders();
-
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(apiKey, apiValue);
-        headers.set(HttpHeaders.ACCEPT, acceptHeader);
+        headers.set(API_KEY_HEADER, apiValue);
+        headers.set(HttpHeaders.ACCEPT, ACCEPT_HEADER);
+
+        if(useMetaHash) {
+            headers.set("metaType", "hash");
+        }
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
-
         ResponseEntity<String> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
-        String response = responseEntity.getBody();
-
-        return response;
+        return responseEntity.getBody();
     }
     
     // 텍스트 파일 불러오기
     public ResponseEntity<Resource> loadTextFile() throws IOException {
-    	Path filePath = Paths.get("src/main/resources/static/text/l10n-Korean-20240124065525.txt");
+        Resource resource = new ClassPathResource("static/text/l10n-Korean-20240124065525.txt");
 
-        // Resource 객체를 생성하여 파일을 읽어옴
-        Resource resource = new UrlResource(filePath.toUri());
+        if(!resource.exists()) {
+            throw new IOException("Localization text resource not found.");
+        }
 
-        // 파일의 내용을 읽어오기 위한 Content-Type 설정
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("text", "plain", StandardCharsets.UTF_8));
-
-        // 파일 다운로드를 위한 Content-Disposition 설정
         headers.setContentDispositionFormData("attachment", "l10n-Korean-20240124065525.txt");
 
         return ResponseEntity.ok()
