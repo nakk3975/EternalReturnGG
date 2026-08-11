@@ -9,3 +9,6 @@ spring:
     url: jdbc:mysql://localhost:3306/
     username: root
     password: root
+
+eternal-return:
+  api-key: ${ETERNAL_RETURN_API_KEY:}
