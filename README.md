@@ -1,5 +1,7 @@
 # EternalReturnGG
 
+> 웹 프로젝트 · 게임 API·전적 조회·캐싱
+
 이터널 리턴의 게임 데이터를 조회하고 전적 및 각종 게임 정보를 화면에 제공하기 위해 만든 Spring Boot 웹 프로젝트입니다.
 
 ## 주요 기능
@@ -12,28 +14,24 @@
 - 무기 / 방어구 정보 조회
 - 스킬 및 특성 정보 조회
 - 전술 스킬 정보 조회
+- 데이터 종류별 응답 캐싱과 최근 게임 상세 미리 조회
 
 ## 기술 스택
 
-### Backend
-- Java 17
-- Spring Boot 3.2.1
-- Spring MVC
-- Spring WebFlux
-- MyBatis 3.0.3
-- MySQL
-- Gradle
+| 영역 | 기술 |
+| --- | --- |
+| Backend | Java 17, Spring Boot 3.2.1, Spring MVC, Spring WebFlux, MyBatis 3.0.3, MySQL, Gradle |
+| Frontend | JSP / JSTL, JavaScript |
 
-### Frontend
-- JSP / JSTL
-- JavaScript
+## 코드 둘러보기
 
-## 프로젝트 구조
-
-- `EternalReturnController` : 검색, 상세, 사용자 조회 화면 라우팅
-- `EternalReturnRestController` : 게임 데이터 조회 REST API
-- `EternalReturnBO` : 외부 데이터 요청 및 비즈니스 로직
-- `WEB-INF/jsp` : 사용자 화면
+| 위치 | 내용 |
+| --- | --- |
+| [EternalReturnController.java](src/main/java/com/ahn/record/eternalreturn/EternalReturnController.java) | 화면 라우팅 |
+| [EternalReturnRestController.java](src/main/java/com/ahn/record/eternalreturn/EternalReturnRestController.java) | 게임 데이터 조회 API |
+| [EternalReturnBO.java](src/main/java/com/ahn/record/eternalreturn/bo/EternalReturnBO.java) | 외부 API 요청·캐싱·미리 조회 |
+| [src/main/resources/static/js](src/main/resources/static/js) | 화면 데이터 요청과 표시 |
+| [src/main/webapp/WEB-INF/jsp/main](src/main/webapp/WEB-INF/jsp/main) | 검색·사용자 화면 |
 
 ## 실행 방법
 
@@ -70,3 +68,7 @@ gradlew.bat bootRun
 ## 목적
 
 외부 게임 API 연동, 서버 측 데이터 처리, 사용자 검색 및 상세 화면 구성을 하나의 Spring Boot 프로젝트에서 학습하고 구현하기 위해 만든 프로젝트입니다.
+
+---
+
+**함께 보기** · [TripPlan](https://github.com/nakk3975/TripPlan) · [2Team-Workspace](https://github.com/nakk3975/2Team-Workspace)
