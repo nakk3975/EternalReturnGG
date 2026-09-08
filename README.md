@@ -1,5 +1,7 @@
 # EternalReturnGG
 
+[개발자 소개 · 전체 프로젝트](https://github.com/nakk3975/TripPlan/blob/main/PORTFOLIO.md)
+
 > 웹 프로젝트 · 게임 API·전적 조회·캐싱
 
 이터널 리턴의 게임 데이터를 조회하고 전적 및 각종 게임 정보를 화면에 제공하기 위해 만든 Spring Boot 웹 프로젝트입니다.
