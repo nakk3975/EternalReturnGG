@@ -189,12 +189,74 @@
 				var damage = 0;
 				var averageDamage = 0;
 				
+				function renderRankSummary() {
+				$("#averageTk").append(averageTotalKill.toFixed(2));
+				$("#rankOne").append(Math.floor(topOne) + "%");
+				$("#topOnePercentBar").css("width", Math.floor(topOne)+"%");
+				$("#rankTwo").append(Math.floor(topTwo) + "%");
+				$("#topTwoPercentBar").css("width", Math.floor(topTwo)+"%");
+				$("#rankThree").append(Math.floor(topThree) + "%");
+				$("#topThreePercentBar").css("width", Math.floor(topThree)+"%");
+				$("#totalGame").append(game);
+				$("#averageKill").append(averageKill);
+				$("#averageAsist").append(averageAsist);
+				$("#averageRank").append(averageRank.toFixed(1));
+				$("#rp").append(mmr);
+				
+				let mmrImg = 0;
+				let tier = "";
+					let mmrStr = (mmr + "").substring(1,4);
+				if(mmrStr < 250) {
+					mmrStr = 4;
+				} else if(mmrStr < 500) {
+					mmrStr = 3;
+				} else if(mmrStr < 750) {
+					mmrStr = 2;
+				} else if(mmrStr <= 999) {
+					mmrStr = 1;
+				}
+				
+				if(mmr == 0) {
+					mmrImg = 0;
+				} else if(mmr < 1000) {
+					mmrImg = 1;
+					tier = "아이언 " + mmrStr;
+				} else if(mmr < 2000) {
+					mmrImg = 2;
+					tier = "브론즈 " + mmrStr;
+				} else if(mmr < 3000) {
+					mmrImg = 3;
+					tier = "실버 " + mmrStr;
+				} else if(mmr < 4000) {
+					mmrImg = 4;
+					tier = "골드 " + mmrStr;
+				} else if(mmr < 5000) {
+					mmrImg = 5;
+					tier = "플래티넘 " + mmrStr;
+				} else if(mmr < 6000) {
+					mmrImg = 6;
+					tier = "다이아몬드 " + mmrStr;
+				} else if(rank < 200) {
+					mmrImg = 8;
+					tier = "이터니티";
+					} else if(rank < 500) {
+						mmrImg = 7;
+						tier = "데미갓";
+					} else if(rank < 1000) {
+						mmrImg = 66;
+						tier = "미스릴";
+				}
+				
+				$("#tier").append(tier);
+				$("#rank").append(rank + "위");
+					$("#rankImg").attr("src", "https://cdn.dak.gg/er/images/tier/round/" + mmrImg + ".png");
+				}
+
 				// 유저 상세 정보
 				$.ajax({
 					type:"get"
 					, url:"/er/userRank"
 					, dataType:"json"
-					, async:false
 					, data:{"userNum":userNum}
 					, success:async function(data) {
 						// 랭크 플레이 한 유저만 불러오기
@@ -237,75 +299,12 @@
 						} else {
 							mmr = 0;
 						}
+						renderRankSummary();
 					}
 					, error:function() {
 						alert("유저 랭크 정보 불러오기 오류");
 					}
 				});
-				
-				// 화면에 표시
-				$("#averageTk").append(averageTotalKill.toFixed(2));
-				$("#rankOne").append(Math.floor(topOne) + "%");
-				$("#topOnePercentBar").css("width", Math.floor(topOne)+"%");
-				$("#rankTwo").append(Math.floor(topTwo) + "%");
-				$("#topTwoPercentBar").css("width", Math.floor(topTwo)+"%");
-				$("#rankThree").append(Math.floor(topThree) + "%");
-				$("#topThreePercentBar").css("width", Math.floor(topThree)+"%");
-				$("#totalGame").append(game);
-				$("#averageKill").append(averageKill);
-				$("#averageAsist").append(averageAsist);
-				$("#averageRank").append(averageRank.toFixed(1));
-				$("#rp").append(mmr);
-				
-				// mmr에 따라 티어 정보 불러오기
-				let mmrImg = 0;
-				let tier = "";
-				mmrStr = mmr + "";
-				mmrStr = mmrStr.substring(1,4);
-				if(mmrStr < 250) {
-					mmrStr = 4;
-				} else if(mmrStr < 500) {
-					mmrStr = 3;
-				} else if(mmrStr < 750) {
-					mmrStr = 2;
-				} else if(mmrStr <= 999) {
-					mmrStr = 1;
-				}
-				
-				if(mmr == 0) {
-					mmrImg = 0;
-				} else if(mmr < 1000) {
-					mmrImg = 1;
-					tier = "아이언 " + mmrStr;
-				} else if(mmr < 2000) {
-					mmrImg = 2;
-					tier = "브론즈 " + mmrStr;
-				} else if(mmr < 3000) {
-					mmrImg = 3;
-					tier = "실버 " + mmrStr;
-				} else if(mmr < 4000) {
-					mmrImg = 4;
-					tier = "골드 " + mmrStr;
-				} else if(mmr < 5000) {
-					mmrImg = 5;
-					tier = "플래티넘 " + mmrStr;
-				} else if(mmr < 6000) {
-					mmrImg = 6;
-					tier = "다이아몬드 " + mmrStr;
-				} else if(rank < 1000) {
-					mmrImg = 66;
-					tier = "미스릴";
-				} else if(rank < 500) {
-					mmrImg = 7;
-					tier = "데미갓";
-				} else if(rank < 200) {
-					mmrImg = 8;
-					tier = "이터니티";
-				}
-				
-				$("#tier").append(tier);
-				$("#rank").append(rank + "위");
-				var rankImg = "https://cdn.dak.gg/er/images/tier/round/" + mmrImg + ".png";
 				
 			    getAjax("/er/user/detail", { "userNum": userNum }, async function (data) {
 			        let items = data.userGames;
@@ -317,6 +316,19 @@
 	                $("#userLevel").append("레벨 " + level);
 	                $("#nickname").append(firstUserNickname);
 			        
+	                // 화면 전체에서 공통으로 쓰는 메타데이터와 최근 게임 상세를 동시에 조회한다.
+	                let [tacticalData, traitData, skillData, gameDetails] = await Promise.all([
+		$.getJSON("/er/tacticalSkill"),
+		$.getJSON("/er/trait"),
+		$.getJSON("/er/skillInfo"),
+		Promise.all(items.map(function(item) {
+			return $.getJSON("/er/game", { "gameId": item.gameId });
+		}))
+	                ]);
+	                let tacticalItems = tacticalData.data || [];
+	                let traitItems = traitData.data || [];
+	                let allSkillItems = skillData.data || [];
+
 			        // 가장 많이한 캐릭터
 			        // Fetch character and skin information in advance to avoid duplicate calls
 			        getAjax("/er/character", {}, function (characterData) {
@@ -444,17 +456,8 @@
 			           	var resultHtml6 = "";
 			           	var resultHtml7 = "";
 			           	var resultHtml8 = "";
-			           	await new Promise((resolve) => {
-				         	// 게임 상세 정보, 게임 결과
-				            $.ajax({
-			            		type:"get"
-				            	, url:"/er/game"
-				            	, dataType:"json"
-				            	, data:{"gameId" : gameId}
-				            	, success:async function(data) {
-				            		let gameItems = data.userGames;
+						let gameItems = gameDetails[i].userGames || [];
 				            		for(let j = 0; j < gameItems.length; j++) {
-				            			console.log(j);
 				            			// 캐릭터 이름
 										let resultCharacterImgName = await getCharacterName(gameItems[j].characterNum);
 										let resultWeaponName = getWeaponName(gameItems[j].bestWeapon);
@@ -470,39 +473,9 @@
 										let resultTraitSecondSub = gameItems[j].traitSecondSub;
 										// 전술 스킬 정보 가져오기
 										
-										let resultTactical = "";
-										let resultMainIcon = "";
-										let resultIcon = "";
-							            await $.ajax({
-											type:"get"
-											, url:"/er/tacticalSkill"
-											, dataType: "json"
-											, success:function(data) {
-												let tacticalItems = data.data;
-												resultTactical = fetchTacticalIcon(resultTacticalSkillCode, tacticalItems);
-											}
-							            });
-										
-							        	// 메인 특성 정보 가져오기
-							            await $.ajax({
-											type:"get"
-											, url:"/er/trait"
-											, dataType:"json"
-											, success:function(data) {
-												let traitItems = data.data;
-						           	 			resultMainIcon = fetchTraitMainIcon(resultTraitSecondSub, traitItems);
-											}
-							            });
-							            // 특성 스킬 정보 가져오기
-							            await $.ajax({
-								        	type:"get"
-								        	, url:"/er/skillInfo"
-								        	, dataType:"json"
-								        	, success:function(data) {
-								        		let allSkillItems = data.data;
-						            			resultIcon = fetchSkillIcon(resultTraitFirst, allSkillItems);
-								        	}
-							            });
+									let resultTactical = fetchTacticalIcon(resultTacticalSkillCode, tacticalItems);
+									let resultMainIcon = fetchTraitMainIcon(resultTraitSecondSub, traitItems);
+									let resultIcon = fetchSkillIcon(resultTraitFirst, allSkillItems);
 							            
 							         	// 팀 전체 킬
 										let resultTotalKill = gameItems[j].totalFieldKill;
@@ -524,11 +497,13 @@
 										let resultItem5 = gameItems[j].equipment[4];
 										
 										// 장비 등급 및 아이템 이미지 경로 가져오기
-										let resultWeaponBgImg = await fetchWeaponAndArmorBgImg(resultItem1, "weapon");
-							            let resultArmorBgImg1 = await fetchWeaponAndArmorBgImg(resultItem2, "armor");
-										let resultArmorBgImg2 = await fetchWeaponAndArmorBgImg(resultItem3, "armor");
-										let resultArmorBgImg3 = await fetchWeaponAndArmorBgImg(resultItem4, "armor");
-										let resultArmorBgImg4 = await fetchWeaponAndArmorBgImg(resultItem5, "armor");
+									let [resultWeaponBgImg, resultArmorBgImg1, resultArmorBgImg2, resultArmorBgImg3, resultArmorBgImg4] = await Promise.all([
+										fetchWeaponAndArmorBgImg(resultItem1, "weapon"),
+										fetchWeaponAndArmorBgImg(resultItem2, "armor"),
+										fetchWeaponAndArmorBgImg(resultItem3, "armor"),
+										fetchWeaponAndArmorBgImg(resultItem4, "armor"),
+										fetchWeaponAndArmorBgImg(resultItem5, "armor")
+									]);
 										
 										let resultKDA = 0;
 										// kda 계산
@@ -1077,10 +1052,6 @@
 											+ "</div></div>"
 				            			}
 				            		}
-				            		resolve();
-				            	}
-				            });
-				        });
 						
 			         	var resultHtml = resultHtml1 + "<hr>" + resultHtml2 + "<hr>" + resultHtml3 + "<hr>" 
 			         	+ resultHtml4 + "<hr>" + resultHtml5 + "<hr>" + resultHtml6 + "<hr>"
@@ -1127,45 +1098,16 @@
 						}
 			        	
 			            // 장비 등급 및 아이템 이미지 경로 가져오기
-						let weaponBgImg = await fetchWeaponAndArmorBgImg(item1, "weapon");
-			            let armorBgImg1 = await fetchWeaponAndArmorBgImg(item2, "armor");
-						let armorBgImg2 = await fetchWeaponAndArmorBgImg(item3, "armor");
-						let armorBgImg3 = await fetchWeaponAndArmorBgImg(item4, "armor");
-						let armorBgImg4 = await fetchWeaponAndArmorBgImg(item5, "armor");
-	
-						
-						
-			            // 메인 특성 정보 가져오기
-			            await $.ajax({
-							type:"get"
-							, url:"/er/trait"
-							, dataType:"json"
-							, success:function(data) {
-								let traitItems = data.data;
+						let [weaponBgImg, armorBgImg1, armorBgImg2, armorBgImg3, armorBgImg4] = await Promise.all([
+							fetchWeaponAndArmorBgImg(item1, "weapon"),
+							fetchWeaponAndArmorBgImg(item2, "armor"),
+							fetchWeaponAndArmorBgImg(item3, "armor"),
+							fetchWeaponAndArmorBgImg(item4, "armor"),
+							fetchWeaponAndArmorBgImg(item5, "armor")
+						]);
 		           	 			mainIcon = fetchTraitMainIcon(traitSecondSub, traitItems);
-							}
-			            });
-			            // 특성 스킬 정보 가져오기
-			            await $.ajax({
-				        	type:"get"
-				        	, url:"/er/skillInfo"
-				        	, dataType:"json"
-				        	, success:function(data) {
-				        		let allSkillItems = data.data;
 		            			icon = fetchSkillIcon(traitFirst, allSkillItems);
-				        	}
-			            });
-	
-			            // 전술 스킬 정보 가져오기
-			            await $.ajax({
-							type:"get"
-							, url:"/er/tacticalSkill"
-							, dataType: "json"
-							, success:function(data) {
-								let tacticalItems = data.data;
 		            			tactical = fetchTacticalIcon(tacticalSkillCode, tacticalItems);
-							}
-			            });
 			            
 			            
 			   	
@@ -1250,10 +1192,9 @@
 						 	
 						
 						$("#record").append(html);
-						$("#rankImg").attr("src", rankImg);
 					    var averageDamage = 0;
-					    if(game != 0) {
-					    	averageDamage = Math.floor(totalDamage / 10);	
+					    if(items.length != 0) {
+						averageDamage = Math.floor(totalDamage / items.length);
 					    }		    
 					}
 			    	$("#averageDamage").append(averageDamage);
