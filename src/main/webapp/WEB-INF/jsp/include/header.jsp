@@ -27,6 +27,7 @@
                 <li class="nav-item"><a href="/er/search/view" class="nav-link font-weight-bold text-white">메인</a></li>
                 <li class="nav-item"><a href="/er/leaderboard" class="nav-link font-weight-bold text-white">랭킹</a></li>
                 <li class="nav-item"><a href="/er/characters" class="nav-link font-weight-bold text-white">실험체</a></li>
+                <li class="nav-item"><a href="/er/statistics" class="nav-link font-weight-bold text-white">통계</a></li>
                 <li class="nav-item"><a href="/er/items" class="nav-link font-weight-bold text-white">아이템</a></li>
                 <li class="nav-item"><a href="/er/routes" class="nav-link font-weight-bold text-white">루트추천</a></li>
                 <li class="nav-item"><a href="/er/guide" class="nav-link font-weight-bold text-white">가이드</a></li>

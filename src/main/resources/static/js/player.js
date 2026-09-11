@@ -49,14 +49,18 @@ function erRpPoints(rows, season, now = Date.now()) {
     return rows.filter(r=>Date.parse(r.startDtm)>=start && Date.parse(r.startDtm)<=now && Number(r.matchingMode)===3 && String(r.seasonId)===String(season) && erFinite(r.mmrAfter) && !Number.isNaN(Date.parse(r.startDtm))).slice().sort((a,b)=>Date.parse(a.startDtm)-Date.parse(b.startDtm));
 }
 function erRpGraph(rows, season, now = Date.now()) {
-    const points=erRpPoints(rows,season,now);
+    const unique=[...new Map(rows.map(r=>[String(r.gameId),r])).values()];
+    const games=erRpPoints(unique,season,now);
+    const daily=new Map();
+    for(const row of games)daily.set(new Date(Date.parse(row.startDtm)+9*3600000).toISOString().slice(0,10),row);
+    const points=[...daily.values()];
     if(!points.length) return '<p class="empty-state">최근 7일 동안 조회된 랭크 RP 기록이 없습니다.</p>';
     const values=points.map(r=>Number(r.mmrAfter));
     const low=Math.floor((Math.min(...values)-25)/50)*50,high=Math.ceil((Math.max(...values)+25)/50)*50;
     const x=i=>42+i*238/Math.max(1,points.length-1),y=v=>145-(v-low)*115/(high-low);
     const date=r=>new Date(r.startDtm).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit'});
     const grid=Array.from({length:4},(_,i)=>{const v=low+(high-low)*i/3;return '<line x1="42" x2="280" y1="'+y(v)+'" y2="'+y(v)+'"/><text x="35" y="'+(y(v)+3)+'" text-anchor="end">'+erNumber(v)+'</text>';}).join('');
-    return '<div class="rp-graph"><h3>최근 7일 RP 변화 <small>조회한 랭크 '+points.length+'경기</small></h3><svg viewBox="0 0 300 177" role="img" aria-label="최근 7일 한국 시간 기준 랭크 경기별 RP 추이"><g class="graph-grid">'+grid+'</g><polyline fill="none" stroke="#d58a64" stroke-width="1.5" points="'+values.map((v,i)=>x(i)+','+y(v)).join(' ')+'"/>'+points.map((r,i)=>'<circle tabindex="0" cx="'+x(i)+'" cy="'+y(Number(r.mmrAfter))+'" r="3" fill="#d58a64"><title>'+date(r)+' · 경기 '+erText(r.gameId)+' · '+erNumber(r.mmrAfter)+' RP ('+erNumber(r.mmrGain)+')</title></circle>').join('')+'<text x="42" y="169">'+date(points[0])+'</text><text x="280" y="169" text-anchor="end">'+date(points[points.length-1])+'</text></svg><p>한국 시간 · 오늘 포함 7일 · 조회된 경기 종료 RP</p></div>';
+    return '<div class="rp-graph"><h3>최근 7일 RP 변화 <small>조회한 랭크 '+games.length+'경기</small></h3><svg viewBox="0 0 300 177" role="img" aria-label="최근 7일 한국 시간 기준 랭크 경기별 RP 추이"><g class="graph-grid">'+grid+'</g><polyline fill="none" stroke="#d58a64" stroke-width="1.5" points="'+values.map((v,i)=>x(i)+','+y(v)).join(' ')+'"/>'+points.map((r,i)=>'<circle tabindex="0" cx="'+x(i)+'" cy="'+y(Number(r.mmrAfter))+'" r="3" fill="#d58a64"><title>'+date(r)+' · 경기 '+erText(r.gameId)+' · '+erNumber(r.mmrAfter)+' RP ('+erNumber(r.mmrGain)+')</title></circle>').join('')+'<text x="42" y="169">'+date(points[0])+'</text><text x="280" y="169" text-anchor="end">'+date(points[points.length-1])+'</text></svg><p>한국 시간 · 오늘 포함 7일 · 저장·조회된 경기의 일별 마지막 RP</p></div>';
 }
 function erEnhancePlayer(root) {
     root.querySelectorAll('[data-character]').forEach(img=>{const c=erPlayerCharacters.get(img.dataset.character);if(c){img.alt=erPlayerNames.get('Character/Name/'+img.dataset.character)||c.name;const portrait=erCharacterImage(c.name,img.dataset.skin);const src=img.id==='detailImage'?portrait.replace('CharProfile_','CharResult_'):portrait;if(img.getAttribute('src')!==src){delete img.dataset.fallback;img.src=src;}}});
@@ -132,7 +136,7 @@ async function startPlayer() {
     const records=document.querySelector('#record');
     if(!userId){records.textContent='플레이어를 먼저 검색해 주세요.';return;}
     const encoded=encodeURIComponent(userId);
-    let rows=[];let placementRows=[];let selectedMode='';let rankSeason=null;let next=null;let loading=false;
+    let rows=[];let graphRows=[];let placementRows=[];let selectedMode='';let rankSeason=null;let next=null;let loading=false;
     let heroStats=[];
     let heroSkin=null, skinLookup='', rankReady=false;
     const heroImage=document.querySelector('#detailImage');
@@ -167,6 +171,7 @@ async function startPlayer() {
         erEnhancePlayer(document.querySelector('.player-hero'));
         if(img.complete && img.naturalWidth>0){img.classList.remove('hero-pending');document.querySelector('#hero-loading').hidden=true;}
     };
+    erRequest('/er/user/rp-history?userNum='+encoded).then(data=>{graphRows=data.userGames||[];document.querySelector('#rp-history').innerHTML=erRpGraph([...graphRows,...rows],rankSeason??rows.find(r=>Number(r.matchingMode)===3)?.seasonId);}).catch(()=>{});
     const getPage=erMatchPages(userId);
     const prefetchNext=()=>{if(next)getPage(next).catch(()=>{});};
     const assets=loadAssetConfig();
@@ -187,7 +192,7 @@ async function startPlayer() {
         const valid=filtered.filter(r=>erFinite(r.gameRank));
         document.querySelector('#recent-summary').innerHTML='<strong>'+filtered.length+'게임</strong> · '+filtered.filter(r=>Number(r.gameRank)===1).length+'승';
         document.querySelector('#recent-overview').innerHTML='<div class="recent-metrics">'+erMetric('평균 순위',valid.length?'#'+erNumber(valid.reduce((s,r)=>s+Number(r.gameRank),0)/valid.length,1):'—')+erMetric('승리',erNumber(valid.filter(r=>Number(r.gameRank)===1).length))+erMetric('TOP 3',erNumber(valid.filter(r=>Number(r.gameRank)<=3).length))+erMetric('평균 TK',filtered.length?erNumber(filtered.reduce((s,r)=>s+Number(r.teamKill??r.totalFieldKill??0),0)/filtered.length,2):'—')+'</div><div class="placement-strip" aria-label="최근 20경기 등수">'+erPlacementHtml(placementRows,selectedMode)+'</div>';
-        document.querySelector('#rp-history').innerHTML=erRpGraph(rows,rankSeason??rows.find(r=>Number(r.matchingMode)===3)?.seasonId);
+        document.querySelector('#rp-history').innerHTML=erRpGraph([...graphRows,...rows],rankSeason??rows.find(r=>Number(r.matchingMode)===3)?.seasonId);
         document.querySelector('#more-matches').hidden=!next;
 
     };
@@ -203,7 +208,7 @@ async function startPlayer() {
         const metric=(label,value)=>'<div><span>'+label+'</span><strong>'+value+'</strong></div>';
         const tier=erTier(row);
         rankPanel.innerHTML='<div class="rank-score">'+(tier?'<img class="tier-emblem" src="https://cdn.dak.gg/er/images/tier/full/'+tier.image+'.png" alt="'+tier.name+'">':'')+'<div><strong>'+erNumber(row.mmr)+' <span>RP</span></strong><small>'+(tier?tier.name:'랭크 · 스쿼드')+'</small><p>순위 '+(Number(row.rank)>0?erNumber(row.rank)+'위':'—')+'</p></div></div><div class="profile-metrics">'+metric('평균 TK',row.totalGames?erNumber(row.totalTeamKills/row.totalGames,2):'—')+metric('승률',row.totalGames && erFinite(row.totalWins)?erNumber(row.totalWins/row.totalGames*100,1)+'%':'—')+metric('게임 수',erNumber(row.totalGames))+metric('평균 킬',erNumber(row.averageKills,2))+metric('TOP 2',row.top2==null?'—':erNumber(row.top2*100,1)+'%')+metric('평균 어시스트',erNumber(row.averageAssistants,2))+metric('평균 동물 킬',erNumber(row.averageHunts,2))+metric('TOP 3',row.top3==null?'—':erNumber(row.top3*100,1)+'%')+metric('평균 순위',erNumber(row.averageRank,1))+'</div>';
-        document.querySelector('#rp-history').innerHTML=erRpGraph(rows,rankSeason);
+        document.querySelector('#rp-history').innerHTML=erRpGraph([...graphRows,...rows],rankSeason);
         await metadata;
         const stats=Array.isArray(row.characterStats)?row.characterStats:[];
         heroStats=stats;updateHero();

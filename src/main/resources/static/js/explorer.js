@@ -1,5 +1,6 @@
 'use strict';
 const ER_PAGES = {
+    statistics:['통계','최근 7일 수집된 경기 기준 실험체 통계입니다.'],
     characters: ['실험체', '실험체 이름으로 검색하고 기본 능력치를 확인하세요.'],
     items: ['아이템', '무기와 방어구의 등급·능력치를 확인하세요.'],
     routes: ['추천 루트', '공식 API에서 제공하는 추천 루트와 장비 구성을 확인하세요.'],
@@ -44,7 +45,7 @@ function erStatHtml(row) {
 }
 async function startExplorer() {
     const page = location.pathname.split('/').filter(Boolean)[1];
-    const special = {characters: erCharacterPage, items: erItemsPage, routes: erRoutesPage, leaderboard: erRankingPage};
+    const special = {characters: erCharacterPage, items: erItemsPage, routes: erRoutesPage, leaderboard: erRankingPage, statistics: erStatisticsPage};
     if (special[page]) return special[page]();
     const info = ER_PAGES[page];
     if (!info) return;

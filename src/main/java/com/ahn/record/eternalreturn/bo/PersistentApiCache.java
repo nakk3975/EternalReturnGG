@@ -27,6 +27,16 @@ public class PersistentApiCache {
         headers.set("x-cache-token", token);
         return client.postForObject(url, new HttpEntity<>(body,headers),JsonNode.class);
     }
+    private JsonNode statistics;
+    private long statisticsExpires;
+    public synchronized JsonNode statistics() {
+        if(statistics != null && statisticsExpires > System.currentTimeMillis())return statistics;
+        JsonNode result = call(Map.of("action","get","key","/v2/data/statistics"));
+        if(result != null)result=result.path("body");
+        if(result == null || !result.path("rows").isArray())throw new IllegalStateException("통계를 불러오지 못했습니다.");
+        statistics=result;statisticsExpires=System.currentTimeMillis()+300000;
+        return result;
+    }
     public Snapshot read(String key) {
         try {
             JsonNode row = call(Map.of("action","get","key",key));

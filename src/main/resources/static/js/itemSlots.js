@@ -17,6 +17,8 @@ function erLoadEquipment() {
 function erApplyItemGrades(root, catalog) {
     root.querySelectorAll('[data-item-code]').forEach(slot => {
         const item = catalog.get(slot.dataset.itemCode);
+        if(item)erHoverItems.set(String(item.code),item);
+        if(!slot.closest('a,button'))slot.tabIndex=0;
         const grade = item?.itemGrade;
         slot.dataset.grade = Object.hasOwn(erGradeNames, grade) ? grade : 'Unknown';
         const label = (item?.name || '아이템 ' + slot.dataset.itemCode) + ' · ' + (erGradeNames[grade] || '등급 정보 없음');
@@ -33,3 +35,30 @@ function erApplyItemGrades(root, catalog) {
         }
     });
 }
+
+const erItemStatLabels={attackPower:'공격력',attackPowerByLv:'레벨당 공격력',defense:'방어력',maxHp:'최대 체력',hpRegen:'체력 재생',skillAmp:'스킬 증폭',skillAmpByLevel:'레벨당 스킬 증폭',attackSpeedRatio:'공격 속도',criticalStrikeChance:'치명타 확률',cooldownReduction:'쿨다운 감소',moveSpeed:'이동 속도',moveSpeedRatio:'이동 속도',lifeSteal:'흡혈',sightRange:'시야',penetrationDefense:'방어 관통',penetrationDefenseRatio:'방어 관통',hpHealedIncreaseRatio:'받는 회복 증가'};
+const erPercentItemStats=new Set(['attackSpeedRatio','criticalStrikeChance','cooldownReduction','moveSpeedRatio','lifeSteal','penetrationDefenseRatio','hpHealedIncreaseRatio']);
+function erItemStats(item) {return Object.entries(erItemStatLabels).filter(([key])=>Number.isFinite(Number(item?.[key]))&&Number(item[key])!==0).map(([key,label])=>({label,value:(erPercentItemStats.has(key)?(Number(item[key])*100).toLocaleString('ko-KR',{maximumFractionDigits:2})+'%':Number(item[key]).toLocaleString('ko-KR',{maximumFractionDigits:2}))}));}
+const erHoverItems=new Map();
+let erItemTooltip,erHoverSlot;
+async function erShowItemTooltip(slot) {
+    const item=erHoverItems.get(slot.dataset.itemCode);if(!item)return;
+    erHoverSlot=slot;
+    const names=typeof erDictionary==='function'?await erDictionary():new Map();
+    if(erHoverSlot!==slot)return;
+    if(!erItemTooltip){erItemTooltip=document.createElement('div');erItemTooltip.id='item-tooltip';erItemTooltip.setAttribute('role','tooltip');document.body.append(erItemTooltip);}
+    const title=names.get('Item/Name/'+item.code)||item.name||item.code;
+    const description=names.get('Item/Desc/'+item.code)||'';
+    erItemTooltip.innerHTML='<strong>'+erText(title)+'</strong><small>'+erText(erGradeNames[item.itemGrade]||'')+'</small><dl>'+erItemStats(item).map(s=>'<div><dt>'+erText(s.label)+'</dt><dd>'+erText(s.value)+'</dd></div>').join('')+'</dl>'+(description?'<p>'+erText(description.replace(/<[^>]*>/g,'').replace(/\\n/g,'\n'))+'</p>':'');
+    erItemTooltip.hidden=false;slot.setAttribute('aria-describedby','item-tooltip');
+    const rect=slot.getBoundingClientRect(),tip=erItemTooltip.getBoundingClientRect();
+    erItemTooltip.style.left=Math.max(8,Math.min(rect.left,innerWidth-tip.width-8))+'px';
+    erItemTooltip.style.top=(rect.bottom+tip.height+10<innerHeight?rect.bottom+8:Math.max(8,rect.top-tip.height-8))+'px';
+}
+function erHideItemTooltip(){if(erHoverSlot)erHoverSlot.removeAttribute('aria-describedby');erHoverSlot=null;if(erItemTooltip)erItemTooltip.hidden=true;}
+document.addEventListener('pointerover',e=>{const slot=e.target.closest?.('[data-item-code]');if(slot&&slot!==erHoverSlot)erShowItemTooltip(slot);});
+document.addEventListener('focusin',e=>{const slot=e.target.closest?.('[data-item-code]');if(slot)erShowItemTooltip(slot);});
+document.addEventListener('pointerout',e=>{if(erHoverSlot&&!erHoverSlot.contains(e.relatedTarget))erHideItemTooltip();});
+document.addEventListener('focusout',erHideItemTooltip);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')erHideItemTooltip();});
+document.addEventListener('scroll',erHideItemTooltip,true);

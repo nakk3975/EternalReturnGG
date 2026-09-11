@@ -83,6 +83,9 @@ public class EternalReturnRestController {
 		return erBo.tacticalSkill();
 	}
 	
+    @GetMapping("/materials")
+    public String materials() throws URISyntaxException {return erBo.materials();}
+
 	@GetMapping("/skillInfo")
 	public String skillInfo() throws IOException, URISyntaxException {
 		return erBo.skillInfo();

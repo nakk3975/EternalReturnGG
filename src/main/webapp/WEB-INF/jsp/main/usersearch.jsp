@@ -10,9 +10,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
 
-    <link rel="stylesheet" href="/static/css/style.css" type="text/css">
-<link rel="stylesheet" href="/static/css/dataPages.css?v=20260911-skills-week-team">
-<link rel="stylesheet" href="/static/css/player.css?v=20260911-skills-week-team">
+    <link rel="stylesheet" href="/static/css/style.css?v=20260911-analysis" type="text/css">
+<link rel="stylesheet" href="/static/css/dataPages.css?v=20260911-analysis">
+<link rel="stylesheet" href="/static/css/player.css?v=20260911-statistics">
 </head>
 <body>
 <c:import url="/WEB-INF/jsp/include/header.jsp" />
@@ -27,8 +27,8 @@
 <c:import url="/WEB-INF/jsp/include/footer.jsp" />
 </div>
 <script src="/static/js/assetImages.js"></script>
-<script src="/static/js/itemSlots.js"></script>
-<script src="/static/js/siteData.js?v=20260911-skills-week-team"></script>
+<script src="/static/js/itemSlots.js?v=20260911-analysis"></script>
+<script src="/static/js/siteData.js?v=20260911-analysis"></script>
 <script src="/static/js/matchDetails.js"></script>
-<script src="/static/js/player.js?v=20260911-skills-week-team"></script>
+<script src="/static/js/player.js?v=20260911-statistics"></script>
 </body></html>

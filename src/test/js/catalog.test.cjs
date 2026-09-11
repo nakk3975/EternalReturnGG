@@ -1,0 +1,12 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const ctx=vm.createContext({document:{addEventListener(){}},erAssetBase:'https://example.test/'});
+for(const file of ['siteData.js','itemSlots.js','catalogPages.js'])vm.runInContext(fs.readFileSync('src/main/resources/static/js/'+file,'utf8'),ctx);
+const catalog=new Map([['1',{code:1,makeMaterial1:2,makeMaterial2:3}],['2',{code:2,makeMaterial1:1}],['3',{code:3}]]);
+const html=ctx.erCraftTree(1,catalog,new Map([['Item/Name/1','<script>']]));
+assert.equal((html.match(/<li>/g)||[]).length,3);
+assert(!html.includes('<script>'));
+assert.equal(ctx.erItemStats({attackPower:0,attackSpeedRatio:0.4}).length,1);
+assert.equal(ctx.erItemStats({attackSpeedRatio:0.4})[0].value,'40%');
+const analysis=ctx.erAnalysisMarkup({rows:[{character:1,mode:3,season:41,games:10,wins:2,top3:4,rank:3,kills:2,rp:null}],builds:[]},1,new Map());
+assert.match(analysis,/20%/);assert.match(analysis,/전체 서버 통계가 아닙니다/);assert.match(analysis,/평균 RP<\/small><strong>—/);
+console.log('PASS: recursive crafting cycle guard, escaped item names, percent stats, honest sample and missing RP');

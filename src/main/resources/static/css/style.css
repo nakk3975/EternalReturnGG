@@ -117,3 +117,5 @@ thead { color:#69788e; background:#f5f7fa; }
 
 #mainBanner{display:inline-flex;align-items:center;gap:9px;white-space:nowrap;text-decoration:none;}
 #mainBanner img{width:42px;height:42px;object-fit:contain;flex-shrink:0;}
+
+#item-tooltip{position:fixed;z-index:10000;pointer-events:none;width:280px;max-width:calc(100vw - 16px);max-height:60vh;overflow:hidden;padding:16px;background:#202938;color:#edf3fa;border:1px solid #566779;border-radius:9px;box-shadow:0 8px 24px #101b3440;}#item-tooltip strong{display:block;font-size:16px;}#item-tooltip small{display:block;color:#b2c5d6;}#item-tooltip dl{margin:12px 0 0;}#item-tooltip dl div{display:flex;justify-content:space-between;gap:16px;}#item-tooltip dt{font-weight:400;}#item-tooltip dd{margin:0;color:#90dccc;}#item-tooltip p{white-space:pre-line;margin:10px 0 0;font-size:12px;}

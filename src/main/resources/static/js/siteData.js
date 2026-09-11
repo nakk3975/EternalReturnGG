@@ -14,7 +14,7 @@ function erStatic(url) {
 }
 let erDictionaryRequest;
 function erDictionary() {
-    if (!erDictionaryRequest) erDictionaryRequest = fetch('/er/loadTextFile?schema=2', {signal:AbortSignal.timeout(15000)}).then(async r => {
+    if (!erDictionaryRequest) erDictionaryRequest = fetch('/er/loadTextFile?schema=3', {signal:AbortSignal.timeout(15000)}).then(async r => {
         if (!r.ok) throw new Error('이름 정보 조회 실패');
         return new Map((await r.text()).split('\n').map(line => {const i=line.indexOf('┃');return i<0 ? ['', ''] : [line.slice(0,i).trim(),line.slice(i+1).trim()];}));
     }).catch(() => new Map());
