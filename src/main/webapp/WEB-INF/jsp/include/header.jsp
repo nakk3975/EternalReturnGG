@@ -1,6 +1,13 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 
+        <style>
+            header{background:radial-gradient(ellipse at 85% 0%,#39bed16b,transparent 60%),linear-gradient(110deg,#173f63,#147489 70%,#268ea5);border-bottom:1px solid #ffffff26;}
+            nav{background:linear-gradient(110deg,#163d59,#19566a);}
+            header .search-form{background:#123c58aa;border-color:#a6e2ee55;}
+            header .search-input::placeholder{color:#c0e0e8;}
+            #mainBanner{filter:drop-shadow(0 2px 4px #0b344933);}
+        </style>
         <header class="d-flex justify-content-between align-items-center">
             <a href="/er/search/view" class="p-2 ml-2 text-white" id="mainBanner" aria-label="ER.GG 홈"><img src="/static/images/ergg-logo.webp" width="42" height="42" alt=""><span>ER.GG</span></a>
             <div class="p-2">

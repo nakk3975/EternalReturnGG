@@ -69,3 +69,9 @@ assert.equal(context.erPlacementHtml(placements,'2'),'');
     assert.equal(calls,3);
     console.log('PASS: 20 placement limit, mode filter, shared prefetch and failed-page retry');
 })().catch(error=>{console.error(error);process.exitCode=1;});
+
+assert.equal(context.erMostPlayed([{characterCode:1,usages:159},{characterCode:2,usages:53}],[{characterNum:2}]),1);
+assert.equal(context.erMostPlayed([],[{characterNum:2},{characterNum:1},{characterNum:2}]),2);
+assert.equal(context.erMostPlayed([],[]),null);
+assert.equal(context.erMostPlayed([{characterCode:1,usages:0}],[{characterNum:2}]),2);
+console.log('PASS: most-used season character, recent fallback, missing records');

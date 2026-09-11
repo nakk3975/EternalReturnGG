@@ -111,3 +111,15 @@
  .match-build .item-slots{width:auto;flex-wrap:nowrap;gap:4px;}
  .match-card .match-numbers{grid-row:3;}
 }
+
+/* Airy profile banner with a transparent character illustration. */
+.player-hero{position:relative;overflow:hidden;min-height:208px;padding:0 32px;gap:22px;border:1px solid #cce6ed;border-radius:14px;background:radial-gradient(ellipse at 85% 10%,#b8ddff 0,transparent 52%),linear-gradient(115deg,#dff6f9,#edfcf5 55%,#e2edff);color:#203c55;}
+.player-hero::after{content:'';position:absolute;width:300px;height:300px;right:-100px;bottom:-230px;border:36px solid #ffffff55;border-radius:50%;pointer-events:none;}
+.player-hero>div{position:relative;z-index:1;padding:28px 0;min-width:0;}
+.player-hero #detailImage{width:208px;height:198px;flex-shrink:0;align-self:flex-end;object-fit:contain;object-position:center bottom;background:transparent;border:0;border-radius:0;}
+.player-hero .eyebrow{color:#347d90;font-size:12px;font-weight:700;letter-spacing:1px;}
+.player-hero #nickname{color:#173850;overflow-wrap:anywhere;}
+.player-hero #userLevel{color:#52758a;}
+.player-hero #refresh{background:#087f96;border-radius:7px;border:1px solid #087f96;}
+.player-hero #refresh:hover{background:#06687c;}
+@media(max-width:760px){.player-hero{min-height:164px;padding:0 16px;gap:12px;}.player-hero #detailImage{width:120px;height:150px;}.player-hero>div{padding:22px 0;}.player-hero #nickname{font-size:24px;}.player-hero #refresh{margin:8px 0 0;display:block;}.player-hero .eyebrow{font-size:11px;}}

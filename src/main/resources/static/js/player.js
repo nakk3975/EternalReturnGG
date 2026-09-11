@@ -68,7 +68,7 @@ function erRpGraph(rows, season) {
     return '<div class="rp-graph"><h3>RP 변화 <small>조회한 랭크 '+points.length+'경기</small></h3><svg viewBox="0 0 300 177" role="img" aria-label="조회된 이번 시즌 랭크 경기별 RP 추이"><g class="graph-grid">'+grid+'</g><polyline fill="none" stroke="#d58a64" stroke-width="1.5" points="'+values.map((v,i)=>x(i)+','+y(v)).join(' ')+'"/>'+points.map((r,i)=>'<circle tabindex="0" cx="'+x(i)+'" cy="'+y(Number(r.mmrAfter))+'" r="3" fill="#d58a64"><title>'+date(r)+' · 경기 '+erText(r.gameId)+' · '+erNumber(r.mmrAfter)+' RP ('+erNumber(r.mmrGain)+')</title></circle>').join('')+'<text x="42" y="169">'+date(points[0])+'</text><text x="280" y="169" text-anchor="end">'+date(points[points.length-1])+'</text></svg><p>경기 종료 RP · 더 보기를 누르면 기록이 이어집니다.</p></div>';
 }
 function erEnhancePlayer(root) {
-    root.querySelectorAll('[data-character]').forEach(img=>{const c=erPlayerCharacters.get(img.dataset.character);if(c){img.alt=erPlayerNames.get('Character/Name/'+img.dataset.character)||c.name;const src=erCharacterImage(c.name,img.dataset.skin);if(img.getAttribute('src')!==src){delete img.dataset.fallback;img.src=src;}}});
+    root.querySelectorAll('[data-character]').forEach(img=>{const c=erPlayerCharacters.get(img.dataset.character);if(c){img.alt=erPlayerNames.get('Character/Name/'+img.dataset.character)||c.name;const portrait=erCharacterImage(c.name,img.dataset.skin);const src=img.id==='detailImage'?portrait.replace('CharProfile_','CharResult_'):portrait;if(img.getAttribute('src')!==src){delete img.dataset.fallback;img.src=src;}}});
     root.querySelectorAll('[data-character-name]').forEach(el=>{el.textContent=erPlayerNames.get('Character/Name/'+el.dataset.characterName)||erPlayerCharacters.get(el.dataset.characterName)?.name||'실험체';});
     root.querySelectorAll('[data-tactical],[data-trait],[data-trait-group],[data-weapon]').forEach(slot=>{
         if(!erAssetBase)return;
@@ -121,12 +121,29 @@ async function erRefreshSnapshot(url, snapshot, onFresh) {
         } catch (_) { return; }
     }
 }
+function erMostPlayed(stats, recent) {
+    const ranked=(stats||[]).filter(s=>erFinite(s.characterCode)&&Number(s.usages)>0);
+    if(ranked.length)return ranked.slice().sort((a,b)=>Number(b.usages)-Number(a.usages)||Number(a.characterCode)-Number(b.characterCode))[0].characterCode;
+    const counts=new Map();
+    for(const row of recent||[])if(erFinite(row.characterNum))counts.set(row.characterNum,(counts.get(row.characterNum)||0)+1);
+    return [...counts].sort((a,b)=>b[1]-a[1]||Number(a[0])-Number(b[0]))[0]?.[0] ?? null;
+}
 async function startPlayer() {
     const userId=new URLSearchParams(location.search).get('userNum');
     const records=document.querySelector('#record');
     if(!userId){records.textContent='플레이어를 먼저 검색해 주세요.';return;}
     const encoded=encodeURIComponent(userId);
     let rows=[];let placementRows=[];let selectedMode='';let rankSeason=null;let next=null;let loading=false;
+    let heroStats=[];
+    const updateHero=()=>{
+        const code=erMostPlayed(heroStats,rows);
+        if(code==null)return;
+        const img=document.querySelector('#detailImage');
+        img.dataset.character=String(code);img.dataset.skin='0';
+        img.title=heroStats.length?'이번 시즌 가장 많이 플레이한 실험체':'최근 경기에서 가장 많이 플레이한 실험체';
+        document.querySelector('#hero-caption').textContent=heroStats.length?'시즌 주력 실험체':'최근 주력 실험체';
+        erEnhancePlayer(document.querySelector('.player-hero'));
+    };
     const getPage=erMatchPages(userId);
     const prefetchNext=()=>{if(next)getPage(next).catch(()=>{});};
     const assets=loadAssetConfig();
@@ -137,6 +154,7 @@ async function startPlayer() {
         if(result[4].status==='fulfilled')erTactical=new Map((result[4].value.data||[]).map(s=>[String(s.group),s]));
         if(result[5].status==='fulfilled')erTraits=new Map((result[5].value.data||[]).map(s=>[String(s.code),s]));
         erEnhancePlayer(document);
+        updateHero();
     });
     const render=()=>{
         const filtered=rows.filter(r=>!selectedMode || String(r.matchingMode)===selectedMode);
@@ -163,6 +181,7 @@ async function startPlayer() {
         document.querySelector('#rp-history').innerHTML=erRpGraph(rows,rankSeason);
         await metadata;
         const stats=Array.isArray(row.characterStats)?row.characterStats:[];
+        heroStats=stats;updateHero();
         document.querySelector('#player-characters').innerHTML=stats.slice().sort((a,b)=>b.usages-a.usages).slice(0,5).map(s=>{
             const c=erPlayerCharacters.get(String(s.characterCode));
             return '<a class="played-character" href="/er/characters/'+encodeURIComponent(c?.name||s.characterCode)+'"><img alt="" src="'+erText(erCharacterImage(c?.name))+'"><span>' +erText(erPlayerNames.get('Character/Name/'+s.characterCode)||c?.name||'실험체')+'<small>'+erNumber(s.usages)+'게임</small></span><strong>'+(s.usages?erNumber(s.wins/s.usages*100,1)+'%':'—')+'</strong></a>';
@@ -188,7 +207,7 @@ async function startPlayer() {
         if(rows[0]){
             document.querySelector('#nickname').textContent=rows[0].nickname || '플레이어';
             document.querySelector('#userLevel').textContent='레벨 '+erNumber(rows[0].accountLevel);
-            const img=document.querySelector('#detailImage');img.dataset.character=String(rows[0].characterNum);img.dataset.skin=String(rows[0].skinCode||0);
+            updateHero();
             document.querySelector('#recent-summary').innerHTML='<strong>'+rows.length+'게임</strong> · '+rows.filter(r=>Number(r.gameRank)===1).length+'승 · 평균 피해 '+erNumber(rows.reduce((sum,r)=>sum+Number(r.damageToPlayer||0),0)/rows.length);
         }
         render();
@@ -196,7 +215,7 @@ async function startPlayer() {
         erRefreshSnapshot('/er/user/detail?userNum='+encoded,data,fresh=>{
             // Do not reset a list the user has paged or expanded while refreshing.
             if(rows.length>10 || document.querySelector('.match-card[aria-expanded=true]'))return;
-            rows=fresh.userGames;next=fresh.next||null;placementRows=rows.slice(0,20);render();
+            rows=fresh.userGames;next=fresh.next||null;placementRows=rows.slice(0,20);render();updateHero();
             if(next)getPage(next).then(page=>{
                 const ids=new Set(placementRows.map(r=>String(r.gameId)));
                 placementRows=placementRows.concat(page.userGames.filter(r=>!ids.has(String(r.gameId)))).slice(0,20);
