@@ -95,6 +95,27 @@ function erBossBadges(row) {
         return count>0?'<span class="boss-badge boss-'+key+'" title="'+name+' 직접 처치 '+count+'회">'+name+(count>1?' ×'+count:'')+'</span>':'';
     }).join('');
 }
+function erScorePlayerLink(row) {
+    const nickname=String(row.nickname||'').trim();
+    if(!nickname)return '알 수 없는 플레이어';
+    if(row.userId)return '<a class="score-player-link" href="/er/user/detail/view?userNum='+encodeURIComponent(row.userId)+'">'+erText(nickname)+'</a>';
+    return '<button type="button" class="score-player-link" data-score-player="'+erText(nickname)+'">'+erText(nickname)+'</button>';
+}
+async function erOpenScorePlayer(event) {
+    const button=event.target.closest('[data-score-player]');
+    if(!button || button.disabled)return;
+    event.preventDefault();event.stopPropagation();
+    button.disabled=true;button.setAttribute('aria-busy','true');
+    const container=button.closest('.score-nickname');
+    container?.querySelector('.score-player-error')?.remove();
+    try{
+        const {user}=await erRequest('/er/search/nickname?nickname='+encodeURIComponent(button.dataset.scorePlayer));
+        if(!user?.userId)throw new Error('플레이어를 찾을 수 없습니다. 닉네임이 변경되었을 수 있습니다.');
+        location.href='/er/user/detail/view?userNum='+encodeURIComponent(user.userId);
+    }catch(error){
+        const message=document.createElement('small');message.className='score-player-error';message.setAttribute('role','status');message.textContent='전적 조회 실패 · 다시 눌러주세요';container?.append(message);
+    }finally{button.disabled=false;button.removeAttribute('aria-busy');}
+}
 function erTeamScoreboard(teams,ownRow) {
     const damageMax=Math.max(1,...teams.flat().map(r=>Number(r.damageToPlayer)||0));
     const animalMax=Math.max(1,...teams.flat().map(r=>Number(r.damageToMonster)||0));
@@ -106,7 +127,7 @@ function erTeamScoreboard(teams,ownRow) {
             const c=erPlayerCharacters.get(String(row.characterNum));
             const name=erPlayerNames.get('Character/Name/'+row.characterNum)||c?.name||'실험체';
             const portrait='<div class="score-portrait"><img data-character="'+erText(row.characterNum)+'" data-skin="'+erText(row.skinCode||0)+'" src="'+erText(erCharacterImage(c?.name,row.skinCode))+'" alt="'+erText(name)+'"><small>'+erNumber(row.characterLevel)+'</small></div>';
-            return '<tr class="'+(erOwnPlayer(row,ownRow)?'score-own-player':'')+'">'+(index===0?'<th scope="rowgroup" rowspan="'+rows.length+'" class="score-placement '+(rank===1?'score-win':rank<=3?'score-top':'')+'"><strong>#'+erNumber(row.gameRank)+'</strong>'+(own?'<small>우리 팀</small>':'')+'</th>':'')+'<td><div class="score-player">'+portrait+erLoadout(row)+'<div class="score-nickname">'+erText(row.nickname)+(erOwnPlayer(row,ownRow)?'<b class="own-player-badge">나</b>':'')+'<div class="boss-badges">'+erBossBadges(row)+'</div></div></div></td><td class="score-kda">'+erNumber(row.teamKill??row.totalFieldKill)+' / '+erNumber(row.playerKill)+' / '+erNumber(row.playerDeaths)+' / '+erNumber(row.playerAssistant)+'</td>'+damage(row.damageToPlayer,damageMax,'player-damage')+damage(row.damageToMonster,animalMax,'animal-damage')+'<td class="score-credit">'+erNumber(row.totalGainVFCredit)+'</td><td class="score-items">'+erEquipmentHtml(row.equipment)+'</td></tr>';
+            return '<tr class="'+(erOwnPlayer(row,ownRow)?'score-own-player':'')+'">'+(index===0?'<th scope="rowgroup" rowspan="'+rows.length+'" class="score-placement '+(rank===1?'score-win':rank<=3?'score-top':'')+'"><strong>#'+erNumber(row.gameRank)+'</strong>'+(own?'<small>우리 팀</small>':'')+'</th>':'')+'<td><div class="score-player">'+portrait+erLoadout(row)+'<div class="score-nickname">'+erScorePlayerLink(row)+(erOwnPlayer(row,ownRow)?'<b class="own-player-badge">나</b>':'')+'<div class="boss-badges">'+erBossBadges(row)+'</div></div></div></td><td class="score-kda">'+erNumber(row.teamKill??row.totalFieldKill)+' / '+erNumber(row.playerKill)+' / '+erNumber(row.playerDeaths)+' / '+erNumber(row.playerAssistant)+'</td>'+damage(row.damageToPlayer,damageMax,'player-damage')+damage(row.damageToMonster,animalMax,'animal-damage')+'<td class="score-credit">'+erNumber(row.totalGainVFCredit)+'</td><td class="score-items">'+erEquipmentHtml(row.equipment)+'</td></tr>';
         }).join('')+'</tbody>';
     }).join('')+'</table></div>';
 }
@@ -287,4 +308,5 @@ async function startPlayer() {
         }).catch(()=>{});
     }catch(error){records.innerHTML='<p class="empty-state">'+erText(error.message)+'</p>';}
 }
+document.addEventListener('click',erOpenScorePlayer);
 document.addEventListener('DOMContentLoaded',startPlayer);
