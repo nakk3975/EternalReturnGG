@@ -71,3 +71,6 @@ html[data-theme=dark] .skill-order li,html[data-theme=dark] .multi-detail,html[d
 html[data-theme=dark] .skill-order li span,html[data-theme=dark] .skill-order li small,html[data-theme=dark] .profile-metrics strong,html[data-theme=dark] .multi-averages dd{color:var(--ink);}
 html[data-theme=dark] .data-table td a,html[data-theme=dark] .explorer-card a,html[data-theme=dark] .guide-card h2,html[data-theme=dark] .guide-card h3{color:var(--link);}
 html[data-theme=dark] .item-stat-chips>span{background:#1c4430;color:#a3ebba;}
+html[data-theme=dark] .ranking-table .rank-player{color:var(--link);}
+html[data-theme=dark] .ranking-table .rank-player:hover,html[data-theme=dark] .ranking-table .rank-player:focus-visible{color:#fff;text-decoration:underline;}
+html[data-theme=dark] .rank-position:not(.top-rank){color:var(--muted);}
