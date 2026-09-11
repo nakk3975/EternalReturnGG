@@ -70,6 +70,7 @@ function erEnhancePlayer(root) {
         if(icon){slot.innerHTML='<img loading="lazy" src="'+erText(erAssetBase+icon+'.png')+'" alt="'+erText(name)+'">';slot.title=name;}
     });
     erApplyItemGrades(root,erPlayerEquipment);
+    root.querySelectorAll('[data-item-code]').forEach(slot=>{const name=erPlayerNames.get('Item/Name/'+slot.dataset.itemCode);if(name){slot.title=name;const img=slot.querySelector('img');if(img)img.alt=name;}});
 }
 async function erRenderGame(gameId, ownRow) {
     const panel=document.getElementById('game-'+gameId);
