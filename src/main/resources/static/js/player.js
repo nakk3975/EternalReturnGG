@@ -93,7 +93,12 @@ async function erRenderGame(gameId, ownRow) {
     if (!Array.isArray(data.userGames)) throw new Error('경기 응답을 확인할 수 없습니다.');
     const teams=new Map();
     for(const row of data.userGames){const key=String(row.teamNumber ?? row.gameRank ?? '기타');if(!teams.has(key))teams.set(key,[]);teams.get(key).push(row);}
-    const html=erPersonalDetails(ownRow)+[...teams.values()].sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(rows=>'<section class="match-team '+(erOwnTeam(rows[0],ownRow)?'own-team':'')+'"><h3>'+(erOwnTeam(rows[0],ownRow)?'<b class="own-team-badge">우리 팀</b> ':'')+'#'+erNumber(rows[0].gameRank)+' <span>팀 '+erText(rows[0].teamNumber??'')+'</span></h3>'+rows.map(r=>erPlayerCard(r,true,erOwnPlayer(r,ownRow))).join('')+'</section>').join('');
+    const html=erPersonalDetails(ownRow)+[...teams.values()].sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(rows=>{
+        const isOwnTeam=erOwnTeam(rows[0],ownRow);
+        const rank=Number(rows[0].gameRank);
+        const rankClass=rank===1?'team-rank-win':rank>1&&rank<=3?'team-rank-top':'';
+        return '<section class="match-team '+(isOwnTeam?'own-team':'')+'"><h3 class="team-heading"><strong class="team-placement '+rankClass+'">#'+erNumber(rows[0].gameRank)+'</strong>'+(isOwnTeam?'<b class="own-team-badge">우리 팀</b>':'')+'<span class="team-number">팀 '+erText(rows[0].teamNumber??'')+'</span></h3>'+rows.map(r=>erPlayerCard(r,true,erOwnPlayer(r,ownRow))).join('')+'</section>';
+    }).join('');
     const fragment=document.createElement('div');fragment.innerHTML=html;erEnhancePlayer(fragment);return fragment.innerHTML;
 }
 // Share speculative and clicked pagination requests; failures can be retried.
