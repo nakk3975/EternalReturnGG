@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="/static/css/style.css" type="text/css">
 <link rel="stylesheet" href="/static/css/dataPages.css">
-<link rel="stylesheet" href="/static/css/player.css">
+<link rel="stylesheet" href="/static/css/player.css?v=20260911-icons32">
 </head>
 <body>
 <div id="wrap">
