@@ -32,3 +32,21 @@ assert(!context.erRpGraph(games,41).includes('NaN'));
 assert(!context.erRpGraph([games[0]],41).includes('NaN'));
 assert.match(context.erPersonalDetails({...row,traitFirstCore:7000401}),/data-trait="7000401"/);
 console.log('PASS: ranked-only RP, private routes, chronological same-season graph, missing fields and single point');
+
+const tier = (mmr,rank=2000,totalGames=1) => context.erTier({mmr,rank,totalGames});
+for (const [base,step,name] of [[0,150,'아이언'],[600,200,'브론즈'],[1400,250,'실버'],[2400,300,'골드'],[3600,350,'플래티넘'],[5000,350,'다이아몬드'],[6400,300,'메테오라이트']]) {
+    ['IV','III','II','I'].forEach((division,i)=>{
+        assert.equal(tier(base+step*i).name,name+' '+division);
+        assert.equal(tier(base+step*(i+1)-1).name,name+' '+division);
+    });
+}
+assert.equal(tier(7600).name,'미스릴');
+assert.equal(tier(8299,1).name,'미스릴');
+assert.equal(tier(8300,300).name,'이터니티');
+assert.equal(tier(8300,301).name,'데미갓');
+assert.equal(tier(8300,1000).name,'데미갓');
+assert.equal(tier(8300,1001).name,'미스릴');
+assert.equal(tier(9000,0).name,'미스릴');
+for (const rp of [null,undefined,'',NaN,-1]) assert.equal(tier(rp),null);
+assert.equal(tier(0,0,0),null);
+console.log('PASS: all 28 lower-tier division boundaries, Mythril, top ranks and unranked');

@@ -11,6 +11,16 @@ function erKda(row) {
 const erWeapons = {1:['Glove','글러브'],2:['Tonfa','톤파'],3:['Bat','방망이'],4:['Whip','채찍'],5:['HighAngleFire','투척'],6:['DirectFire','암기'],7:['Bow','활'],8:['CrossBow','석궁'],9:['Pistol','권총'],10:['AssaultRifle','돌격 소총'],11:['SniperRifle','저격 소총'],13:['Hammer','망치'],14:['Axe','도끼'],15:['OneHandSword','단검'],16:['TwoHandSword','양손검'],17:['Polearm','폴암'],18:['DualSword','쌍검'],19:['Spear','창'],20:['Nunchaku','쌍절곤'],21:['Rapier','레이피어'],22:['Guitar','기타'],23:['Camera','카메라'],24:['Arcana','아르카나'],25:['VFArm','VF 의수']};
 const erMetric = (label,value) => '<div class="match-stat"><strong>'+value+'</strong><span>'+label+'</span></div>';
 const erFinite = value => value != null && value !== '' && Number.isFinite(Number(value));
+// RP bands: official ranked FAQ, updated 2026-08-19 (article 21812479709081).
+// Keep this table explicit: Meteorite divisions are now 300 RP, Mythril starts at 7600.
+function erTier(row) {
+    if (!erFinite(row.mmr) || Number(row.mmr)<0 || !erFinite(row.totalGames) || Number(row.totalGames)<=0) return null;
+    const rp=Number(row.mmr), rank=Number(row.rank);
+    if (rp>=8300 && rank>0 && rank<=1000) return rank<=300 ? {name:'이터니티',image:8} : {name:'데미갓',image:7};
+    const bands=[[7600,0,'미스릴',66],[6400,300,'메테오라이트',63],[5000,350,'다이아몬드',6],[3600,350,'플래티넘',5],[2400,300,'골드',4],[1400,250,'실버',3],[600,200,'브론즈',2],[0,150,'아이언',1]];
+    const [min,step,name,image]=bands.find(([min])=>rp>=min);
+    return {name:name+(step?' '+['IV','III','II','I'][Math.min(3,Math.floor((rp-min)/step))]:''),image};
+}
 function erRp(row) {
     if(Number(row.matchingMode)!==3) return '—';
     const score = row.mmrAfter ?? row.rankPoint;
@@ -117,8 +127,8 @@ async function startPlayer() {
         if(!row){rankPanel.innerHTML='<p class="empty-state">이번 시즌 랭크 기록이 없습니다.</p>';return;}
         rankSeason=row.seasonId;
         const metric=(label,value)=>'<div><span>'+label+'</span><strong>'+value+'</strong></div>';
-        const tier=Number(row.seasonId)===41 && Number(row.mmr)>=8300 && Number(row.rank)>0 ? (Number(row.rank)<=300?{name:'이터니티',image:8}:Number(row.rank)<=1000?{name:'데미갓',image:7}:null) : null;
-        rankPanel.innerHTML='<div class="rank-score">'+(tier?'<img class="tier-emblem" src="https://cdn.dak.gg/assets/er/images/rank/round/'+tier.image+'.png" alt="'+tier.name+'">':'')+'<div><strong>'+erNumber(row.mmr)+' <span>RP</span></strong><small>'+(tier?tier.name:'랭크 · 스쿼드')+'</small><p>순위 '+(Number(row.rank)>0?erNumber(row.rank)+'위':'—')+'</p></div></div><div class="profile-metrics">'+metric('평균 TK',row.totalGames?erNumber(row.totalTeamKills/row.totalGames,2):'—')+metric('승률',row.totalGames && erFinite(row.totalWins)?erNumber(row.totalWins/row.totalGames*100,1)+'%':'—')+metric('게임 수',erNumber(row.totalGames))+metric('평균 킬',erNumber(row.averageKills,2))+metric('TOP 2',row.top2==null?'—':erNumber(row.top2*100,1)+'%')+metric('평균 어시스트',erNumber(row.averageAssistants,2))+metric('평균 동물 킬',erNumber(row.averageHunts,2))+metric('TOP 3',row.top3==null?'—':erNumber(row.top3*100,1)+'%')+metric('평균 순위',erNumber(row.averageRank,1))+'</div>';
+        const tier=erTier(row);
+        rankPanel.innerHTML='<div class="rank-score">'+(tier?'<img class="tier-emblem" src="https://cdn.dak.gg/er/images/tier/full/'+tier.image+'.png" alt="'+tier.name+'">':'')+'<div><strong>'+erNumber(row.mmr)+' <span>RP</span></strong><small>'+(tier?tier.name:'랭크 · 스쿼드')+'</small><p>순위 '+(Number(row.rank)>0?erNumber(row.rank)+'위':'—')+'</p></div></div><div class="profile-metrics">'+metric('평균 TK',row.totalGames?erNumber(row.totalTeamKills/row.totalGames,2):'—')+metric('승률',row.totalGames && erFinite(row.totalWins)?erNumber(row.totalWins/row.totalGames*100,1)+'%':'—')+metric('게임 수',erNumber(row.totalGames))+metric('평균 킬',erNumber(row.averageKills,2))+metric('TOP 2',row.top2==null?'—':erNumber(row.top2*100,1)+'%')+metric('평균 어시스트',erNumber(row.averageAssistants,2))+metric('평균 동물 킬',erNumber(row.averageHunts,2))+metric('TOP 3',row.top3==null?'—':erNumber(row.top3*100,1)+'%')+metric('평균 순위',erNumber(row.averageRank,1))+'</div>';
         document.querySelector('#rp-history').innerHTML=erRpGraph(rows,rankSeason);
         await metadata;
         const stats=Array.isArray(row.characterStats)?row.characterStats:[];
