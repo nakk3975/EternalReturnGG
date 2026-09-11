@@ -7,10 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ER.GG · 게임 정보</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/css/style.css?v=20260911-analysis">
+    <link rel="stylesheet" href="/static/css/style.css?v=20260911-analysis-final">
     <link rel="stylesheet" href="/static/css/explorer.css">
     <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
-<link rel="stylesheet" href="/static/css/dataPages.css?v=20260911-analysis">
+<link rel="stylesheet" href="/static/css/dataPages.css?v=20260911-analysis-final">
 <link rel="stylesheet" href="/static/css/multi.css?v=1">
 </head>
 <body>
@@ -27,10 +27,10 @@
     <c:import url="/WEB-INF/jsp/include/footer.jsp" />
 </div>
 <script src="/static/js/assetImages.js"></script>
-<script src="/static/js/itemSlots.js?v=20260911-analysis"></script>
-<script src="/static/js/siteData.js?v=20260911-analysis"></script>
-<script src="/static/js/catalogPages.js?v=20260911-analysis"></script>
+<script src="/static/js/itemSlots.js?v=20260911-analysis-final"></script>
+<script src="/static/js/siteData.js?v=20260911-analysis-final"></script>
+<script src="/static/js/catalogPages.js?v=20260911-analysis-final"></script>
 <script src="/static/js/multi.js?v=1"></script>
-<script src="/static/js/explorer.js?v=20260911-analysis"></script>
+<script src="/static/js/explorer.js?v=20260911-analysis-final"></script>
 </body>
 </html>

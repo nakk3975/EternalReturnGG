@@ -69,7 +69,7 @@ function erEnhancePlayer(root) {
         if(!erAssetBase)return;
         let icon, name;
         if(slot.dataset.weapon!=null){const w=erWeapons[slot.dataset.weapon];if(w){icon='Ico_Ability_'+w[0];name=w[1];}}
-        else if(slot.dataset.tactical!=null){icon=erTactical.get(slot.dataset.tactical)?.icon;name=slot.title||'전술 스킬';}
+        else if(slot.dataset.tactical!=null){icon=erTactical.get(slot.dataset.tactical)?.icon;name=erPlayerNames.get('Skill/Group/Name/'+icon?.match(/(\d+)$/)?.[1])||slot.title||'전술 스킬';}
         else if(slot.dataset.traitGroup!=null){const group=erTraits.get(slot.dataset.traitGroup)?.traitGroup; if(group){icon='TraitSkillIcon_'+group+'02';name=({Havoc:'파괴',Fortification:'저항',Support:'지원',Chaos:'혼돈'})[group]||group;}}
         else if(Number(slot.dataset.trait)>0){icon='TraitSkillIcon_'+(Number(slot.dataset.trait)-1);name=erPlayerNames.get('Skill/Group/Name/'+(Number(slot.dataset.trait)-1))||erPlayerNames.get('Trait/Name/'+slot.dataset.trait)||'특성 '+slot.dataset.trait;}
         if(icon){slot.innerHTML='<img loading="lazy" src="'+erText(erAssetBase+icon+'.png')+'" alt="'+erText(name)+'">';slot.title=name;}
@@ -162,7 +162,7 @@ async function startPlayer() {
         if(!rankReady)return;
         const code=erMostPlayed(heroStats,rows);
         if(code==null){document.querySelector('#hero-loading').textContent='실험체 기록 없음';return;}
-        if(rankSeason && heroStats.length && heroSkin?.code!==code){loadSeasonSkin(code,rankSeason);return;}
+        if(rankSeason && heroStats.length && heroSkin?.code!==code){heroImage.classList.add('hero-pending');document.querySelector('#hero-loading').hidden=false;loadSeasonSkin(code,rankSeason);return;}
         const img=document.querySelector('#detailImage');
         img.dataset.character=String(code);img.dataset.skin=String(heroSkin?.code===code?heroSkin.skin:0);
         img.title=heroStats.length?'이번 시즌 가장 많이 플레이한 실험체':'최근 경기에서 가장 많이 플레이한 실험체';
@@ -205,6 +205,7 @@ async function startPlayer() {
         if(!row)updateHero();
         if(!row){rankPanel.innerHTML='<p class="empty-state">이번 시즌 랭크 기록이 없습니다.</p>';return;}
         rankSeason=row.seasonId;
+        heroStats=Array.isArray(row.characterStats)?row.characterStats:[];
         const metric=(label,value)=>'<div><span>'+label+'</span><strong>'+value+'</strong></div>';
         const tier=erTier(row);
         rankPanel.innerHTML='<div class="rank-score">'+(tier?'<img class="tier-emblem" src="https://cdn.dak.gg/er/images/tier/full/'+tier.image+'.png" alt="'+tier.name+'">':'')+'<div><strong>'+erNumber(row.mmr)+' <span>RP</span></strong><small>'+(tier?tier.name:'랭크 · 스쿼드')+'</small><p>순위 '+(Number(row.rank)>0?erNumber(row.rank)+'위':'—')+'</p></div></div><div class="profile-metrics">'+metric('평균 TK',row.totalGames?erNumber(row.totalTeamKills/row.totalGames,2):'—')+metric('승률',row.totalGames && erFinite(row.totalWins)?erNumber(row.totalWins/row.totalGames*100,1)+'%':'—')+metric('게임 수',erNumber(row.totalGames))+metric('평균 킬',erNumber(row.averageKills,2))+metric('TOP 2',row.top2==null?'—':erNumber(row.top2*100,1)+'%')+metric('평균 어시스트',erNumber(row.averageAssistants,2))+metric('평균 동물 킬',erNumber(row.averageHunts,2))+metric('TOP 3',row.top3==null?'—':erNumber(row.top3*100,1)+'%')+metric('평균 순위',erNumber(row.averageRank,1))+'</div>';
