@@ -29,7 +29,7 @@
 <script src="/static/js/assetImages.js?v=20260911-weapon-skill"></script>
 <script src="/static/js/itemSlots.js?v=20260912-hover"></script>
 <script src="/static/js/siteData.js?v=20260912-descriptions"></script>
-<script src="/static/js/catalogPages.js?v=20260912-rank-identity"></script>
+<script src="/static/js/catalogPages.js?v=20260912-rank-identity2"></script>
 <script src="/static/js/multi.js?v=1"></script>
 <script src="/static/js/explorer.js?v=20260911-analysis-final"></script>
 </body>
