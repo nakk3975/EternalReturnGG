@@ -123,3 +123,12 @@
 .player-hero #refresh{background:#087f96;border-radius:7px;border:1px solid #087f96;}
 .player-hero #refresh:hover{background:#06687c;}
 @media(max-width:760px){.player-hero{min-height:164px;padding:0 16px;gap:12px;}.player-hero #detailImage{width:120px;height:150px;}.player-hero>div{padding:22px 0;}.player-hero #nickname{font-size:24px;}.player-hero #refresh{margin:8px 0 0;display:block;}.player-hero .eyebrow{font-size:11px;}}
+
+.skill-order .skill-icon{display:block;width:42px;height:42px;object-fit:contain;margin:4px auto;border-radius:5px;background:#293746;}
+.match-team.own-team{border:2px solid #1098a7;border-radius:7px;overflow:hidden;margin:12px 0;}
+.match-team.own-team h3{background:#d9f2f3;color:#086574;font-size:14px;}
+.own-team .participant-row{background:#f0fafb;}
+.own-team .participant-row.own-player,.participant-row.own-player{background:#dceff7;box-shadow:inset 4px 0 #197ab2;}
+.own-team-badge,.own-player-badge{display:inline-block;padding:2px 7px;border-radius:4px;background:#087f96;color:#fff;font-size:12px;}
+
+#detailImage.hero-pending{visibility:hidden;}#hero-loading{position:absolute;left:32px;width:208px;text-align:center;color:#427589;font-size:13px;}@media(max-width:760px){#hero-loading{left:16px;width:120px;font-size:12px;}}

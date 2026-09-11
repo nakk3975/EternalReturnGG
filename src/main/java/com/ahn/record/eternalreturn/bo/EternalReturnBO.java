@@ -79,7 +79,6 @@ public class EternalReturnBO {
         prefetchStatic("/v2/data/ItemArmor", STATIC_CACHE_MS);
         prefetchStatic("/v2/data/TacticalSkillSetGroup", STATIC_CACHE_MS);
         prefetchStatic("/v2/data/Trait", STATIC_CACHE_MS);
-        prefetchStatic("/v2/data/SkillGroup", STATIC_CACHE_MS);
         prefetchStatic("/v1/l10n/Korean", STATIC_CACHE_MS);
     }
 
@@ -132,8 +131,23 @@ public class EternalReturnBO {
         return requestCached("/v2/data/CharacterSkin", false, STATIC_CACHE_MS);
     }
 
-    public String skillInfo() throws URISyntaxException {
-        return requestCached("/v2/data/SkillGroup", false, STATIC_CACHE_MS);
+    public String skillInfo() throws IOException, URISyntaxException {
+        // SkillGroup is no longer a public data table. Names remain in official localization.
+        byte[] body = loadTextFile().getBody();
+        var skills = new ArrayList<Map<String, Object>>();
+        for (String line : new String(body, StandardCharsets.UTF_8).split("\\n")) {
+            if (!line.startsWith("Skill/Group/Name/")) continue;
+            int separator = line.indexOf('┃');
+            if (separator < 0) continue;
+            try {
+                int code = Integer.parseInt(line.substring("Skill/Group/Name/".length(), separator).trim());
+                int character = code / 1000 - 1000;
+                if (character < 1 || character > 999) continue;
+                skills.add(Map.of("group", code, "characterCode", character,
+                        "name", line.substring(separator + 1).trim(), "icon", "SkillIcon_" + code));
+            } catch (NumberFormatException ignored) { }
+        }
+        return objectMapper.writeValueAsString(Map.of("code", 200, "data", skills));
     }
 
     public String metaHash() throws URISyntaxException {

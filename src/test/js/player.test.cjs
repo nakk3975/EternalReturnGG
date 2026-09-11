@@ -26,9 +26,9 @@ const games=[
  {gameId:4,matchingMode:3,seasonId:40,mmrAfter:15000,startDtm:'2026-09-01T08:00:00Z'},
  {gameId:5,matchingMode:3,seasonId:41,mmrAfter:null,startDtm:'2026-09-11T09:00:00Z'}
 ];
-assert.equal(JSON.stringify(context.erRpPoints(games,41).map(r=>r.gameId)),'[1,2]');
-assert.match(context.erRpGraph(games,41),/조회한 랭크 2경기/);
-assert(!context.erRpGraph(games,41).includes('NaN'));
+assert.equal(JSON.stringify(context.erRpPoints(games,41,Date.parse("2026-09-11T12:00:00Z")).map(r=>r.gameId)),'[1,2]');
+assert.match(context.erRpGraph(games,41,Date.parse("2026-09-11T12:00:00Z")),/조회한 랭크 2경기/);
+assert(!context.erRpGraph(games,41,Date.parse("2026-09-11T12:00:00Z")).includes('NaN'));
 assert(!context.erRpGraph([games[0]],41).includes('NaN'));
 assert.match(context.erPersonalDetails({...row,traitFirstCore:7000401}),/data-trait="7000401"/);
 console.log('PASS: ranked-only RP, private routes, chronological same-season graph, missing fields and single point');
@@ -75,3 +75,12 @@ assert.equal(context.erMostPlayed([],[{characterNum:2},{characterNum:1},{charact
 assert.equal(context.erMostPlayed([],[]),null);
 assert.equal(context.erMostPlayed([{characterCode:1,usages:0}],[{characterNum:2}]),2);
 console.log('PASS: most-used season character, recent fallback, missing records');
+
+const boundaryGames=['2026-09-04T14:59:59Z','2026-09-04T15:00:00Z','2026-09-11T12:01:00Z'].map((startDtm,i)=>({gameId:i,matchingMode:3,seasonId:41,mmrAfter:1000,startDtm}));
+assert.equal(JSON.stringify(context.erRpPoints(boundaryGames,41,Date.parse('2026-09-11T12:00:00Z')).map(r=>r.gameId)),'[1]');
+assert.equal(context.erOwnTeam({teamNumber:2},{teamNumber:2}),true);
+assert.equal(context.erOwnTeam({teamNumber:2},{teamNumber:3}),false);
+assert.equal(context.erOwnTeam({},{}),false);
+assert.equal(context.erOwnPlayer({userId:'a'},{userId:'b'}),false);
+assert.match(context.erPlayerCard(row,true,true),/own-player/);
+console.log('PASS: KST seven-day boundaries, future exclusion, team and own-player identity');

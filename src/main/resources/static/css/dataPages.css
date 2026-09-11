@@ -135,3 +135,5 @@
 .match-loadout img { width:20px; height:20px; object-fit:contain; border-radius:3px; background:#253348; }
 .match-character:has(.match-loadout img) { height:78px; }
 .match-character:has(.match-loadout img) > span { top:34px; bottom:auto; }
+
+.skill-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));}.skill-row img{flex:none;width:56px;height:56px;object-fit:contain;background:#263344;}.skill-row strong{font-size:15px;}.skill-row p{margin:3px 0 0;color:#798493;font-size:13px;}

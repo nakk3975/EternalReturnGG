@@ -84,7 +84,7 @@ public class EternalReturnRestController {
 	}
 	
 	@GetMapping("/skillInfo")
-	public String skillInfo() throws URISyntaxException {
+	public String skillInfo() throws IOException, URISyntaxException {
 		return erBo.skillInfo();
 	}
 	

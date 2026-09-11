@@ -38,3 +38,9 @@ function erTier(row) {
     const [min,step,name,image]=bands.find(([min])=>rp>=min);
     return {name:name+(step?' '+['IV','III','II','I'][Math.min(3,Math.floor((rp-min)/step))]:''),image};
 }
+
+function erSkillImage(code, name) {
+    if(!/^\d+$/.test(String(code)) || !erAssetBase)return '';
+    const prefix=Number(code)>=7000000?'TraitSkillIcon_':Number(code)>=4000000?'VSkillIcon_':'SkillIcon_';
+    return '<img class="skill-icon" loading="lazy" src="'+erText(erAssetBase+prefix+code+'.png')+'" alt="'+erText(name||'스킬 '+code)+'">';
+}

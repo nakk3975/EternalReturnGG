@@ -24,19 +24,29 @@ async function erCharacterPage() {
         const current=++generation;
         selected=chars.find(c=>c.name.toLowerCase()===String(name).toLowerCase()||String(c.code)===String(name));
         if(!selected){content.innerHTML='<p class="empty-state">해당 실험체를 찾을 수 없습니다. 왼쪽에서 선택해 주세요.</p>';status.textContent='';return;}
-        tab=['overview','routes','items','skills'].includes(tab)?tab:'overview';
+        tab=['overview','routes','items','skills','traits','tactical'].includes(tab)?tab:'overview';
         if(replace)history.replaceState(null,'','/er/characters/'+encodeURIComponent(selected.name)+'?tab='+tab);
         document.title=label(selected)+' · 실험체 분석 · ER.GG';drawPicker();status.textContent='';
-        content.innerHTML='<section class="character-hero surface"><img src="'+erText(erCharacterImage(selected.name))+'" alt="'+erText(label(selected))+'"><div><small>실험체 분석</small><h2>'+erText(label(selected))+'</h2><p>'+erText(selected.name)+'</p></div><span class="mode-chip">기본 정보</span></section><div class="sub-tabs">'+[['overview','개요'],['items','아이템'],['routes','추천 루트'],['skills','스킬']].map(([key,title])=>'<a class="'+(key===tab?'active':'')+'" href="/er/characters/'+encodeURIComponent(selected.name)+'?tab='+key+'">'+title+'</a>').join('')+'</div><div id="character-tab"></div>';
+        content.innerHTML='<section class="character-hero surface"><img src="'+erText(erCharacterImage(selected.name))+'" alt="'+erText(label(selected))+'"><div><small>실험체 분석</small><h2>'+erText(label(selected))+'</h2><p>'+erText(selected.name)+'</p></div><span class="mode-chip">기본 정보</span></section><div class="sub-tabs">'+[['overview','개요'],['items','아이템'],['routes','추천 루트'],['skills','스킬'],['traits','특성'],['tactical','전술 스킬']].map(([key,title])=>'<a class="'+(key===tab?'active':'')+'" href="/er/characters/'+encodeURIComponent(selected.name)+'?tab='+key+'">'+title+'</a>').join('')+'</div><div id="character-tab"></div>';
         const target=content.querySelector('#character-tab');
         if(tab==='overview') {
             target.innerHTML='<section class="surface"><h3 class="panel-title">기본 능력치</h3><div class="data-stats">'+erStatCells(selected)+'</div></section><section class="surface"><h3 class="panel-title">추천 루트</h3><div id="character-routes"><p class="empty-state">루트를 불러오는 중입니다.</p></div></section><p class="data-note">승률·픽률·스킬 순서는 집계 데이터가 준비되면 제공됩니다.</p>';
         }else target.innerHTML='<p class="empty-state">정보를 불러오는 중입니다.</p>';
         try {
+            if(tab==='traits' || tab==='tactical') {
+                const data=await erStatic(tab==='traits'?'/er/trait':'/er/tacticalSkill');if(current!==generation)return;
+                const list=data.data||[];
+                target.innerHTML='<section class="surface"><h3 class="panel-title">'+(tab==='traits'?'특성 도감':'전술 스킬 도감')+'</h3><div class="skill-grid">'+list.map(s=>{
+                    const code=tab==='traits'?Number(s.code)-1:s.group;
+                    const title=names.get('Skill/Group/Name/'+code)||names.get('Trait/Name/'+s.code)||s.name||'스킬 '+code;
+                    const icon=tab==='traits'?'TraitSkillIcon_'+code:s.icon;
+                    return '<article class="skill-row">'+(icon?'<img loading="lazy" src="'+erText(erAssetBase+icon+'.png')+'" alt="'+erText(title)+'">':'')+'<div><strong>'+erText(title)+'</strong><p>'+erText(s.traitGroup||'전술 스킬')+'</p></div></article>';
+                }).join('')+'</div></section>';return;
+            }
             if(tab==='skills') {
                 const skills=await erStatic('/er/skillInfo');if(current!==generation)return;
                 const list=(skills.data||[]).filter(s=>String(s.characterCode)===String(selected.code));
-                target.innerHTML=list.length?'<section class="surface"><h3 class="panel-title">스킬 정보</h3>'+list.map(s=>'<div class="skill-row">'+(s.icon?'<img src="'+erText(erAssetBase+s.icon+'.png')+'" alt="">':'')+'<div><strong>'+erText(s.name||s.skillName||'스킬 '+s.group)+'</strong><p>'+erText(s.skillSlot||'')+'</p></div></div>').join('')+'</section>':'<p class="empty-state">이 실험체에 연결된 스킬 정보가 제공되지 않았습니다.</p>';
+                target.innerHTML=list.length?'<section class="surface"><h3 class="panel-title">스킬 정보</h3><div class="skill-grid">'+list.map(s=>'<div class="skill-row">'+(s.icon?'<img src="'+erText(erAssetBase+s.icon+'.png')+'" alt="">':'')+'<div><strong>'+erText(s.name||s.skillName||'스킬 '+s.group)+'</strong><p>'+erText(s.skillSlot||'실험체 스킬')+'</p></div></div>').join('')+'</div></section>':'<p class="empty-state">이 실험체에 연결된 스킬 정보가 제공되지 않았습니다.</p>';
                 return;
             }
             const data=await erStatic('/er/main');if(current!==generation)return;

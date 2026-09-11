@@ -20,7 +20,7 @@ function erRoute(row) { return row.routeIdOfStart == null ? '—' : Number(row.r
 function erLoadout(row) {
     return '<div class="match-loadout"><span data-weapon="'+erText(row.bestWeapon)+'" title="무기군"></span><span data-trait="'+erText(row.traitFirstCore)+'" title="핵심 특성"></span><span data-tactical="'+erText(row.tacticalSkillGroup)+'" title="전술 스킬 '+erNumber(row.tacticalSkillLevel)+'레벨"></span><span data-trait-group="'+erText(row.traitSecondSub?.[0])+'" title="보조 특성"></span></div>';
 }
-function erPlayerCard(row, details = false) {
+function erPlayerCard(row, details = false, isOwn = false) {
     const character = erPlayerCharacters.get(String(row.characterNum));
     const name = erPlayerNames.get('Character/Name/'+row.characterNum) || character?.name || '실험체';
     const date = new Date(row.startDtm);
@@ -30,7 +30,7 @@ function erPlayerCard(row, details = false) {
     const duration = seconds == null ? '—' : Math.floor(seconds/60)+':'+String(Math.floor(seconds%60)).padStart(2,'0');
     const portrait = '<div class="match-character"><img data-character="'+erText(row.characterNum)+'" data-skin="'+erText(row.skinCode || 0)+'" src="'+erText(erCharacterImage(character?.name,row.skinCode))+'" alt="'+erText(name)+'"><span>'+erNumber(row.characterLevel)+'</span><small data-character-name="'+erText(row.characterNum)+'">'+erText(name)+'</small></div>';
     const stats = erMetric('TK / K / A',erNumber(row.teamKill ?? row.totalFieldKill)+' / '+erNumber(row.playerKill)+' / '+erNumber(row.playerAssistant)) + erMetric('딜량',erNumber(row.damageToPlayer)) + erMetric('RP',erRp(row)) + erMetric('루트 ID',erRoute(row));
-    if (details) return '<div class="participant-row">'+portrait+'<div class="participant-name">'+erText(row.nickname)+'<small>'+erText(erWeapons[row.bestWeapon]?.[1]||'무기군 미제공')+' · 숙련도 '+erNumber(row.bestWeaponLevel)+'</small></div>'+erLoadout(row)+erMetric('K / D / A',erNumber(row.playerKill)+' / '+erNumber(row.playerDeaths)+' / '+erNumber(row.playerAssistant))+erMetric('딜량',erNumber(row.damageToPlayer))+erMetric('RP',erRp(row))+erEquipmentHtml(row.equipment)+'</div>';
+    if (details) return '<div class="participant-row '+(isOwn?'own-player':'')+'">'+portrait+'<div class="participant-name">'+(isOwn?'<b class="own-player-badge">나</b> ':'')+erText(row.nickname)+'<small>'+erText(erWeapons[row.bestWeapon]?.[1]||'무기군 미제공')+' · 숙련도 '+erNumber(row.bestWeaponLevel)+'</small></div>'+erLoadout(row)+erMetric('K / D / A',erNumber(row.playerKill)+' / '+erNumber(row.playerDeaths)+' / '+erNumber(row.playerAssistant))+erMetric('딜량',erNumber(row.damageToPlayer))+erMetric('RP',erRp(row))+erEquipmentHtml(row.equipment)+'</div>';
     return '<div class="one-record match-card '+(Number(row.gameRank)===1?'match-victory':Number(row.gameRank)<=3?'match-top':'')+'" role="button" tabindex="0" data-game-id="'+erText(row.gameId)+'" aria-expanded="false" aria-controls="game-'+erText(row.gameId)+'"><div class="match-result"><strong>#'+erNumber(row.gameRank)+'</strong><b>'+mode+'</b><small>'+duration+'</small><time>'+erText(played)+'</time></div>'+portrait+erLoadout(row)+'<div class="match-numbers">'+stats+'</div><div class="match-build">'+erEquipmentHtml(row.equipment)+'</div><span class="plus-btn" aria-hidden="true">⌄</span></div><div id="game-'+erText(row.gameId)+'" class="detail-box match-detail" hidden></div>';
 }
 function erPersonalDetails(row) {
@@ -41,20 +41,22 @@ function erPersonalDetails(row) {
 function erSkillOrder(row) {
     const entries=Object.entries(row.skillOrderInfo||{}).filter(([order,code])=>erFinite(order)&&erFinite(code)).sort((a,b)=>Number(a[0])-Number(b[0]));
     if(!entries.length)return '';
-    return '<div class="skill-order"><h4>스킬 습득 순서</h4><ol>'+entries.map(([order,code])=>'<li><small>'+erText(order)+'</small><span>'+erText(erPlayerNames.get('Skill/Group/Name/'+code)||'스킬 '+code)+'</span></li>').join('')+'</ol></div>';
+    return '<div class="skill-order"><h4>스킬 습득 순서</h4><ol>'+entries.map(([order,code])=>'<li><small>'+erText(order)+'</small>'+erSkillImage(code,erPlayerNames.get('Skill/Group/Name/'+code))+'<span>'+erText(erPlayerNames.get('Skill/Group/Name/'+code)||'스킬 '+code)+'</span></li>').join('')+'</ol></div>';
 }
-function erRpPoints(rows, season) {
-    return rows.filter(r=>Number(r.matchingMode)===3 && String(r.seasonId)===String(season) && erFinite(r.mmrAfter) && !Number.isNaN(Date.parse(r.startDtm))).slice().sort((a,b)=>Date.parse(a.startDtm)-Date.parse(b.startDtm));
+function erRpPoints(rows, season, now = Date.now()) {
+    const day=86400000, offset=9*3600000;
+    const start=Math.floor((now+offset)/day)*day-offset-6*day;
+    return rows.filter(r=>Date.parse(r.startDtm)>=start && Date.parse(r.startDtm)<=now && Number(r.matchingMode)===3 && String(r.seasonId)===String(season) && erFinite(r.mmrAfter) && !Number.isNaN(Date.parse(r.startDtm))).slice().sort((a,b)=>Date.parse(a.startDtm)-Date.parse(b.startDtm));
 }
-function erRpGraph(rows, season) {
-    const points=erRpPoints(rows,season);
-    if(!points.length) return '<p class="empty-state">조회된 이번 시즌 랭크 RP 기록이 없습니다.</p>';
+function erRpGraph(rows, season, now = Date.now()) {
+    const points=erRpPoints(rows,season,now);
+    if(!points.length) return '<p class="empty-state">최근 7일 동안 조회된 랭크 RP 기록이 없습니다.</p>';
     const values=points.map(r=>Number(r.mmrAfter));
     const low=Math.floor((Math.min(...values)-25)/50)*50,high=Math.ceil((Math.max(...values)+25)/50)*50;
     const x=i=>42+i*238/Math.max(1,points.length-1),y=v=>145-(v-low)*115/(high-low);
     const date=r=>new Date(r.startDtm).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit'});
     const grid=Array.from({length:4},(_,i)=>{const v=low+(high-low)*i/3;return '<line x1="42" x2="280" y1="'+y(v)+'" y2="'+y(v)+'"/><text x="35" y="'+(y(v)+3)+'" text-anchor="end">'+erNumber(v)+'</text>';}).join('');
-    return '<div class="rp-graph"><h3>RP 변화 <small>조회한 랭크 '+points.length+'경기</small></h3><svg viewBox="0 0 300 177" role="img" aria-label="조회된 이번 시즌 랭크 경기별 RP 추이"><g class="graph-grid">'+grid+'</g><polyline fill="none" stroke="#d58a64" stroke-width="1.5" points="'+values.map((v,i)=>x(i)+','+y(v)).join(' ')+'"/>'+points.map((r,i)=>'<circle tabindex="0" cx="'+x(i)+'" cy="'+y(Number(r.mmrAfter))+'" r="3" fill="#d58a64"><title>'+date(r)+' · 경기 '+erText(r.gameId)+' · '+erNumber(r.mmrAfter)+' RP ('+erNumber(r.mmrGain)+')</title></circle>').join('')+'<text x="42" y="169">'+date(points[0])+'</text><text x="280" y="169" text-anchor="end">'+date(points[points.length-1])+'</text></svg><p>경기 종료 RP · 더 보기를 누르면 기록이 이어집니다.</p></div>';
+    return '<div class="rp-graph"><h3>최근 7일 RP 변화 <small>조회한 랭크 '+points.length+'경기</small></h3><svg viewBox="0 0 300 177" role="img" aria-label="최근 7일 한국 시간 기준 랭크 경기별 RP 추이"><g class="graph-grid">'+grid+'</g><polyline fill="none" stroke="#d58a64" stroke-width="1.5" points="'+values.map((v,i)=>x(i)+','+y(v)).join(' ')+'"/>'+points.map((r,i)=>'<circle tabindex="0" cx="'+x(i)+'" cy="'+y(Number(r.mmrAfter))+'" r="3" fill="#d58a64"><title>'+date(r)+' · 경기 '+erText(r.gameId)+' · '+erNumber(r.mmrAfter)+' RP ('+erNumber(r.mmrGain)+')</title></circle>').join('')+'<text x="42" y="169">'+date(points[0])+'</text><text x="280" y="169" text-anchor="end">'+date(points[points.length-1])+'</text></svg><p>한국 시간 · 오늘 포함 7일 · 조회된 경기 종료 RP</p></div>';
 }
 function erEnhancePlayer(root) {
     root.querySelectorAll('[data-character]').forEach(img=>{const c=erPlayerCharacters.get(img.dataset.character);if(c){img.alt=erPlayerNames.get('Character/Name/'+img.dataset.character)||c.name;const portrait=erCharacterImage(c.name,img.dataset.skin);const src=img.id==='detailImage'?portrait.replace('CharProfile_','CharResult_'):portrait;if(img.getAttribute('src')!==src){delete img.dataset.fallback;img.src=src;}}});
@@ -71,6 +73,14 @@ function erEnhancePlayer(root) {
     erApplyItemGrades(root,erPlayerEquipment);
     root.querySelectorAll('[data-item-code]').forEach(slot=>{const name=erPlayerNames.get('Item/Name/'+slot.dataset.itemCode);if(name){slot.title=name;const img=slot.querySelector('img');if(img)img.alt=name;}});
 }
+function erOwnTeam(row, own) {
+    return erFinite(row.teamNumber) && erFinite(own.teamNumber) && String(row.teamNumber)===String(own.teamNumber);
+}
+function erOwnPlayer(row, own) {
+    if(row.userId && own.userId)return row.userId===own.userId;
+    if(row.userNum!=null && own.userNum!=null)return String(row.userNum)===String(own.userNum);
+    return Boolean(row.nickname && own.nickname && row.nickname===own.nickname);
+}
 async function erRenderGame(gameId, ownRow) {
     const panel=document.getElementById('game-'+gameId);
     if(panel){panel.innerHTML=erPersonalDetails(ownRow)+'<p class="empty-state">팀별 경기 결과를 불러오는 중입니다.</p>';erEnhancePlayer(panel);}
@@ -78,7 +88,7 @@ async function erRenderGame(gameId, ownRow) {
     if (!Array.isArray(data.userGames)) throw new Error('경기 응답을 확인할 수 없습니다.');
     const teams=new Map();
     for(const row of data.userGames){const key=String(row.teamNumber ?? row.gameRank ?? '기타');if(!teams.has(key))teams.set(key,[]);teams.get(key).push(row);}
-    const html=erPersonalDetails(ownRow)+[...teams.values()].sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(rows=>'<section class="match-team"><h3>#'+erNumber(rows[0].gameRank)+' <span>팀 '+erText(rows[0].teamNumber??'')+'</span></h3>'+rows.map(r=>erPlayerCard(r,true)).join('')+'</section>').join('');
+    const html=erPersonalDetails(ownRow)+[...teams.values()].sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(rows=>'<section class="match-team '+(erOwnTeam(rows[0],ownRow)?'own-team':'')+'"><h3>'+(erOwnTeam(rows[0],ownRow)?'<b class="own-team-badge">우리 팀</b> ':'')+'#'+erNumber(rows[0].gameRank)+' <span>팀 '+erText(rows[0].teamNumber??'')+'</span></h3>'+rows.map(r=>erPlayerCard(r,true,erOwnPlayer(r,ownRow))).join('')+'</section>').join('');
     const fragment=document.createElement('div');fragment.innerHTML=html;erEnhancePlayer(fragment);return fragment.innerHTML;
 }
 // Share speculative and clicked pagination requests; failures can be retried.
@@ -124,7 +134,9 @@ async function startPlayer() {
     const encoded=encodeURIComponent(userId);
     let rows=[];let placementRows=[];let selectedMode='';let rankSeason=null;let next=null;let loading=false;
     let heroStats=[];
-    let heroSkin=null, skinLookup='';
+    let heroSkin=null, skinLookup='', rankReady=false;
+    const heroImage=document.querySelector('#detailImage');
+    heroImage.addEventListener('load',()=>{if(heroImage.dataset.character){heroImage.classList.remove('hero-pending');document.querySelector('#hero-loading').hidden=true;}});
     const loadSeasonSkin=async(code,season)=>{
         const lookup=season+':'+code;
         if(skinLookup===lookup)return;
@@ -133,24 +145,27 @@ async function startPlayer() {
             try {
                 const result=await erRequest('/er/user/season-skin?userNum='+encoded+'&season='+encodeURIComponent(season)+'&character='+encodeURIComponent(code));
                 if(skinLookup!==lookup)return;
-                if(result.status==='incomplete')return;
+                if(result.status==='incomplete'){heroSkin={code,skin:0,unavailable:true};updateHero();return;}
                 if(result.status==='complete'){
                     heroSkin={code,skin:result.skinCode,uses:result.uses};updateHero();return;
                 }
             }catch(_){}
             await new Promise(resolve=>setTimeout(resolve,5000));
         }
+        if(skinLookup===lookup){heroSkin={code,skin:0,unavailable:true};updateHero();}
     };
     const updateHero=()=>{
+        if(!rankReady)return;
         const code=erMostPlayed(heroStats,rows);
-        if(code==null)return;
+        if(code==null){document.querySelector('#hero-loading').textContent='실험체 기록 없음';return;}
+        if(rankSeason && heroStats.length && heroSkin?.code!==code){loadSeasonSkin(code,rankSeason);return;}
         const img=document.querySelector('#detailImage');
         img.dataset.character=String(code);img.dataset.skin=String(heroSkin?.code===code?heroSkin.skin:0);
         img.title=heroStats.length?'이번 시즌 가장 많이 플레이한 실험체':'최근 경기에서 가장 많이 플레이한 실험체';
         document.querySelector('#hero-caption').textContent=heroStats.length?'시즌 주력 실험체':'최근 주력 실험체';
-        if(heroSkin?.code===code)img.title+=' · 시즌 최다 사용 스킨 ('+heroSkin.uses+'경기)';
+        if(heroSkin?.code===code && !heroSkin.unavailable)img.title+=' · 시즌 최다 사용 스킨 ('+heroSkin.uses+'경기)';
         erEnhancePlayer(document.querySelector('.player-hero'));
-        if(rankSeason && heroStats.length)loadSeasonSkin(code,rankSeason);
+        if(img.complete && img.naturalWidth>0){img.classList.remove('hero-pending');document.querySelector('#hero-loading').hidden=true;}
     };
     const getPage=erMatchPages(userId);
     const prefetchNext=()=>{if(next)getPage(next).catch(()=>{});};
@@ -181,6 +196,8 @@ async function startPlayer() {
     const rankPanel=document.querySelector('#rank-panel');
     const renderRank=async data=>{
         const row=data.userStats?.[0];
+        rankReady=true;
+        if(!row)updateHero();
         if(!row){rankPanel.innerHTML='<p class="empty-state">이번 시즌 랭크 기록이 없습니다.</p>';return;}
         rankSeason=row.seasonId;
         const metric=(label,value)=>'<div><span>'+label+'</span><strong>'+value+'</strong></div>';
@@ -195,7 +212,7 @@ async function startPlayer() {
             return '<a class="played-character" href="/er/characters/'+encodeURIComponent(c?.name||s.characterCode)+'"><img alt="" src="'+erText(erCharacterImage(c?.name))+'"><span>' +erText(erPlayerNames.get('Character/Name/'+s.characterCode)||c?.name||'실험체')+'<small>'+erNumber(s.usages)+'게임</small></span><strong>'+(s.usages?erNumber(s.wins/s.usages*100,1)+'%':'—')+'</strong></a>';
         }).join('')||'<p class="empty-state">실험체 기록이 없습니다.</p>';
     };
-    erRequest('/er/userRank?userNum='+encoded).then(data=>{renderRank(data).catch(()=>{});erRefreshSnapshot('/er/userRank?userNum='+encoded,data,renderRank);}).catch(()=>{rankPanel.innerHTML='<p class="empty-state">랭크 정보를 불러오지 못했습니다.</p>';});
+    erRequest('/er/userRank?userNum='+encoded).then(data=>{renderRank(data).catch(()=>{});erRefreshSnapshot('/er/userRank?userNum='+encoded,data,renderRank);}).catch(()=>{rankReady=true;updateHero();rankPanel.innerHTML='<p class="empty-state">랭크 정보를 불러오지 못했습니다.</p>';});
     document.querySelector('#more-matches').onclick=async()=>{
         if(loading||!next)return;
         loading=true;const button=document.querySelector('#more-matches');button.disabled=true;button.textContent='불러오는 중…';

@@ -16,8 +16,8 @@
 	<link rel="stylesheet" href="/static/css/style.css" type="text/css">
 </head>
 <body>
-	<div id="wrap">
-		<c:import url="/WEB-INF/jsp/include/header.jsp" />
+	<c:import url="/WEB-INF/jsp/include/header.jsp" />
+<div id="wrap">
 		<section>
 			<div id="searchBox" class="d-flex align-items-center justify-content-center">
 				<div class="home-hero-copy"><p class="eyebrow">ETERNAL RETURN STATS</p><h1>다음 승리를 위한 기록</h1><p>플레이어 전적부터 실험체와 추천 루트까지</p></div>
