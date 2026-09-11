@@ -2,7 +2,7 @@
     pageEncoding="UTF-8"%>
 
         <header class="d-flex justify-content-between align-items-center">
-            <a href="/er/search/view" class="p-2 ml-2 text-white" id="mainBanner" aria-label="ER.GG 홈"><img src="/images/ergg-logo.webp" width="42" height="42" alt=""><span>ER.GG</span></a>
+            <a href="/er/search/view" class="p-2 ml-2 text-white" id="mainBanner" aria-label="ER.GG 홈"><img src="/static/images/ergg-logo.webp" width="42" height="42" alt=""><span>ER.GG</span></a>
             <div class="p-2">
                 <form class="search-form" id="searchHeaderForm">
                     <input type="text" aria-label="플레이어 닉네임" id="searchHeaderInput" class="search-input" placeholder="플레이어 닉네임을 입력해주세요." required>
