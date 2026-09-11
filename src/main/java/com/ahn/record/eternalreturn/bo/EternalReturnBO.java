@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -58,6 +59,10 @@ public class EternalReturnBO {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ExecutorService prefetchExecutor = Executors.newFixedThreadPool(6);
 
+    @Autowired(required = false) private PersistentApiCache persistentCache;
+    private final java.util.Set<String> refreshing = ConcurrentHashMap.newKeySet();
+    private final java.util.concurrent.ThreadPoolExecutor persistenceExecutor = new java.util.concurrent.ThreadPoolExecutor(
+            2, 2, 0L, java.util.concurrent.TimeUnit.MILLISECONDS, new java.util.concurrent.ArrayBlockingQueue<>(64));
     private final Map<String, CacheEntry> responseCache = new ConcurrentHashMap<>();
     private final Object[] cacheLocks = java.util.stream.IntStream.range(0, 64)
             .mapToObj(i -> new Object()).toArray();
@@ -81,6 +86,7 @@ public class EternalReturnBO {
     @PreDestroy
     public void shutdownPrefetchExecutor() {
         prefetchExecutor.shutdownNow();
+        persistenceExecutor.shutdownNow();
     }
 
     public String searchGame(int gameId) throws IOException, URISyntaxException {
@@ -231,6 +237,10 @@ public class EternalReturnBO {
             return cached.body;
         }
 
+        if (cached != null && persistentEligible(path)) {
+            refreshStored(path, useMetaHash, ttlMillis);
+            return staleBody(cached.body);
+        }
         Object lock = cacheLocks[(path.hashCode() & Integer.MAX_VALUE) % cacheLocks.length];
 
         synchronized(lock) {
@@ -241,7 +251,19 @@ public class EternalReturnBO {
                 return cached.body;
             }
 
+            if (persistentEligible(path) && persistentCache != null) {
+                PersistentApiCache.Snapshot stored = persistentCache.read(path);
+                if(stored != null) {
+                    responseCache.put(path, new CacheEntry(stored.body(), stored.expiresAt()));
+                    if(stored.expiresAt() <= now) {
+                        refreshStored(path,useMetaHash,ttlMillis);
+                        return staleBody(stored.body());
+                    }
+                    return stored.body();
+                }
+            }
             String response = request(path, useMetaHash);
+            validateCacheBody(response);
             if (responseCache.size() >= 500) {
                 long expiryNow = System.currentTimeMillis();
                 responseCache.entrySet().removeIf(entry -> entry.getValue().expiresAt <= expiryNow);
@@ -250,8 +272,48 @@ public class EternalReturnBO {
                 }
             }
             responseCache.put(path, new CacheEntry(response, System.currentTimeMillis() + ttlMillis));
+            if(persistentEligible(path) && persistentCache != null) {
+                try { persistenceExecutor.execute(() -> writeStored(path,response,ttlMillis)); }
+                catch(java.util.concurrent.RejectedExecutionException ignored) { }
+            }
             return response;
         }
+    }
+
+    private boolean persistentEligible(String path) {
+        return path.startsWith("/v1/user/games/") || path.startsWith("/v2/user/stats/") || path.startsWith("/v1/games/") || path.startsWith("/v1/rank/top/");
+    }
+    private void validateCacheBody(String body) {
+        try {
+            JsonNode data=objectMapper.readTree(body);
+            if(!data.isObject() || (data.has("code") && data.path("code").asInt()!=0 && data.path("code").asInt()!=200))
+                throw new IllegalStateException("Invalid API cache response");
+        } catch(IOException e) { throw new IllegalStateException("Invalid API JSON",e); }
+    }
+    private String staleBody(String body) {
+        try {
+            com.fasterxml.jackson.databind.node.ObjectNode data=(com.fasterxml.jackson.databind.node.ObjectNode)objectMapper.readTree(body);
+            data.put("_cacheStale",true);
+            return data.toString();
+        } catch(Exception ignored) { return body; }
+    }
+    private void writeStored(String path,String body,long ttl) {
+        try { persistentCache.write(path,objectMapper.readTree(body),ttl); }
+        catch(Exception ignored) { }
+    }
+    private void refreshStored(String path,boolean meta,long ttl) {
+        if(!refreshing.add(path))return;
+        try {
+            persistenceExecutor.execute(() -> {
+                try {
+                    String body=request(path,meta);
+                    validateCacheBody(body);
+                    responseCache.put(path,new CacheEntry(body,System.currentTimeMillis()+ttl));
+                    if(persistentCache != null)writeStored(path,body,ttl);
+                } catch(Exception ignored) { /* Preserve the last successful snapshot. */ }
+                finally { refreshing.remove(path); }
+            });
+        } catch(java.util.concurrent.RejectedExecutionException ignored) { refreshing.remove(path); }
     }
 
     private String request(String path, boolean useMetaHash) throws URISyntaxException {

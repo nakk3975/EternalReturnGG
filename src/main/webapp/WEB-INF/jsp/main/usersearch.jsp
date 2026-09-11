@@ -30,5 +30,5 @@
 <script src="/static/js/itemSlots.js"></script>
 <script src="/static/js/siteData.js"></script>
 <script src="/static/js/matchDetails.js"></script>
-<script src="/static/js/player.js"></script>
+<script src="/static/js/player.js?v=20260911-persistent"></script>
 </body></html>

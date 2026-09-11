@@ -99,7 +99,7 @@ function erMatchPages(userId) {
         const key=String(cursor||'');
         if(!pages.has(key)) {
             const request=erRequest('/er/user/detail?userNum='+encodeURIComponent(userId)+(key?'&next='+encodeURIComponent(key):''))
-                .then(data=>{if(!Array.isArray(data.userGames))throw new Error('전적 응답 오류');return data;})
+                .then(data=>{if(!Array.isArray(data.userGames))throw new Error('전적 응답 오류');if(data._cacheStale)pages.delete(key);return data;})
                 .catch(error=>{pages.delete(key);throw error;});
             pages.set(key,request);
             if(pages.size>3)pages.delete(pages.keys().next().value);
@@ -110,6 +110,16 @@ function erMatchPages(userId) {
 function erPlacementHtml(rows,mode='') {
     return rows.slice(0,20).filter(r=>(!mode||String(r.matchingMode)===mode)&&erFinite(r.gameRank)).reverse()
         .map(r=>'<span class="'+(Number(r.gameRank)===1?'win':Number(r.gameRank)<=3?'top':'')+'">'+erNumber(r.gameRank)+'</span>').join('');
+}
+async function erRefreshSnapshot(url, snapshot, onFresh) {
+    if(!snapshot._cacheStale)return;
+    for(let attempt=0;attempt<5;attempt++) {
+        await new Promise(resolve=>setTimeout(resolve,2000));
+        try {
+            const fresh=await erRequest(url);
+            if(!fresh._cacheStale){await onFresh(fresh);return;}
+        } catch (_) { return; }
+    }
 }
 async function startPlayer() {
     const userId=new URLSearchParams(location.search).get('userNum');
@@ -143,7 +153,7 @@ async function startPlayer() {
     document.querySelectorAll('[data-match-mode]').forEach(button=>button.onclick=()=>{selectedMode=button.dataset.matchMode;document.querySelectorAll('[data-match-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));render();});
     document.querySelector('#refresh').onclick=()=>location.reload();
     const rankPanel=document.querySelector('#rank-panel');
-    erRequest('/er/userRank?userNum='+encoded).then(async data=>{
+    const renderRank=async data=>{
         const row=data.userStats?.[0];
         if(!row){rankPanel.innerHTML='<p class="empty-state">이번 시즌 랭크 기록이 없습니다.</p>';return;}
         rankSeason=row.seasonId;
@@ -157,7 +167,8 @@ async function startPlayer() {
             const c=erPlayerCharacters.get(String(s.characterCode));
             return '<a class="played-character" href="/er/characters/'+encodeURIComponent(c?.name||s.characterCode)+'"><img alt="" src="'+erText(erCharacterImage(c?.name))+'"><span>' +erText(erPlayerNames.get('Character/Name/'+s.characterCode)||c?.name||'실험체')+'<small>'+erNumber(s.usages)+'게임</small></span><strong>'+(s.usages?erNumber(s.wins/s.usages*100,1)+'%':'—')+'</strong></a>';
         }).join('')||'<p class="empty-state">실험체 기록이 없습니다.</p>';
-    }).catch(()=>{rankPanel.innerHTML='<p class="empty-state">랭크 정보를 불러오지 못했습니다.</p>';});
+    };
+    erRequest('/er/userRank?userNum='+encoded).then(data=>{renderRank(data).catch(()=>{});erRefreshSnapshot('/er/userRank?userNum='+encoded,data,renderRank);}).catch(()=>{rankPanel.innerHTML='<p class="empty-state">랭크 정보를 불러오지 못했습니다.</p>';});
     document.querySelector('#more-matches').onclick=async()=>{
         if(loading||!next)return;
         loading=true;const button=document.querySelector('#more-matches');button.disabled=true;button.textContent='불러오는 중…';
@@ -182,6 +193,16 @@ async function startPlayer() {
         }
         render();
         erEnhancePlayer(document);
+        erRefreshSnapshot('/er/user/detail?userNum='+encoded,data,fresh=>{
+            // Do not reset a list the user has paged or expanded while refreshing.
+            if(rows.length>10 || document.querySelector('.match-card[aria-expanded=true]'))return;
+            rows=fresh.userGames;next=fresh.next||null;placementRows=rows.slice(0,20);render();
+            if(next)getPage(next).then(page=>{
+                const ids=new Set(placementRows.map(r=>String(r.gameId)));
+                placementRows=placementRows.concat(page.userGames.filter(r=>!ids.has(String(r.gameId)))).slice(0,20);
+                const strip=document.querySelector('.placement-strip');if(strip)strip.innerHTML=erPlacementHtml(placementRows,selectedMode);
+            }).catch(()=>{});
+        });
         // Fetch only the next page in the background; keep the visible list at ten.
         if(next)getPage(next).then(page=>{
             const ids=new Set(placementRows.map(r=>String(r.gameId)));
