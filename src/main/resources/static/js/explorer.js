@@ -58,7 +58,7 @@ async function startExplorer() {
     const image = (file, name) => '<img loading="lazy" src="' + erEscape(erAssetBase + file) + '" alt="' + erEscape(name) + '">';
     const showError = error => { status.textContent = error.message; };
     if (page === 'guide') {
-        results.innerHTML = Object.entries(ER_PAGES).filter(([key]) => key !== 'guide').map(([key, value]) => card('<h2><a href="/er/' + key + '">' + value[0] + '</a></h2><p>' + value[1] + '</p>')).join('');
+        results.innerHTML = Object.entries(ER_PAGES).filter(([key]) => key !== 'guide').map(([key, value]) => '<a class="explorer-card guide-card" href="/er/' + key + '"><h2>' + value[0] + '</h2><p>' + value[1] + '</p></a>').join('');
         status.textContent = ''; return;
     }
     if (page === 'multi' || page === 'favorites') {

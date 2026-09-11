@@ -22,3 +22,9 @@
 .explorer-card dd { margin:0; text-align:right; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
 .explorer-card .actions { display:flex; gap:8px; flex-wrap:wrap; }
 @media(max-width:640px) { .explorer { padding:28px 14px; } .explorer h1 { font-size:27px; } .explorer-grid { grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; } .explorer-card { padding:14px; } .explorer-controls { padding:12px; } }
+
+/* Empty shared controls must not leave a blank toolbar on the guide. */
+.explorer-controls:empty,#explorer-status:empty { display:none; }
+.guide-card { display:block; color:var(--accent); text-decoration:none; cursor:pointer; }
+.guide-card:hover { color:var(--accent); border-color:var(--accent); background:#f5fbfc; text-decoration:none; }
+.guide-card:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }

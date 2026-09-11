@@ -92,12 +92,33 @@ async function erRenderGame(gameId, ownRow) {
     const html=erPersonalDetails(ownRow)+[...teams.values()].sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(rows=>'<section class="match-team"><h3>#'+erNumber(rows[0].gameRank)+' <span>팀 '+erText(rows[0].teamNumber??'')+'</span></h3>'+rows.map(r=>erPlayerCard(r,true)).join('')+'</section>').join('');
     const fragment=document.createElement('div');fragment.innerHTML=html;erEnhancePlayer(fragment);return fragment.innerHTML;
 }
+// Share speculative and clicked pagination requests; failures can be retried.
+function erMatchPages(userId) {
+    const pages=new Map();
+    return cursor=>{
+        const key=String(cursor||'');
+        if(!pages.has(key)) {
+            const request=erRequest('/er/user/detail?userNum='+encodeURIComponent(userId)+(key?'&next='+encodeURIComponent(key):''))
+                .then(data=>{if(!Array.isArray(data.userGames))throw new Error('전적 응답 오류');return data;})
+                .catch(error=>{pages.delete(key);throw error;});
+            pages.set(key,request);
+            if(pages.size>3)pages.delete(pages.keys().next().value);
+        }
+        return pages.get(key);
+    };
+}
+function erPlacementHtml(rows,mode='') {
+    return rows.slice(0,20).filter(r=>(!mode||String(r.matchingMode)===mode)&&erFinite(r.gameRank)).reverse()
+        .map(r=>'<span class="'+(Number(r.gameRank)===1?'win':Number(r.gameRank)<=3?'top':'')+'">'+erNumber(r.gameRank)+'</span>').join('');
+}
 async function startPlayer() {
     const userId=new URLSearchParams(location.search).get('userNum');
     const records=document.querySelector('#record');
     if(!userId){records.textContent='플레이어를 먼저 검색해 주세요.';return;}
     const encoded=encodeURIComponent(userId);
-    let rows=[];let selectedMode='';let rankSeason=null;let next=null;let loading=false;
+    let rows=[];let placementRows=[];let selectedMode='';let rankSeason=null;let next=null;let loading=false;
+    const getPage=erMatchPages(userId);
+    const prefetchNext=()=>{if(next)getPage(next).catch(()=>{});};
     const assets=loadAssetConfig();
     const metadata=Promise.allSettled([assets,erStatic('/er/character'),erDictionary(),erLoadEquipment(),erStatic('/er/tacticalSkill'),erStatic('/er/trait')]).then(result=>{
         if(result[1].status==='fulfilled')for(const c of result[1].value.data||[])erPlayerCharacters.set(String(c.code),c);
@@ -114,7 +135,7 @@ async function startPlayer() {
         erEnhancePlayer(records);
         const valid=filtered.filter(r=>erFinite(r.gameRank));
         document.querySelector('#recent-summary').innerHTML='<strong>'+filtered.length+'게임</strong> · '+filtered.filter(r=>Number(r.gameRank)===1).length+'승';
-        document.querySelector('#recent-overview').innerHTML='<div class="recent-metrics">'+erMetric('평균 순위',valid.length?'#'+erNumber(valid.reduce((s,r)=>s+Number(r.gameRank),0)/valid.length,1):'—')+erMetric('승리',erNumber(valid.filter(r=>Number(r.gameRank)===1).length))+erMetric('TOP 3',erNumber(valid.filter(r=>Number(r.gameRank)<=3).length))+erMetric('평균 TK',filtered.length?erNumber(filtered.reduce((s,r)=>s+Number(r.teamKill??r.totalFieldKill??0),0)/filtered.length,2):'—')+'</div><div class="placement-strip">'+valid.slice().reverse().slice(-20).map(r=>'<span class="'+(Number(r.gameRank)===1?'win':Number(r.gameRank)<=3?'top':'')+'">'+erNumber(r.gameRank)+'</span>').join('')+'</div>';
+        document.querySelector('#recent-overview').innerHTML='<div class="recent-metrics">'+erMetric('평균 순위',valid.length?'#'+erNumber(valid.reduce((s,r)=>s+Number(r.gameRank),0)/valid.length,1):'—')+erMetric('승리',erNumber(valid.filter(r=>Number(r.gameRank)===1).length))+erMetric('TOP 3',erNumber(valid.filter(r=>Number(r.gameRank)<=3).length))+erMetric('평균 TK',filtered.length?erNumber(filtered.reduce((s,r)=>s+Number(r.teamKill??r.totalFieldKill??0),0)/filtered.length,2):'—')+'</div><div class="placement-strip" aria-label="최근 20경기 등수">'+erPlacementHtml(placementRows,selectedMode)+'</div>';
         document.querySelector('#rp-history').innerHTML=erRpGraph(rows,rankSeason??rows.find(r=>Number(r.matchingMode)===3)?.seasonId);
         document.querySelector('#more-matches').hidden=!next;
 
@@ -141,18 +162,18 @@ async function startPlayer() {
         if(loading||!next)return;
         loading=true;const button=document.querySelector('#more-matches');button.disabled=true;button.textContent='불러오는 중…';
         try{
-            const data=await erRequest('/er/user/detail?userNum='+encoded+'&next='+encodeURIComponent(next));
+            const data=await getPage(next);
             if(!Array.isArray(data.userGames))throw new Error('전적 응답 오류');
             const ids=new Set(rows.map(r=>String(r.gameId))), added=data.userGames.filter(r=>!ids.has(String(r.gameId)));
-            rows.push(...added);next=added.length && String(data.next)!==String(next) ? data.next||null : null;render();
+            rows.push(...added);next=added.length && String(data.next)!==String(next) ? data.next||null : null;render();prefetchNext();
             button.textContent='전적 더 보기';
         }catch(error){button.textContent='조회 실패 · 다시 시도';}
         finally{loading=false;button.disabled=false;}
     };
     try {
-        const data=await erRequest('/er/user/detail?userNum='+encoded);
+        const data=await getPage(null);
         if(!Array.isArray(data.userGames))throw new Error('최근 전적 응답을 확인할 수 없습니다.');
-        rows=data.userGames;next=data.next || null;
+        rows=data.userGames;placementRows=rows.slice(0,20);next=data.next || null;
         if(rows[0]){
             document.querySelector('#nickname').textContent=rows[0].nickname || '플레이어';
             document.querySelector('#userLevel').textContent='레벨 '+erNumber(rows[0].accountLevel);
@@ -161,6 +182,13 @@ async function startPlayer() {
         }
         render();
         erEnhancePlayer(document);
+        // Fetch only the next page in the background; keep the visible list at ten.
+        if(next)getPage(next).then(page=>{
+            const ids=new Set(placementRows.map(r=>String(r.gameId)));
+            placementRows=placementRows.concat(page.userGames.filter(r=>!ids.has(String(r.gameId)))).slice(0,20);
+            const strip=document.querySelector('.placement-strip');
+            if(strip)strip.innerHTML=erPlacementHtml(placementRows,selectedMode);
+        }).catch(()=>{});
     }catch(error){records.innerHTML='<p class="empty-state">'+erText(error.message)+'</p>';}
 }
 document.addEventListener('DOMContentLoaded',startPlayer);

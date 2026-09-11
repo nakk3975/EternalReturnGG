@@ -115,7 +115,7 @@ public class EternalReturnBO {
     public String userInfo(String userId, Long next) throws URISyntaxException {
         String path = "/v1/user/games/uid/" + encodePathSegment(userId);
         if (next != null && next > 0) path += "?next=" + next;
-        return requestCached(path, false, USER_CACHE_MS);
+        return requestCached(path, false, next != null && next > 0 ? GAME_CACHE_MS : USER_CACHE_MS);
     }
 
     public String tacticalSkill() throws URISyntaxException {
