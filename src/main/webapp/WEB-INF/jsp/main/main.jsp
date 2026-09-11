@@ -40,10 +40,10 @@
 	</div>
 	
 	<script src="/static/js/getName.js"></script>
-	<script src="/static/js/assetImages.js"></script>
+	<script src="/static/js/assetImages.js?v=20260911-weapon-skill"></script>
 	<script src="/static/js/fetchWeaponBgImg.js"></script>
 	<script src="/static/js/itemSlots.js?v=20260911-analysis-final"></script>
-	<script src="/static/js/siteData.js?v=20260911-analysis-final"></script>
+	<script src="/static/js/siteData.js?v=20260911-weapon-skill"></script>
 	<script src="/static/js/home.js"></script>
 </body>
 </html>

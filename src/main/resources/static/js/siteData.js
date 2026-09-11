@@ -41,6 +41,6 @@ function erTier(row) {
 
 function erSkillImage(code, name) {
     if(!/^\d+$/.test(String(code)) || !erAssetBase)return '';
-    const prefix=Number(code)>=7000000?'TraitSkillIcon_':Number(code)>=4000000?'VSkillIcon_':Number(code)>=2000000?'WSkillIcon_':'SkillIcon_';
+    const prefix=Number(code)>=7000000?'TraitSkillIcon_':Number(code)>=4000000?'VSkillIcon_':Number(code)>=2000000?'WeaponSkillIcon_':'SkillIcon_';
     return '<img class="skill-icon" loading="lazy" src="'+erText(erAssetBase+prefix+code+'.png')+'" alt="'+erText(name||'스킬 '+code)+'">';
 }
