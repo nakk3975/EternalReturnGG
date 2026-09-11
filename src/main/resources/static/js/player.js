@@ -86,6 +86,30 @@ function erOwnPlayer(row, own) {
     if(row.userNum!=null && own.userNum!=null)return String(row.userNum)===String(own.userNum);
     return Boolean(row.nickname && own.nickname && row.nickname===own.nickname);
 }
+// Monster/Name codes from the game localization; credit rewards are not kill attribution.
+function erBossBadges(row) {
+    const kills=row.killMonsters;
+    if(!kills || typeof kills!=='object' || Array.isArray(kills))return '';
+    return [['wickline','위클라인',[7,107]],['alpha','알파',[8,108]],['omega','오메가',[9,109]]].map(([key,name,codes])=>{
+        const count=codes.reduce((sum,code)=>sum+(erFinite(kills[code])&&Number(kills[code])>0?Number(kills[code]):0),0);
+        return count>0?'<span class="boss-badge boss-'+key+'" title="'+name+' 직접 처치 '+count+'회">'+name+(count>1?' ×'+count:'')+'</span>':'';
+    }).join('');
+}
+function erTeamScoreboard(teams,ownRow) {
+    const damageMax=Math.max(1,...teams.flat().map(r=>Number(r.damageToPlayer)||0));
+    const animalMax=Math.max(1,...teams.flat().map(r=>Number(r.damageToMonster)||0));
+    const damage=(value,max,type)=>'<td class="score-damage"><span class="damage-meter '+type+'" aria-hidden="true"><i style="width:'+Math.min(100,Math.max(0,(Number(value)||0)/max*100))+'%"></i></span>'+erNumber(value)+'</td>';
+    return '<div class="team-scoreboard-scroll" tabindex="0" aria-label="팀별 경기 결과"><table class="team-scoreboard"><thead><tr><th scope="col">#</th><th scope="col">플레이어</th><th scope="col">TK / K / D / A</th><th scope="col">딜량</th><th scope="col">동물 딜량</th><th scope="col">크레딧</th><th scope="col">아이템 빌드</th></tr></thead>'+teams.slice().sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(rows=>{
+        const own=erOwnTeam(rows[0],ownRow);
+        const rank=Number(rows[0].gameRank);
+        return '<tbody class="score-team '+(own?'score-own-team':'')+'">'+rows.map((row,index)=>{
+            const c=erPlayerCharacters.get(String(row.characterNum));
+            const name=erPlayerNames.get('Character/Name/'+row.characterNum)||c?.name||'실험체';
+            const portrait='<div class="score-portrait"><img data-character="'+erText(row.characterNum)+'" data-skin="'+erText(row.skinCode||0)+'" src="'+erText(erCharacterImage(c?.name,row.skinCode))+'" alt="'+erText(name)+'"><small>'+erNumber(row.characterLevel)+'</small></div>';
+            return '<tr class="'+(erOwnPlayer(row,ownRow)?'score-own-player':'')+'">'+(index===0?'<th scope="rowgroup" rowspan="'+rows.length+'" class="score-placement '+(rank===1?'score-win':rank<=3?'score-top':'')+'"><strong>#'+erNumber(row.gameRank)+'</strong>'+(own?'<small>우리 팀</small>':'')+'</th>':'')+'<td><div class="score-player">'+portrait+erLoadout(row)+'<div class="score-nickname">'+erText(row.nickname)+(erOwnPlayer(row,ownRow)?'<b class="own-player-badge">나</b>':'')+'<div class="boss-badges">'+erBossBadges(row)+'</div></div></div></td><td class="score-kda">'+erNumber(row.teamKill??row.totalFieldKill)+' / '+erNumber(row.playerKill)+' / '+erNumber(row.playerDeaths)+' / '+erNumber(row.playerAssistant)+'</td>'+damage(row.damageToPlayer,damageMax,'player-damage')+damage(row.damageToMonster,animalMax,'animal-damage')+'<td class="score-credit">'+erNumber(row.totalGainVFCredit)+'</td><td class="score-items">'+erEquipmentHtml(row.equipment)+'</td></tr>';
+        }).join('')+'</tbody>';
+    }).join('')+'</table></div>';
+}
 async function erRenderGame(gameId, ownRow) {
     const panel=document.getElementById('game-'+gameId);
     if(panel){panel.innerHTML=erPersonalDetails(ownRow)+'<p class="empty-state">팀별 경기 결과를 불러오는 중입니다.</p>';erEnhancePlayer(panel);}
@@ -93,12 +117,7 @@ async function erRenderGame(gameId, ownRow) {
     if (!Array.isArray(data.userGames)) throw new Error('경기 응답을 확인할 수 없습니다.');
     const teams=new Map();
     for(const row of data.userGames){const key=String(row.teamNumber ?? row.gameRank ?? '기타');if(!teams.has(key))teams.set(key,[]);teams.get(key).push(row);}
-    const html=erPersonalDetails(ownRow)+[...teams.values()].sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(rows=>{
-        const isOwnTeam=erOwnTeam(rows[0],ownRow);
-        const rank=Number(rows[0].gameRank);
-        const rankClass=rank===1?'team-rank-win':rank>1&&rank<=3?'team-rank-top':'';
-        return '<section class="match-team '+(isOwnTeam?'own-team':'')+'"><h3 class="team-heading"><strong class="team-placement '+rankClass+'">#'+erNumber(rows[0].gameRank)+'</strong>'+(isOwnTeam?'<b class="own-team-badge">우리 팀</b>':'')+'<span class="team-number">팀 '+erText(rows[0].teamNumber??'')+'</span></h3>'+rows.map(r=>erPlayerCard(r,true,erOwnPlayer(r,ownRow))).join('')+'</section>';
-    }).join('');
+    const html=erPersonalDetails(ownRow)+erTeamScoreboard([...teams.values()],ownRow);
     const fragment=document.createElement('div');fragment.innerHTML=html;erEnhancePlayer(fragment);return fragment.innerHTML;
 }
 // Share speculative and clicked pagination requests; failures can be retried.

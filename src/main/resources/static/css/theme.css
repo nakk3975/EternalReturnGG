@@ -120,3 +120,27 @@ html[data-theme=dark] .match-detail .team-placement{color:#d9dfeb;}
 html[data-theme=dark] .match-detail .team-placement.team-rank-win{color:#43d9b5;}
 html[data-theme=dark] .match-detail .team-placement.team-rank-top{color:#7bbaff;}
 @media(max-width:760px){.match-detail .participant-name{font-size:14px;}.match-detail .participant-row .match-stat>strong{font-size:14px;}.match-detail .team-heading{gap:9px;padding:8px 10px;}.match-detail .team-placement{font-size:24px;min-width:48px;}}
+
+/* Shared rank cell spans all teammates, matching the scoreboard's reading order. */
+.team-scoreboard-scroll{width:100%;overflow-x:auto;background:var(--panel);}
+.team-scoreboard{width:100%;min-width:740px;border-collapse:collapse;color:var(--ink);font-size:13px;table-layout:auto;}
+.team-scoreboard thead th{padding:12px 7px;background:var(--panel-alt);color:var(--muted);font-size:12px;font-weight:500;text-align:center;white-space:nowrap;}
+.team-scoreboard thead th:nth-child(2){text-align:left;}
+.team-scoreboard td{padding:10px 7px;vertical-align:middle;text-align:center;}
+.team-scoreboard .score-placement{width:48px;min-width:48px;text-align:center;vertical-align:middle;background:var(--panel-alt);border-right:1px solid var(--line);padding:8px 3px;}
+.score-placement strong{font-size:17px;}.score-placement small{display:block;font-size:11px;margin-top:7px;white-space:nowrap;}
+.score-win strong{color:#087f65;}.score-top strong{color:#216fbd;}
+.score-team{border-bottom:1px solid var(--line);}
+.score-player{display:flex;align-items:center;gap:8px;min-width:220px;text-align:left;}
+.score-portrait{position:relative;flex:none;width:44px;height:44px;}.score-portrait img{width:44px;height:44px;border-radius:50%;object-fit:cover;}.score-portrait small{position:absolute;bottom:-2px;right:-2px;padding:0 3px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--muted);font-size:10px;}
+.score-player .match-loadout{grid-template-columns:repeat(2,22px);gap:3px;min-height:47px;flex:none;}.score-player .match-loadout>span,.score-player .match-loadout img{width:22px;height:22px;}
+.score-nickname{font-size:14px;font-weight:600;line-height:1.5;overflow-wrap:anywhere;max-width:145px;}.score-nickname .own-player-badge{margin-left:4px;font-size:10px;}
+.score-kda{white-space:nowrap;font-weight:650;font-variant-numeric:tabular-nums;}
+.score-damage,.score-credit{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.damage-meter{display:block;width:44px;height:6px;margin:0 auto 4px;border-radius:5px;background:var(--line);overflow:hidden;}.damage-meter i{display:block;height:100%;border-radius:5px;background:#bf9275;}.animal-damage i{background:#819e43;}
+.team-scoreboard .score-items .item-slots{width:104px;display:flex;flex-wrap:wrap;justify-content:center;gap:3px;margin:auto;}.team-scoreboard .score-items .item-slot{width:31px;height:23px;}
+.score-own-team{background:#f0fafb;}.score-own-team .score-placement{background:#d9f2f3;color:#086574;}.score-own-player td{background:#dceff7;}
+.boss-badges{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;}.boss-badge{display:inline-block;padding:0 4px;border:1px solid;border-radius:3px;font-size:11px;font-weight:500;white-space:nowrap;}.boss-wickline{background:#c7e8a0;color:#325418;border-color:#91ba60;}.boss-alpha{background:#f7e7ff;color:#a527c1;border-color:#c677dc;}.boss-omega{background:#e4efff;color:#3264ba;border-color:#83a4dc;}
+html[data-theme=dark] .score-own-team{background:#1c3438;}html[data-theme=dark] .score-own-team .score-placement{background:#24454a;color:#a5e9eb;}html[data-theme=dark] .score-own-player td{background:#21434e;}
+html[data-theme=dark] .score-win strong{color:#43d9b5;}html[data-theme=dark] .score-top strong{color:#7bbaff;}
+html[data-theme=dark] .boss-wickline{background:#334a25;color:#c5ec9e;}html[data-theme=dark] .boss-alpha{background:#492651;color:#edb1ff;}html[data-theme=dark] .boss-omega{background:#243d60;color:#accbff;}
