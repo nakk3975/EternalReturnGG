@@ -53,8 +53,9 @@ public class EternalReturnRestController {
 	}
 	
 	@GetMapping("/user/detail")
-	public String userDetail(@RequestParam("userNum") String userId) throws URISyntaxException {
-		return erBo.userInfo(userId);
+	public String userDetail(@RequestParam("userNum") String userId,
+            @RequestParam(value = "next", required = false) Long next) throws URISyntaxException {
+		return erBo.userInfo(userId, next);
 	}
 	
 	@GetMapping("/skin/info")
@@ -77,6 +78,11 @@ public class EternalReturnRestController {
 		return erBo.skillInfo();
 	}
 	
+    @GetMapping("/meta/hash")
+    public String metaHash() throws URISyntaxException {
+        return erBo.metaHash();
+    }
+
 	@GetMapping("/trait")
 	public String traitSkill() throws URISyntaxException {
 		return erBo.traitSkill();

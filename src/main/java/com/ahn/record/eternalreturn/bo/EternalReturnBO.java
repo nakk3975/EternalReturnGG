@@ -109,9 +109,13 @@ public class EternalReturnBO {
     }
 
     public String userInfo(String userId) throws URISyntaxException {
-        String response = requestCached("/v1/user/games/uid/" + encodePathSegment(userId), false, USER_CACHE_MS);
-        // Details are fetched on expansion; searchGame still caches them.
-        return response;
+        return userInfo(userId, null);
+    }
+
+    public String userInfo(String userId, Long next) throws URISyntaxException {
+        String path = "/v1/user/games/uid/" + encodePathSegment(userId);
+        if (next != null && next > 0) path += "?next=" + next;
+        return requestCached(path, false, USER_CACHE_MS);
     }
 
     public String tacticalSkill() throws URISyntaxException {
@@ -124,6 +128,10 @@ public class EternalReturnBO {
 
     public String skillInfo() throws URISyntaxException {
         return requestCached("/v2/data/SkillGroup", false, STATIC_CACHE_MS);
+    }
+
+    public String metaHash() throws URISyntaxException {
+        return requestCached("/v2/data/hash", false, STATIC_CACHE_MS);
     }
 
     public String traitSkill() throws URISyntaxException {
@@ -350,7 +358,7 @@ public class EternalReturnBO {
 
         // Current clients only consume character and item names, not skill descriptions.
         String names = new String(body, StandardCharsets.UTF_8).lines()
-                .filter(line -> line.startsWith("Character/Name/") || line.startsWith("Item/Name/"))
+                .filter(line -> line.startsWith("Character/Name/") || line.startsWith("Item/Name/") || line.startsWith("Trait/Name/"))
                 .collect(java.util.stream.Collectors.joining("\n"));
         if (names.isEmpty()) throw new IOException("Localization name records were not found.");
         localizationBody = names.getBytes(StandardCharsets.UTF_8);

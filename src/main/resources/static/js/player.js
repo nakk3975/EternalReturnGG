@@ -8,30 +8,70 @@ function erKda(row) {
     if (row.playerDeaths == null || row.playerKill == null || row.playerAssistant == null) return '—';
     return Number(row.playerDeaths) === 0 ? 'PERFECT' : erNumber((Number(row.playerKill)+Number(row.playerAssistant))/Number(row.playerDeaths),2);
 }
+const erWeapons = {1:['Glove','글러브'],2:['Tonfa','톤파'],3:['Bat','방망이'],4:['Whip','채찍'],5:['HighAngleFire','투척'],6:['DirectFire','암기'],7:['Bow','활'],8:['CrossBow','석궁'],9:['Pistol','권총'],10:['AssaultRifle','돌격 소총'],11:['SniperRifle','저격 소총'],13:['Hammer','망치'],14:['Axe','도끼'],15:['OneHandSword','단검'],16:['TwoHandSword','양손검'],17:['Polearm','폴암'],18:['DualSword','쌍검'],19:['Spear','창'],20:['Nunchaku','쌍절곤'],21:['Rapier','레이피어'],22:['Guitar','기타'],23:['Camera','카메라'],24:['Arcana','아르카나'],25:['VFArm','VF 의수']};
+const erMetric = (label,value) => '<div class="match-stat"><strong>'+value+'</strong><span>'+label+'</span></div>';
+const erFinite = value => value != null && value !== '' && Number.isFinite(Number(value));
+function erRp(row) {
+    if(Number(row.matchingMode)!==3) return '—';
+    const score = row.mmrAfter ?? row.rankPoint;
+    const gain = row.mmrGain;
+    return erNumber(score)+(erFinite(gain)?'<small class="rp-change '+(Number(gain)>0?'rp-up':Number(gain)<0?'rp-down':'')+'">'+(Number(gain)>0?'+':'')+erNumber(gain)+'</small>':'');
+}
+function erRoute(row) { return row.routeIdOfStart == null ? '—' : Number(row.routeIdOfStart)===0 ? '비공개' : erText(row.routeIdOfStart); }
+function erLoadout(row) {
+    return '<div class="match-loadout"><span data-weapon="'+erText(row.bestWeapon)+'" title="무기군"></span><span data-trait="'+erText(row.traitFirstCore)+'" title="핵심 특성"></span><span data-tactical="'+erText(row.tacticalSkillGroup)+'" title="전술 스킬 '+erNumber(row.tacticalSkillLevel)+'레벨"></span><span data-trait-group="'+erText(row.traitSecondSub?.[0])+'" title="보조 특성"></span></div>';
+}
 function erPlayerCard(row, details = false) {
     const character = erPlayerCharacters.get(String(row.characterNum));
     const name = erPlayerNames.get('Character/Name/'+row.characterNum) || character?.name || '실험체';
     const date = new Date(row.startDtm);
-    const played = Number.isNaN(date.getTime()) ? '' : date.toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-    const mode = ({2:'일반',3:'랭크',4:'코발트'})[row.matchingMode] || '기타 모드';
-    const duration = row.totalTime == null ? '—' : Math.floor(row.totalTime/60)+'분 '+Math.floor(row.totalTime%60)+'초';
-    const portrait = '<div class="match-character"><img data-character="'+erText(row.characterNum)+'" data-skin="'+erText(row.skinCode || 0)+'" src="'+erText(erCharacterImage(character?.name,row.skinCode))+'" alt="'+erText(name)+'"><span>Lv.'+erNumber(row.characterLevel)+'</span><div class="match-loadout"><span data-tactical="'+erText(row.tacticalSkillGroup)+'"></span><span data-trait="'+erText(Number(row.traitFirstCore)-1)+'"></span></div></div>';
-    const stats = '<div class="match-stat"><span>TK / K / A</span><strong>'+erNumber(row.totalFieldKill)+' / '+erNumber(row.playerKill)+' / '+erNumber(row.playerAssistant)+'</strong></div><div class="match-stat"><span>플레이어 피해</span><strong>'+erNumber(row.damageToPlayer)+'</strong></div><div class="match-stat"><span>KDA</span><strong>'+erKda(row)+'</strong></div>';
-    if (details) return '<div class="participant-row">'+portrait+'<div class="participant-name">'+erText(row.nickname)+'<small data-character-name="'+erText(row.characterNum)+'">'+erText(name)+'</small></div>'+stats+erEquipmentHtml(row.equipment)+'</div>';
-    return '<div class="one-record match-card '+(Number(row.gameRank)===1?'match-victory':'')+'" role="button" tabindex="0" data-game-id="'+erText(row.gameId)+'" aria-expanded="false" aria-controls="game-'+erText(row.gameId)+'"><div class="match-result"><strong>#'+erNumber(row.gameRank)+'</strong><b>'+mode+'</b><small>'+duration+'</small><time>'+erText(played)+'</time></div>'+portrait+'<div class="match-numbers">'+stats+'</div><div class="match-build"><span>최종 장비</span>'+erEquipmentHtml(row.equipment)+'</div><span class="plus-btn" aria-hidden="true">⌄</span></div><div id="game-'+erText(row.gameId)+'" class="detail-box match-detail" hidden></div>';
+    const played = Number.isNaN(date.getTime()) ? '' : date.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    const mode = ({2:'일반',3:'랭크',4:'코발트'})[row.matchingMode] || '기타';
+    const seconds = row.duration ?? row.totalTime;
+    const duration = seconds == null ? '—' : Math.floor(seconds/60)+':'+String(Math.floor(seconds%60)).padStart(2,'0');
+    const portrait = '<div class="match-character"><img data-character="'+erText(row.characterNum)+'" data-skin="'+erText(row.skinCode || 0)+'" src="'+erText(erCharacterImage(character?.name,row.skinCode))+'" alt="'+erText(name)+'"><span>'+erNumber(row.characterLevel)+'</span><small data-character-name="'+erText(row.characterNum)+'">'+erText(name)+'</small></div>';
+    const stats = erMetric('TK / K / A',erNumber(row.teamKill ?? row.totalFieldKill)+' / '+erNumber(row.playerKill)+' / '+erNumber(row.playerAssistant)) + erMetric('딜량',erNumber(row.damageToPlayer)) + erMetric('RP',erRp(row)) + erMetric('루트 ID',erRoute(row));
+    if (details) return '<div class="participant-row">'+portrait+'<div class="participant-name">'+erText(row.nickname)+'<small>'+erText(erWeapons[row.bestWeapon]?.[1]||'무기군 미제공')+' · 숙련도 '+erNumber(row.bestWeaponLevel)+'</small></div>'+erLoadout(row)+erMetric('K / D / A',erNumber(row.playerKill)+' / '+erNumber(row.playerDeaths)+' / '+erNumber(row.playerAssistant))+erMetric('딜량',erNumber(row.damageToPlayer))+erMetric('RP',erRp(row))+erEquipmentHtml(row.equipment)+'</div>';
+    return '<div class="one-record match-card '+(Number(row.gameRank)===1?'match-victory':Number(row.gameRank)<=3?'match-top':'')+'" role="button" tabindex="0" data-game-id="'+erText(row.gameId)+'" aria-expanded="false" aria-controls="game-'+erText(row.gameId)+'"><div class="match-result"><strong>#'+erNumber(row.gameRank)+'</strong><b>'+mode+'</b><small>'+duration+'</small><time>'+erText(played)+'</time></div>'+portrait+erLoadout(row)+'<div class="match-numbers">'+stats+'</div><div class="match-build">'+erEquipmentHtml(row.equipment)+'</div><span class="plus-btn" aria-hidden="true">⌄</span></div><div id="game-'+erText(row.gameId)+'" class="detail-box match-detail" hidden></div>';
+}
+function erPersonalDetails(row) {
+    const metrics=[['KDA',erKda(row)],['무기 숙련도',erNumber(row.bestWeaponLevel)],['받은 피해',erNumber(row.damageFromPlayer)],['회복량',erNumber(row.healAmount)],['보호막 흡수',erNumber(row.protectAbsorb)],['야생동물 처치',erNumber(row.monsterKill)],['획득 크레딧',erNumber(row.totalGainVFCredit)],['사용 크레딧',erNumber(row.totalUseVFCredit)],['카메라 설치',erNumber(row.addTelephotoCamera)],['카메라 제거',erNumber(row.removeTelephotoCamera)],['기본 공격 피해',erNumber(row.damageToPlayer_basic)],['스킬 피해',erNumber(row.damageToPlayer_skill)]];
+    const traitCodes=[row.traitFirstCore,...(row.traitFirstSub||[]),...(row.traitSecondSub||[])].filter(erFinite);
+    return '<section class="personal-detail"><h3>내 경기 분석 <small>'+erText(row.serverName||'')+' · 경기 #'+erText(row.gameId)+'</small></h3><div class="detail-metrics">'+metrics.map(([k,v])=>erMetric(k,v)).join('')+'</div><div class="detail-traits"><strong>특성</strong>'+traitCodes.map(code=>'<span data-trait="'+code+'" title="특성 '+code+'"></span>').join('')+'<span>'+erText(erWeapons[row.bestWeapon]?.[1]||'무기군 미제공')+' · 루트 '+erRoute(row)+'</span></div></section>';
+}
+function erRpPoints(rows, season) {
+    return rows.filter(r=>Number(r.matchingMode)===3 && String(r.seasonId)===String(season) && erFinite(r.mmrAfter) && !Number.isNaN(Date.parse(r.startDtm))).slice().sort((a,b)=>Date.parse(a.startDtm)-Date.parse(b.startDtm));
+}
+function erRpGraph(rows, season) {
+    const points=erRpPoints(rows,season);
+    if(!points.length) return '<p class="empty-state">조회된 이번 시즌 랭크 RP 기록이 없습니다.</p>';
+    const values=points.map(r=>Number(r.mmrAfter));
+    const low=Math.floor((Math.min(...values)-25)/50)*50,high=Math.ceil((Math.max(...values)+25)/50)*50;
+    const x=i=>42+i*238/Math.max(1,points.length-1),y=v=>145-(v-low)*115/(high-low);
+    const date=r=>new Date(r.startDtm).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit'});
+    const grid=Array.from({length:4},(_,i)=>{const v=low+(high-low)*i/3;return '<line x1="42" x2="280" y1="'+y(v)+'" y2="'+y(v)+'"/><text x="35" y="'+(y(v)+3)+'" text-anchor="end">'+erNumber(v)+'</text>';}).join('');
+    return '<div class="rp-graph"><h3>RP 변화 <small>조회한 랭크 '+points.length+'경기</small></h3><svg viewBox="0 0 300 177" role="img" aria-label="조회된 이번 시즌 랭크 경기별 RP 추이"><g class="graph-grid">'+grid+'</g><polyline fill="none" stroke="#d58a64" stroke-width="1.5" points="'+values.map((v,i)=>x(i)+','+y(v)).join(' ')+'"/>'+points.map((r,i)=>'<circle tabindex="0" cx="'+x(i)+'" cy="'+y(Number(r.mmrAfter))+'" r="3" fill="#d58a64"><title>'+date(r)+' · 경기 '+erText(r.gameId)+' · '+erNumber(r.mmrAfter)+' RP ('+erNumber(r.mmrGain)+')</title></circle>').join('')+'<text x="42" y="169">'+date(points[0])+'</text><text x="280" y="169" text-anchor="end">'+date(points[points.length-1])+'</text></svg><p>경기 종료 RP · 더 보기를 누르면 기록이 이어집니다.</p></div>';
 }
 function erEnhancePlayer(root) {
     root.querySelectorAll('[data-character]').forEach(img=>{const c=erPlayerCharacters.get(img.dataset.character);if(c){const src=erCharacterImage(c.name,img.dataset.skin);if(img.getAttribute('src')!==src){delete img.dataset.fallback;img.src=src;}}});
     root.querySelectorAll('[data-character-name]').forEach(el=>{el.textContent=erPlayerNames.get('Character/Name/'+el.dataset.characterName)||erPlayerCharacters.get(el.dataset.characterName)?.name||'실험체';});
-    root.querySelectorAll('[data-tactical],[data-trait]').forEach(slot=>{const code=slot.dataset.tactical ?? slot.dataset.trait;const info=slot.dataset.tactical!=null?erTactical.get(code):erTraits.get(code);if(info?.icon&&erAssetBase)slot.innerHTML='<img src="'+erText(erAssetBase+info.icon+'.png')+'" alt="'+(slot.dataset.tactical!=null?'전술 스킬':'핵심 특성')+'">';});
+    root.querySelectorAll('[data-tactical],[data-trait],[data-trait-group],[data-weapon]').forEach(slot=>{
+        if(!erAssetBase)return;
+        let icon, name;
+        if(slot.dataset.weapon!=null){const w=erWeapons[slot.dataset.weapon];if(w){icon='Ico_Ability_'+w[0];name=w[1];}}
+        else if(slot.dataset.tactical!=null){icon=erTactical.get(slot.dataset.tactical)?.icon;name=slot.title||'전술 스킬';}
+        else if(slot.dataset.traitGroup!=null){const group=erTraits.get(slot.dataset.traitGroup)?.traitGroup; if(group){icon='TraitSkillIcon_'+group+'02';name=({Havoc:'파괴',Fortification:'저항',Support:'지원',Chaos:'혼돈'})[group]||group;}}
+        else if(Number(slot.dataset.trait)>0){icon='TraitSkillIcon_'+(Number(slot.dataset.trait)-1);name=erPlayerNames.get('Trait/Name/'+slot.dataset.trait)||'특성 '+slot.dataset.trait;}
+        if(icon){slot.innerHTML='<img loading="lazy" src="'+erText(erAssetBase+icon+'.png')+'" alt="'+erText(name)+'">';slot.title=name;}
+    });
     erApplyItemGrades(root,erPlayerEquipment);
 }
-async function erRenderGame(gameId) {
+async function erRenderGame(gameId, ownRow) {
     const data=await erRequest('/er/game?gameId='+encodeURIComponent(gameId));
     if (!Array.isArray(data.userGames)) throw new Error('경기 응답을 확인할 수 없습니다.');
     const teams=new Map();
     for(const row of data.userGames){const key=String(row.teamNumber ?? row.gameRank ?? '기타');if(!teams.has(key))teams.set(key,[]);teams.get(key).push(row);}
-    const html=[...teams.values()].sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(rows=>'<section class="match-team"><h3>#'+erNumber(rows[0].gameRank)+' <span>팀 '+erText(rows[0].teamNumber??'')+'</span></h3>'+rows.map(r=>erPlayerCard(r,true)).join('')+'</section>').join('');
+    const html=erPersonalDetails(ownRow)+[...teams.values()].sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(rows=>'<section class="match-team"><h3>#'+erNumber(rows[0].gameRank)+' <span>팀 '+erText(rows[0].teamNumber??'')+'</span></h3>'+rows.map(r=>erPlayerCard(r,true)).join('')+'</section>').join('');
     const fragment=document.createElement('div');fragment.innerHTML=html;erEnhancePlayer(fragment);return fragment.innerHTML;
 }
 async function startPlayer() {
@@ -39,21 +79,27 @@ async function startPlayer() {
     const records=document.querySelector('#record');
     if(!userId){records.textContent='플레이어를 먼저 검색해 주세요.';return;}
     const encoded=encodeURIComponent(userId);
-    let rows=[];let selectedMode='';
+    let rows=[];let selectedMode='';let rankSeason=null;let next=null;let loading=false;
     const assets=loadAssetConfig();
-    const metadata=Promise.allSettled([assets,erStatic('/er/character'),erDictionary(),erLoadEquipment(),erStatic('/er/tacticalSkill'),erStatic('/er/skillInfo')]).then(result=>{
+    const metadata=Promise.allSettled([assets,erStatic('/er/character'),erDictionary(),erLoadEquipment(),erStatic('/er/tacticalSkill'),erStatic('/er/trait')]).then(result=>{
         if(result[1].status==='fulfilled')for(const c of result[1].value.data||[])erPlayerCharacters.set(String(c.code),c);
         if(result[2].status==='fulfilled')erPlayerNames=result[2].value;
         if(result[3].status==='fulfilled')erPlayerEquipment=result[3].value;
         if(result[4].status==='fulfilled')erTactical=new Map((result[4].value.data||[]).map(s=>[String(s.group),s]));
-        if(result[5].status==='fulfilled')erTraits=new Map((result[5].value.data||[]).map(s=>[String(s.group),s]));
+        if(result[5].status==='fulfilled')erTraits=new Map((result[5].value.data||[]).map(s=>[String(s.code),s]));
         erEnhancePlayer(document);
     });
     const render=()=>{
         const filtered=rows.filter(r=>!selectedMode || String(r.matchingMode)===selectedMode);
         records.innerHTML=filtered.length ? filtered.map(r=>erPlayerCard(r)).join('') : '<p class="empty-state">이 모드의 최근 전적이 없습니다.</p>';
-        for(const row of filtered)matchDetailLoaders.set(String(row.gameId),()=>erRenderGame(row.gameId));
+        for(const row of filtered)matchDetailLoaders.set(String(row.gameId),()=>erRenderGame(row.gameId,row));
         erEnhancePlayer(records);
+        const valid=filtered.filter(r=>erFinite(r.gameRank));
+        document.querySelector('#recent-summary').innerHTML='<strong>'+filtered.length+'게임</strong> · '+filtered.filter(r=>Number(r.gameRank)===1).length+'승';
+        document.querySelector('#recent-overview').innerHTML='<div class="recent-metrics">'+erMetric('평균 순위',valid.length?'#'+erNumber(valid.reduce((s,r)=>s+Number(r.gameRank),0)/valid.length,1):'—')+erMetric('승리',erNumber(valid.filter(r=>Number(r.gameRank)===1).length))+erMetric('TOP 3',erNumber(valid.filter(r=>Number(r.gameRank)<=3).length))+erMetric('평균 TK',filtered.length?erNumber(filtered.reduce((s,r)=>s+Number(r.teamKill??r.totalFieldKill??0),0)/filtered.length,2):'—')+'</div><div class="placement-strip">'+valid.slice().reverse().slice(-20).map(r=>'<span class="'+(Number(r.gameRank)===1?'win':Number(r.gameRank)<=3?'top':'')+'">'+erNumber(r.gameRank)+'</span>').join('')+'</div>';
+        document.querySelector('#rp-history').innerHTML=erRpGraph(rows,rankSeason??rows.find(r=>Number(r.matchingMode)===3)?.seasonId);
+        document.querySelector('#more-matches').hidden=!next;
+
     };
     document.querySelectorAll('[data-match-mode]').forEach(button=>button.onclick=()=>{selectedMode=button.dataset.matchMode;document.querySelectorAll('[data-match-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));render();});
     document.querySelector('#refresh').onclick=()=>location.reload();
@@ -61,8 +107,11 @@ async function startPlayer() {
     erRequest('/er/userRank?userNum='+encoded).then(async data=>{
         const row=data.userStats?.[0];
         if(!row){rankPanel.innerHTML='<p class="empty-state">이번 시즌 랭크 기록이 없습니다.</p>';return;}
+        rankSeason=row.seasonId;
         const metric=(label,value)=>'<div><span>'+label+'</span><strong>'+value+'</strong></div>';
-        rankPanel.innerHTML='<div class="rank-score"><small>현재 시즌 · 스쿼드</small><strong>'+erNumber(row.mmr)+' <span>RP</span></strong><p>순위 '+(Number(row.rank)>0?erNumber(row.rank)+'위':'—')+'</p></div><div class="profile-metrics">'+metric('게임 수',erNumber(row.totalGames))+metric('승률',row.top1==null?'—':erNumber(row.top1*100,1)+'%')+metric('평균 킬',erNumber(row.averageKills,2))+metric('평균 어시스트',erNumber(row.averageAssistants,2))+metric('TOP 3',row.top3==null?'—':erNumber(row.top3*100,1)+'%')+metric('평균 순위',erNumber(row.averageRank,1))+'</div>';
+        const tier=Number(row.seasonId)===41 && Number(row.mmr)>=8300 && Number(row.rank)>0 ? (Number(row.rank)<=300?{name:'이터니티',image:8}:{name:'데미갓',image:7}) : null;
+        rankPanel.innerHTML='<div class="rank-score">'+(tier?'<img class="tier-emblem" src="https://cdn.dak.gg/assets/er/images/rank/round/'+tier.image+'.png" alt="'+tier.name+'">':'')+'<div><strong>'+erNumber(row.mmr)+' <span>RP</span></strong><small>'+(tier?tier.name:'랭크 · 스쿼드')+'</small><p>순위 '+(Number(row.rank)>0?erNumber(row.rank)+'위':'—')+'</p></div></div><div class="profile-metrics">'+metric('평균 TK',row.totalGames?erNumber(row.totalTeamKills/row.totalGames,2):'—')+metric('승률',row.totalGames && erFinite(row.totalWins)?erNumber(row.totalWins/row.totalGames*100,1)+'%':'—')+metric('게임 수',erNumber(row.totalGames))+metric('평균 킬',erNumber(row.averageKills,2))+metric('TOP 2',row.top2==null?'—':erNumber(row.top2*100,1)+'%')+metric('평균 어시스트',erNumber(row.averageAssistants,2))+metric('평균 동물 킬',erNumber(row.averageHunts,2))+metric('TOP 3',row.top3==null?'—':erNumber(row.top3*100,1)+'%')+metric('평균 순위',erNumber(row.averageRank,1))+'</div>';
+        document.querySelector('#rp-history').innerHTML=erRpGraph(rows,rankSeason);
         await metadata;
         const stats=Array.isArray(row.characterStats)?row.characterStats:[];
         document.querySelector('#player-characters').innerHTML=stats.slice().sort((a,b)=>b.usages-a.usages).slice(0,5).map(s=>{
@@ -70,10 +119,22 @@ async function startPlayer() {
             return '<a class="played-character" href="/er/characters/'+encodeURIComponent(c?.name||s.characterCode)+'"><img alt="" src="'+erText(erCharacterImage(c?.name))+'"><span>' +erText(erPlayerNames.get('Character/Name/'+s.characterCode)||c?.name||'실험체')+'<small>'+erNumber(s.usages)+'게임</small></span><strong>'+(s.usages?erNumber(s.wins/s.usages*100,1)+'%':'—')+'</strong></a>';
         }).join('')||'<p class="empty-state">실험체 기록이 없습니다.</p>';
     }).catch(()=>{rankPanel.innerHTML='<p class="empty-state">랭크 정보를 불러오지 못했습니다.</p>';});
+    document.querySelector('#more-matches').onclick=async()=>{
+        if(loading||!next)return;
+        loading=true;const button=document.querySelector('#more-matches');button.disabled=true;button.textContent='불러오는 중…';
+        try{
+            const data=await erRequest('/er/user/detail?userNum='+encoded+'&next='+encodeURIComponent(next));
+            if(!Array.isArray(data.userGames))throw new Error('전적 응답 오류');
+            const ids=new Set(rows.map(r=>String(r.gameId))), added=data.userGames.filter(r=>!ids.has(String(r.gameId)));
+            rows.push(...added);next=added.length && String(data.next)!==String(next) ? data.next||null : null;render();
+            button.textContent='전적 더 보기';
+        }catch(error){button.textContent='조회 실패 · 다시 시도';}
+        finally{loading=false;button.disabled=false;}
+    };
     try {
         const data=await erRequest('/er/user/detail?userNum='+encoded);
         if(!Array.isArray(data.userGames))throw new Error('최근 전적 응답을 확인할 수 없습니다.');
-        rows=data.userGames.slice(0,10);
+        rows=data.userGames;next=data.next || null;
         if(rows[0]){
             document.querySelector('#nickname').textContent=rows[0].nickname || '플레이어';
             document.querySelector('#userLevel').textContent='레벨 '+erNumber(rows[0].accountLevel);
