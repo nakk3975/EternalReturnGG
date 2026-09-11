@@ -72,7 +72,8 @@ function erEnhancePlayer(root) {
         else if(slot.dataset.tactical!=null){icon=erTactical.get(slot.dataset.tactical)?.icon;name=erPlayerNames.get('Skill/Group/Name/'+icon?.match(/(\d+)$/)?.[1])||slot.title||'전술 스킬';}
         else if(slot.dataset.traitGroup!=null){const group=erTraits.get(slot.dataset.traitGroup)?.traitGroup; if(group){icon='TraitSkillIcon_'+group+'02';name=({Havoc:'파괴',Fortification:'저항',Support:'지원',Chaos:'혼돈'})[group]||group;}}
         else if(Number(slot.dataset.trait)>0){icon='TraitSkillIcon_'+(Number(slot.dataset.trait)-1);name=erPlayerNames.get('Skill/Group/Name/'+(Number(slot.dataset.trait)-1))||erPlayerNames.get('Trait/Name/'+slot.dataset.trait)||'특성 '+slot.dataset.trait;}
-        if(icon){slot.innerHTML='<img loading="lazy" src="'+erText(erAssetBase+icon+'.png')+'" alt="'+erText(name)+'">';slot.title=name;}
+        if(slot.dataset.trait!=null&&Number(slot.dataset.trait)>=7400000){slot.hidden=true;return;}
+        if(icon){const skillCode=icon.match(/(?:SkillIcon_)(\d+)$/)?.[1];if(skillCode){slot.dataset.skillCode=skillCode;slot.tabIndex=0;}slot.innerHTML='<img loading="lazy" src="'+erText(erAssetBase+icon+'.png')+'" alt="'+erText(name)+'">';slot.title=name;}
     });
     erApplyItemGrades(root,erPlayerEquipment);
     root.querySelectorAll('[data-item-code]').forEach(slot=>{const name=erPlayerNames.get('Item/Name/'+slot.dataset.itemCode);if(name){slot.title=name;const img=slot.querySelector('img');if(img)img.alt=name;}});

@@ -38,18 +38,18 @@ async function erCharacterPage() {
         try {
             if(tab==='traits' || tab==='tactical') {
                 const data=await erStatic(tab==='traits'?'/er/trait':'/er/tacticalSkill');if(current!==generation)return;
-                const list=data.data||[];
+                const list=tab==='traits'?(data.data||[]).filter(erIsStandardTrait).sort((a,b)=>a.traitSortOrder-b.traitSortOrder):(data.data||[]);
                 target.innerHTML='<section class="surface"><h3 class="panel-title">'+(tab==='traits'?'특성 도감':'전술 스킬 도감')+'</h3><div class="skill-grid">'+list.map(s=>{
                     const code=tab==='traits'?Number(s.code)-1:(s.icon?.match(/(\d+)$/)?.[1]||s.group);
                     const title=names.get('Skill/Group/Name/'+code)||names.get('Trait/Name/'+s.code)||s.name||'스킬 '+code;
                     const icon=tab==='traits'?'TraitSkillIcon_'+code:s.icon;
-                    return '<article class="skill-row">'+(icon?'<img loading="lazy" src="'+erText(erAssetBase+icon+'.png')+'" alt="'+erText(title)+'">':'')+'<div><strong>'+erText(title)+'</strong><p>'+erText(s.traitGroup||'전술 스킬')+'</p></div></article>';
+                    return '<article class="skill-row">'+erSkillImage(code,title)+'<div><strong>'+erText(title)+'</strong><p>'+erText(erTraitGroups[s.traitGroup]||'전술 스킬')+'</p></div></article>';
                 }).join('')+'</div></section>';return;
             }
             if(tab==='skills') {
                 const skills=await erStatic('/er/skillInfo');if(current!==generation)return;
                 const list=(skills.data||[]).filter(s=>String(s.characterCode)===String(selected.code));
-                target.innerHTML=list.length?'<section class="surface"><h3 class="panel-title">스킬 정보</h3><div class="skill-grid">'+list.map(s=>'<div class="skill-row">'+(s.icon?'<img src="'+erText(erAssetBase+s.icon+'.png')+'" alt="">':'')+'<div><strong>'+erText(s.name||s.skillName||'스킬 '+s.group)+'</strong><p>'+erText(s.skillSlot||'실험체 스킬')+'</p></div></div>').join('')+'</div></section>':'<p class="empty-state">이 실험체에 연결된 스킬 정보가 제공되지 않았습니다.</p>';
+                target.innerHTML=list.length?'<section class="surface"><h3 class="panel-title">스킬 정보</h3><div class="skill-grid">'+list.map(s=>'<div class="skill-row">'+erSkillImage(s.group,s.name)+'<div><strong>'+erText(s.name||s.skillName||'스킬 '+s.group)+'</strong><p>'+erText(s.skillSlot||'실험체 스킬')+'</p></div></div>').join('')+'</div></section>':'<p class="empty-state">이 실험체에 연결된 스킬 정보가 제공되지 않았습니다.</p>';
                 return;
             }
             const data=await erStatic('/er/main');if(current!==generation)return;
@@ -157,8 +157,8 @@ function erAnalysisMarkup(data,code,names,mode='3',tactical=[]) {
         return '<section class="surface analysis-builds"><h3 class="panel-title">'+title+'</h3>'+choices.map(r=>{
             const v=r.value;let body='';
             if(kind==='skills')body='<div class="analysis-skill-order">'+Object.entries(v||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([order,code])=>'<span title="'+erText(names.get('Skill/Group/Name/'+code)||code)+'"><small>'+erText(order)+'</small>'+skill(code)+'</span>').join('')+'</div>';
-            if(kind==='tactical'){const meta=tactical.find(s=>String(s.group)===String(v));const iconCode=meta?.icon?.match(/(\d+)$/)?.[1];body=(meta?.icon?'<img src="'+erText(erAssetBase+meta.icon+'.png')+'" alt="'+erText(names.get('Skill/Group/Name/'+iconCode)||'전술 스킬')+'">':'')+'<strong>'+erText(names.get('Skill/Group/Name/'+iconCode)||'전술 스킬 '+v)+'</strong>';}
-            if(kind==='traits')body='<div class="analysis-traits">'+[v.core,...(v.first||[]),...(v.second||[])].filter(c=>Number(c)>0).map(c=>'<span title="'+erText(names.get('Skill/Group/Name/'+(Number(c)-1))||names.get('Trait/Name/'+c)||c)+'">'+skill(Number(c)-1)+'</span>').join('')+'</div>';
+            if(kind==='tactical'){const meta=tactical.find(s=>String(s.group)===String(v));const iconCode=meta?.icon?.match(/(\d+)$/)?.[1];body=erSkillImage(iconCode,names.get('Skill/Group/Name/'+iconCode))+'<strong>'+erText(names.get('Skill/Group/Name/'+iconCode)||'전술 스킬 '+v)+'</strong>';}
+            if(kind==='traits')body='<div class="analysis-traits">'+[v.core,...(v.first||[]),...(v.second||[])].filter(c=>Number(c)>=7000000&&Number(c)<7400000).map(c=>'<span title="'+erText(names.get('Skill/Group/Name/'+(Number(c)-1))||names.get('Trait/Name/'+c)||c)+'">'+skill(Number(c)-1)+'</span>').join('')+'</div>';
             return '<div class="analysis-build"><div>'+body+'</div><p>사용 '+erNumber(r.games/row.games*100,1)+'%<br>승률 '+erNumber(r.wins/r.games*100,1)+'%<small>'+erNumber(r.games)+'개 기록</small></p></div>';
         }).join('')+(choices.length?'':'<p class="empty-state">수집된 기록이 없습니다.</p>')+'</section>';
     }).join('');

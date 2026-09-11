@@ -1,6 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 
+        <link rel="stylesheet" href="/static/css/theme.css?v=20260912-hover">
+        <script>try{document.documentElement.dataset.theme=localStorage.getItem('ergg.theme')||'light';}catch(_){document.documentElement.dataset.theme='light';}</script>
         <style>
             header{padding-left:max(24px,calc((100% - 1232px)/2));padding-right:max(24px,calc((100% - 1232px)/2));background:radial-gradient(ellipse at 85% 0%,#39bed16b,transparent 60%),linear-gradient(110deg,#173f63,#147489 70%,#268ea5);border-bottom:1px solid #ffffff26;}
             nav > .nav{max-width:1280px;margin:0 auto;}
@@ -11,6 +13,7 @@
         </style>
         <header class="d-flex justify-content-between align-items-center">
             <a href="/er/search/view" class="p-2 ml-2 text-white" id="mainBanner" aria-label="ER.GG 홈"><img src="/static/images/ergg-logo.webp" width="42" height="42" alt=""><span>ER.GG</span></a>
+            <button id="theme-toggle" type="button" aria-label="화면 테마 변경">라이트 / 다크</button>
             <div class="p-2">
                 <form class="search-form" id="searchHeaderForm">
                     <input type="text" aria-label="플레이어 닉네임" id="searchHeaderInput" class="search-input" placeholder="플레이어 닉네임을 입력해주세요." required>
@@ -38,6 +41,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('theme-toggle').addEventListener('click',()=>{const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=theme;try{localStorage.setItem('ergg.theme',theme);}catch(_){}});
             document.querySelectorAll('nav a').forEach(link => {
                 if (link.pathname === location.pathname || (link.pathname !== '/er/search/view' && location.pathname.startsWith(link.pathname + '/'))) link.setAttribute('aria-current', 'page');
             });

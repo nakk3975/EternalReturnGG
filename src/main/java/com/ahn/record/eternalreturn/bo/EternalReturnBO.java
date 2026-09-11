@@ -434,9 +434,9 @@ public class EternalReturnBO {
             throw new IOException("Localization data could not be downloaded.");
         }
 
-        // Current clients only consume character and item names, not skill descriptions.
+        // Share official names and descriptions for the global information tooltip.
         String names = new String(body, StandardCharsets.UTF_8).lines()
-                .filter(line -> line.startsWith("Character/Name/") || (line.startsWith("Item/Name/") || line.startsWith("Item/Desc/")) || line.startsWith("Trait/Name/") || line.startsWith("Skill/Group/Name/"))
+                .filter(line -> line.startsWith("Character/Name/") || (line.startsWith("Item/Name/") || line.startsWith("Item/Desc/")) || line.startsWith("Trait/") || line.startsWith("Skill/"))
                 .collect(java.util.stream.Collectors.joining("\n"));
         if (names.isEmpty()) throw new IOException("Localization name records were not found.");
         localizationBody = names.getBytes(StandardCharsets.UTF_8);

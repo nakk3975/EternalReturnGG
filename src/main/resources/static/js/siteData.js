@@ -14,7 +14,7 @@ function erStatic(url) {
 }
 let erDictionaryRequest;
 function erDictionary() {
-    if (!erDictionaryRequest) erDictionaryRequest = fetch('/er/loadTextFile?schema=3', {signal:AbortSignal.timeout(15000)}).then(async r => {
+    if (!erDictionaryRequest) erDictionaryRequest = fetch('/er/loadTextFile?schema=4', {signal:AbortSignal.timeout(15000)}).then(async r => {
         if (!r.ok) throw new Error('이름 정보 조회 실패');
         return new Map((await r.text()).split('\n').map(line => {const i=line.indexOf('┃');return i<0 ? ['', ''] : [line.slice(0,i).trim(),line.slice(i+1).trim()];}));
     }).catch(() => new Map());
@@ -42,5 +42,15 @@ function erTier(row) {
 function erSkillImage(code, name) {
     if(!/^\d+$/.test(String(code)) || !erAssetBase)return '';
     const prefix=Number(code)>=7000000?'TraitSkillIcon_':Number(code)>=4000000?'VSkillIcon_':Number(code)>=2000000?'WeaponSkillIcon_':'SkillIcon_';
-    return '<img class="skill-icon" loading="lazy" src="'+erText(erAssetBase+prefix+code+'.png')+'" alt="'+erText(name||'스킬 '+code)+'">';
+    return '<img class="skill-icon" data-skill-code="'+code+'" tabindex="0" loading="lazy" src="'+erText(erAssetBase+prefix+code+'.png')+'" alt="'+erText(name||'스킬 '+code)+'">';
+}
+
+const erTraitGroups={Havoc:'파괴',Fortification:'저항',Support:'지원',Chaos:'혼돈'};
+function erIsStandardTrait(row){return row.active===true&&Object.hasOwn(erTraitGroups,row.traitGroup)&&['Core','Sub1','Sub2'].includes(row.traitType);}
+function erSkillDescription(names,code){
+    const keys=['Skill/Group/Desc/','Skill/Group/Description/','Skill/Desc/','Skill/Description/','Skill/Tooltip/'];
+    for(const prefix of keys){const text=names.get(prefix+code);if(text)return text;}
+    // Some localization entries carry a level suffix; preserve the official text.
+    for(const [key,text] of names){if(key.startsWith('Skill/')&&/(Desc|Tooltip)/i.test(key)&&key.split('/').includes(String(code)))return text;}
+    return '';
 }

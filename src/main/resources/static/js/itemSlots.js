@@ -42,22 +42,27 @@ function erItemStats(item) {return Object.entries(erItemStatLabels).filter(([key
 const erHoverItems=new Map();
 let erItemTooltip,erHoverSlot;
 async function erShowItemTooltip(slot) {
-    const item=erHoverItems.get(slot.dataset.itemCode);if(!item)return;
     erHoverSlot=slot;
     const names=typeof erDictionary==='function'?await erDictionary():new Map();
-    if(erHoverSlot!==slot)return;
+    if(erHoverSlot!==slot||!slot.isConnected)return;
+    let item=erHoverItems.get(slot.dataset.itemCode);
+    if(slot.dataset.itemCode&&!item){item=(await erLoadEquipment()).get(slot.dataset.itemCode);if(erHoverSlot!==slot)return;}
+    const code=slot.dataset.skillCode;
+    if(!item&&!code)return;
+    const clean=text=>String(text||'').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'').replace(/\\n/g,'\n');
+    const title=item?(names.get('Item/Name/'+item.code)||item.name||item.code):(names.get('Skill/Group/Name/'+code)||slot.getAttribute('alt')||slot.title||'스킬 '+code);
+    const description=item?(names.get('Item/Desc/'+item.code)||''):erSkillDescription(names,code);
+    const category=item?(erGradeNames[item.itemGrade]||'아이템'):Number(code)>=7000000?'특성':Number(code)>=4000000?'전술 스킬':Number(code)>=2000000?'무기 스킬':'실험체 스킬';
     if(!erItemTooltip){erItemTooltip=document.createElement('div');erItemTooltip.id='item-tooltip';erItemTooltip.setAttribute('role','tooltip');document.body.append(erItemTooltip);}
-    const title=names.get('Item/Name/'+item.code)||item.name||item.code;
-    const description=names.get('Item/Desc/'+item.code)||'';
-    erItemTooltip.innerHTML='<strong>'+erText(title)+'</strong><small>'+erText(erGradeNames[item.itemGrade]||'')+'</small><dl>'+erItemStats(item).map(s=>'<div><dt>'+erText(s.label)+'</dt><dd>'+erText(s.value)+'</dd></div>').join('')+'</dl>'+(description?'<p>'+erText(description.replace(/<[^>]*>/g,'').replace(/\\n/g,'\n'))+'</p>':'');
+    erItemTooltip.innerHTML='<strong>'+erText(title)+'</strong><small>'+erText(category)+'</small>'+(item?'<dl>'+erItemStats(item).map(s=>'<div><dt>'+erText(s.label)+'</dt><dd>'+erText(s.value)+'</dd></div>').join('')+'</dl>':'')+'<p>'+erText(clean(description)||(item?'':'현재 공식 데이터에 상세 설명이 제공되지 않습니다.'))+'</p>';
     erItemTooltip.hidden=false;slot.setAttribute('aria-describedby','item-tooltip');
     const rect=slot.getBoundingClientRect(),tip=erItemTooltip.getBoundingClientRect();
     erItemTooltip.style.left=Math.max(8,Math.min(rect.left,innerWidth-tip.width-8))+'px';
     erItemTooltip.style.top=(rect.bottom+tip.height+10<innerHeight?rect.bottom+8:Math.max(8,rect.top-tip.height-8))+'px';
 }
 function erHideItemTooltip(){if(erHoverSlot)erHoverSlot.removeAttribute('aria-describedby');erHoverSlot=null;if(erItemTooltip)erItemTooltip.hidden=true;}
-document.addEventListener('pointerover',e=>{const slot=e.target.closest?.('[data-item-code]');if(slot&&slot!==erHoverSlot)erShowItemTooltip(slot);});
-document.addEventListener('focusin',e=>{const slot=e.target.closest?.('[data-item-code]');if(slot)erShowItemTooltip(slot);});
+document.addEventListener('pointerover',e=>{const slot=e.target.closest?.('[data-item-code],[data-skill-code]');if(slot&&slot!==erHoverSlot)erShowItemTooltip(slot);});
+document.addEventListener('focusin',e=>{const slot=e.target.closest?.('[data-item-code],[data-skill-code]');if(slot)erShowItemTooltip(slot);});
 document.addEventListener('pointerout',e=>{if(erHoverSlot&&!erHoverSlot.contains(e.relatedTarget))erHideItemTooltip();});
 document.addEventListener('focusout',erHideItemTooltip);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')erHideItemTooltip();});
