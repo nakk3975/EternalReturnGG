@@ -37,3 +37,24 @@ html[data-theme=dark] .own-team,html[data-theme=dark] .own-player{background:#1c
 @media(min-width:1181px){.items-layout{grid-template-columns:220px minmax(390px,1fr) minmax(340px,1fr);gap:16px;}}
 @media(min-width:641px) and (max-width:1180px){.items-layout{grid-template-columns:210px minmax(0,1fr);}.items-layout .item-detail{grid-column:2;}}
 @media(max-width:640px){#item-type-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px;}.item-filter-group:first-child{grid-column:1/-1;}.item-filter-group:first-child .item-type-buttons{grid-template-columns:repeat(4,minmax(0,1fr));}.item-filters{margin-bottom:16px;}}
+
+/* Recipe nodes keep their shape; only the recipe viewport scrolls. */
+.craft-viewport{--branch:#b2bac5;overflow-x:auto;overscroll-behavior-x:contain;max-width:100%;padding:24px 8px 18px;background:var(--panel);scrollbar-width:thin;scrollbar-color:var(--muted) transparent;}
+html[data-theme=dark] .craft-viewport{--branch:#606875;}
+.craft-viewport .craft-tree,.craft-viewport .craft-tree ul{display:flex;justify-content:center;list-style:none;width:max-content;min-width:100%;margin:0;padding:0;border:0;gap:0;overflow:visible;}
+.craft-viewport .craft-tree li{position:relative;flex:0 0 auto;width:max-content;min-width:0;padding:0 10px;text-align:center;border:0;}
+.craft-viewport .craft-tree ul{position:relative;padding-top:24px;}
+.craft-viewport .craft-tree ul:before{content:'';position:absolute;top:0;left:50%;height:24px;border-left:1px solid var(--branch);}
+.craft-viewport .craft-tree ul>li{padding-top:24px;}
+.craft-viewport .craft-tree ul>li:before,.craft-viewport .craft-tree ul>li:after{content:'';position:absolute;top:0;width:50%;height:24px;border-top:1px solid var(--branch);}
+.craft-viewport .craft-tree ul>li:before{right:50%;}
+.craft-viewport .craft-tree ul>li:after{left:50%;border-left:1px solid var(--branch);}
+.craft-viewport .craft-tree ul>li:first-child:before,.craft-viewport .craft-tree ul>li:last-child:after{border-top:0;}
+.craft-viewport .craft-tree ul>li:last-child:before{border-right:1px solid var(--branch);}
+.craft-viewport .craft-tree ul>li:only-child:before{display:none;}
+.craft-viewport .craft-tree ul>li:only-child:after{border-left:1px solid var(--branch);}
+.craft-viewport .craft-node{position:relative;display:inline-flex;vertical-align:top;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;width:92px;height:88px;margin:0;padding:6px;border:1px solid transparent;border-radius:6px;color:var(--ink);text-decoration:none;box-sizing:border-box;}
+.craft-viewport .craft-node:hover,.craft-viewport .craft-node:focus-visible{background:var(--panel-alt);border-color:var(--accent);outline:none;}
+.craft-viewport .craft-tree .item-slot{flex:0 0 42px;width:58px;height:42px;border-radius:4px;}
+.craft-viewport .craft-name{display:block;max-width:100%;font-size:12px;font-weight:500;line-height:16px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+@media(max-width:640px){.craft-viewport{padding:20px 0 14px;}.craft-viewport .craft-tree li{padding-left:7px;padding-right:7px;}}
