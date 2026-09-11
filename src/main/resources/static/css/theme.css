@@ -74,3 +74,31 @@ html[data-theme=dark] .item-stat-chips>span{background:#1c4430;color:#a3ebba;}
 html[data-theme=dark] .ranking-table .rank-player{color:var(--link);}
 html[data-theme=dark] .ranking-table .rank-player:hover,html[data-theme=dark] .ranking-table .rank-player:focus-visible{color:#fff;text-decoration:underline;}
 html[data-theme=dark] .rank-position:not(.top-rank){color:var(--muted);}
+
+/* Keep legacy surfaces and high-specificity player styles theme-aware. */
+html[data-theme=dark]{--surface:var(--panel);}
+html[data-theme=dark] .home-route{background:var(--panel);color:var(--ink);border-color:var(--line);}
+html[data-theme=dark] .home-route:hover{background:var(--panel-alt);border-color:var(--accent);}
+html[data-theme=dark] .home-route h3,html[data-theme=dark] .route-character-name,html[data-theme=dark] .player-page{color:var(--ink);}
+html[data-theme=dark] #record .match-card{background:var(--panel);color:var(--ink);border-top-color:var(--line);border-right-color:var(--line);border-bottom-color:var(--line);}
+html[data-theme=dark] #record .match-card:hover,html[data-theme=dark] #record .match-card[aria-expanded=true]{background:var(--panel-alt);}
+html[data-theme=dark] .player-sidebar .panel-title,html[data-theme=dark] .player-matches .sub-tabs{background:var(--panel-alt);color:var(--ink);border-color:var(--line);}
+html[data-theme=dark] .player-matches .sub-tabs button{background:transparent;color:var(--muted);border-color:var(--line);}
+html[data-theme=dark] .player-matches .sub-tabs button[aria-pressed=true]{background:#e29d00;color:#171719;}
+html[data-theme=dark] #more-matches,html[data-theme=dark] .explorer-controls,html[data-theme=dark] .explorer textarea,html[data-theme=dark] .user-record,html[data-theme=dark] .one-record,html[data-theme=dark] .detail-box{background:var(--panel);color:var(--ink);border-color:var(--line);}
+html[data-theme=dark] .own-team .participant-row{background:#1c3438;}
+html[data-theme=dark] .own-team .participant-row.own-player,html[data-theme=dark] .participant-row.own-player{background:#21434e;}
+html[data-theme=dark] .match-team.own-team h3{background:#24454a;color:#a5e9eb;}
+html[data-theme=dark] .rp-graph h3,html[data-theme=dark] .rp-graph small,html[data-theme=dark] .rp-graph p,html[data-theme=dark] .personal-detail h3 small,html[data-theme=dark] .detail-traits>span:last-child,html[data-theme=dark] #hero-loading{color:var(--muted);}
+html[data-theme=dark] .rp-graph text{fill:var(--muted);}
+html[data-theme=dark] .graph-grid line{stroke:var(--line);}
+html[data-theme=dark] .rp-graph,html[data-theme=dark] .detail-traits,html[data-theme=dark] .skill-order,html[data-theme=dark] .participant-row{border-color:var(--line);}
+html[data-theme=dark] .match-loadout>span,html[data-theme=dark] .match-character>span{background:var(--panel-alt);color:var(--ink);border-color:var(--line);}
+html[data-theme=dark] .multi-modes button,html[data-theme=dark] .multi-more{background:var(--panel-alt);color:var(--ink);border-color:var(--line);}
+html[data-theme=dark] .multi-modes button[aria-pressed=true]{background:#4b5263;color:#fff;border-color:var(--accent);}
+html[data-theme=dark] .multi-rank,html[data-theme=dark] .multi-metrics,html[data-theme=dark] .multi-empty,html[data-theme=dark] .multi-detail h2 span{color:var(--muted);}
+html[data-theme=dark] .multi-metrics dd{color:var(--ink);}
+html[data-theme=dark] .multi-match-label{background:var(--panel-alt);color:var(--ink);}
+html[data-theme=dark] .selected .multi-match-label{background:#665026;color:#fff1c7;}
+html[data-theme=dark] .placement-strip span:not(.win):not(.top),html[data-theme=dark] .multi-placements span:not(.win):not(.top){background:#414650;color:#e3e7ef;}
+html[data-theme=dark] footer,html[data-theme=dark] #rankText,html[data-theme=dark] #charPlayText{background:var(--panel-alt);color:var(--muted);border-color:var(--line);}
