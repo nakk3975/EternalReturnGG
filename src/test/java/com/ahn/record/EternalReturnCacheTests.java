@@ -45,4 +45,22 @@ class EternalReturnCacheTests {
             mock.verify();
         } finally { bo.shutdownPrefetchExecutor(); }
     }
+    @Test
+    void recentGamePagesHaveSeparateCacheKeys() throws Exception {
+        EternalReturnBO bo = new EternalReturnBO();
+        try {
+            ReflectionTestUtils.setField(bo, "apiValue", "test-key");
+            MockRestServiceServer mock = MockRestServiceServer.bindTo((RestTemplate) ReflectionTestUtils.getField(bo, "restTemplate")).build();
+            mock.expect(requestTo("https://open-api.bser.io/v1/user/games/uid/player"))
+                .andRespond(withSuccess("{\"userGames\":[{\"gameId\":123}],\"next\":123}", MediaType.APPLICATION_JSON));
+            mock.expect(requestTo("https://open-api.bser.io/v1/user/games/uid/player?next=123"))
+                .andRespond(withSuccess("{\"userGames\":[{\"gameId\":122}]}", MediaType.APPLICATION_JSON));
+            String first = bo.userInfo("player");
+            String second = bo.userInfo("player", 123L);
+            assertNotEquals(first, second);
+            assertEquals(second, bo.userInfo("player", 123L));
+            assertEquals(first, bo.userInfo("player"));
+            mock.verify();
+        } finally { bo.shutdownPrefetchExecutor(); }
+    }
 }

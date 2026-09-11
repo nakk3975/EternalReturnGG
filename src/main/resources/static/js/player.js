@@ -35,9 +35,14 @@ function erPlayerCard(row, details = false) {
     return '<div class="one-record match-card '+(Number(row.gameRank)===1?'match-victory':Number(row.gameRank)<=3?'match-top':'')+'" role="button" tabindex="0" data-game-id="'+erText(row.gameId)+'" aria-expanded="false" aria-controls="game-'+erText(row.gameId)+'"><div class="match-result"><strong>#'+erNumber(row.gameRank)+'</strong><b>'+mode+'</b><small>'+duration+'</small><time>'+erText(played)+'</time></div>'+portrait+erLoadout(row)+'<div class="match-numbers">'+stats+'</div><div class="match-build">'+erEquipmentHtml(row.equipment)+'</div><span class="plus-btn" aria-hidden="true">⌄</span></div><div id="game-'+erText(row.gameId)+'" class="detail-box match-detail" hidden></div>';
 }
 function erPersonalDetails(row) {
-    const metrics=[['KDA',erKda(row)],['무기 숙련도',erNumber(row.bestWeaponLevel)],['받은 피해',erNumber(row.damageFromPlayer)],['회복량',erNumber(row.healAmount)],['보호막 흡수',erNumber(row.protectAbsorb)],['야생동물 처치',erNumber(row.monsterKill)],['획득 크레딧',erNumber(row.totalGainVFCredit)],['사용 크레딧',erNumber(row.totalUseVFCredit)],['카메라 설치',erNumber(row.addTelephotoCamera)],['카메라 제거',erNumber(row.removeTelephotoCamera)],['기본 공격 피해',erNumber(row.damageToPlayer_basic)],['스킬 피해',erNumber(row.damageToPlayer_skill)]];
+    const metrics=[['KDA',erKda(row)],['무기 숙련도',erNumber(row.bestWeaponLevel)],['받은 피해',erNumber(row.damageFromPlayer)],['회복량',erNumber(row.healAmount)],['보호막 흡수',erNumber(row.protectAbsorb)],['야생동물 처치',erNumber(row.monsterKill)],['획득 크레딧',erNumber(row.totalGainVFCredit)],['사용 크레딧',erNumber(row.totalUseVFCredit)],['망원 카메라 설치',erNumber(row.addTelephotoCamera)],['망원 카메라 제거',erNumber(row.removeTelephotoCamera)],['기본 공격 피해',erNumber(row.damageToPlayer_basic)],['스킬 피해',erNumber(row.damageToPlayer_skill)],['최대 체력',erNumber(row.maxHp)],['공격력',erNumber(row.attackPower)],['방어력',erNumber(row.defense)],['공격 속도',erNumber(row.attackSpeed,2)],['이동 속도',erNumber(row.moveSpeed,2)],['최종 시야 범위',erNumber(row.sightRange,2)]];
     const traitCodes=[row.traitFirstCore,...(row.traitFirstSub||[]),...(row.traitSecondSub||[])].filter(erFinite);
-    return '<section class="personal-detail"><h3>내 경기 분석 <small>'+erText(row.serverName||'')+' · 경기 #'+erText(row.gameId)+'</small></h3><div class="detail-metrics">'+metrics.map(([k,v])=>erMetric(k,v)).join('')+'</div><div class="detail-traits"><strong>특성</strong>'+traitCodes.map(code=>'<span data-trait="'+code+'" title="특성 '+code+'"></span>').join('')+'<span>'+erText(erWeapons[row.bestWeapon]?.[1]||'무기군 미제공')+' · 루트 '+erRoute(row)+'</span></div></section>';
+    return '<section class="personal-detail"><h3>내 경기 분석 <small>'+erText(row.serverName||'')+' · 경기 #'+erText(row.gameId)+'</small></h3><div class="detail-metrics">'+metrics.map(([k,v])=>erMetric(k,v)).join('')+'</div><div class="detail-traits"><strong>특성</strong>'+traitCodes.map(code=>'<span data-trait="'+code+'" title="특성 '+code+'"></span>').join('')+'<span>'+erText(erWeapons[row.bestWeapon]?.[1]||'무기군 미제공')+' · 루트 '+erRoute(row)+'</span></div>'+erSkillOrder(row)+'</section>';
+}
+function erSkillOrder(row) {
+    const entries=Object.entries(row.skillOrderInfo||{}).filter(([order,code])=>erFinite(order)&&erFinite(code)).sort((a,b)=>Number(a[0])-Number(b[0]));
+    if(!entries.length)return '';
+    return '<div class="skill-order"><h4>스킬 습득 순서</h4><ol>'+entries.map(([order,code])=>'<li><small>'+erText(order)+'</small><span>'+erText(erPlayerNames.get('Skill/Group/Name/'+code)||'스킬 '+code)+'</span></li>').join('')+'</ol></div>';
 }
 function erRpPoints(rows, season) {
     return rows.filter(r=>Number(r.matchingMode)===3 && String(r.seasonId)===String(season) && erFinite(r.mmrAfter) && !Number.isNaN(Date.parse(r.startDtm))).slice().sort((a,b)=>Date.parse(a.startDtm)-Date.parse(b.startDtm));
@@ -53,7 +58,7 @@ function erRpGraph(rows, season) {
     return '<div class="rp-graph"><h3>RP 변화 <small>조회한 랭크 '+points.length+'경기</small></h3><svg viewBox="0 0 300 177" role="img" aria-label="조회된 이번 시즌 랭크 경기별 RP 추이"><g class="graph-grid">'+grid+'</g><polyline fill="none" stroke="#d58a64" stroke-width="1.5" points="'+values.map((v,i)=>x(i)+','+y(v)).join(' ')+'"/>'+points.map((r,i)=>'<circle tabindex="0" cx="'+x(i)+'" cy="'+y(Number(r.mmrAfter))+'" r="3" fill="#d58a64"><title>'+date(r)+' · 경기 '+erText(r.gameId)+' · '+erNumber(r.mmrAfter)+' RP ('+erNumber(r.mmrGain)+')</title></circle>').join('')+'<text x="42" y="169">'+date(points[0])+'</text><text x="280" y="169" text-anchor="end">'+date(points[points.length-1])+'</text></svg><p>경기 종료 RP · 더 보기를 누르면 기록이 이어집니다.</p></div>';
 }
 function erEnhancePlayer(root) {
-    root.querySelectorAll('[data-character]').forEach(img=>{const c=erPlayerCharacters.get(img.dataset.character);if(c){const src=erCharacterImage(c.name,img.dataset.skin);if(img.getAttribute('src')!==src){delete img.dataset.fallback;img.src=src;}}});
+    root.querySelectorAll('[data-character]').forEach(img=>{const c=erPlayerCharacters.get(img.dataset.character);if(c){img.alt=erPlayerNames.get('Character/Name/'+img.dataset.character)||c.name;const src=erCharacterImage(c.name,img.dataset.skin);if(img.getAttribute('src')!==src){delete img.dataset.fallback;img.src=src;}}});
     root.querySelectorAll('[data-character-name]').forEach(el=>{el.textContent=erPlayerNames.get('Character/Name/'+el.dataset.characterName)||erPlayerCharacters.get(el.dataset.characterName)?.name||'실험체';});
     root.querySelectorAll('[data-tactical],[data-trait],[data-trait-group],[data-weapon]').forEach(slot=>{
         if(!erAssetBase)return;
@@ -61,12 +66,14 @@ function erEnhancePlayer(root) {
         if(slot.dataset.weapon!=null){const w=erWeapons[slot.dataset.weapon];if(w){icon='Ico_Ability_'+w[0];name=w[1];}}
         else if(slot.dataset.tactical!=null){icon=erTactical.get(slot.dataset.tactical)?.icon;name=slot.title||'전술 스킬';}
         else if(slot.dataset.traitGroup!=null){const group=erTraits.get(slot.dataset.traitGroup)?.traitGroup; if(group){icon='TraitSkillIcon_'+group+'02';name=({Havoc:'파괴',Fortification:'저항',Support:'지원',Chaos:'혼돈'})[group]||group;}}
-        else if(Number(slot.dataset.trait)>0){icon='TraitSkillIcon_'+(Number(slot.dataset.trait)-1);name=erPlayerNames.get('Trait/Name/'+slot.dataset.trait)||'특성 '+slot.dataset.trait;}
+        else if(Number(slot.dataset.trait)>0){icon='TraitSkillIcon_'+(Number(slot.dataset.trait)-1);name=erPlayerNames.get('Skill/Group/Name/'+(Number(slot.dataset.trait)-1))||erPlayerNames.get('Trait/Name/'+slot.dataset.trait)||'특성 '+slot.dataset.trait;}
         if(icon){slot.innerHTML='<img loading="lazy" src="'+erText(erAssetBase+icon+'.png')+'" alt="'+erText(name)+'">';slot.title=name;}
     });
     erApplyItemGrades(root,erPlayerEquipment);
 }
 async function erRenderGame(gameId, ownRow) {
+    const panel=document.getElementById('game-'+gameId);
+    if(panel){panel.innerHTML=erPersonalDetails(ownRow)+'<p class="empty-state">팀별 경기 결과를 불러오는 중입니다.</p>';erEnhancePlayer(panel);}
     const data=await erRequest('/er/game?gameId='+encodeURIComponent(gameId));
     if (!Array.isArray(data.userGames)) throw new Error('경기 응답을 확인할 수 없습니다.');
     const teams=new Map();
@@ -109,7 +116,7 @@ async function startPlayer() {
         if(!row){rankPanel.innerHTML='<p class="empty-state">이번 시즌 랭크 기록이 없습니다.</p>';return;}
         rankSeason=row.seasonId;
         const metric=(label,value)=>'<div><span>'+label+'</span><strong>'+value+'</strong></div>';
-        const tier=Number(row.seasonId)===41 && Number(row.mmr)>=8300 && Number(row.rank)>0 ? (Number(row.rank)<=300?{name:'이터니티',image:8}:{name:'데미갓',image:7}) : null;
+        const tier=Number(row.seasonId)===41 && Number(row.mmr)>=8300 && Number(row.rank)>0 ? (Number(row.rank)<=300?{name:'이터니티',image:8}:Number(row.rank)<=1000?{name:'데미갓',image:7}:null) : null;
         rankPanel.innerHTML='<div class="rank-score">'+(tier?'<img class="tier-emblem" src="https://cdn.dak.gg/assets/er/images/rank/round/'+tier.image+'.png" alt="'+tier.name+'">':'')+'<div><strong>'+erNumber(row.mmr)+' <span>RP</span></strong><small>'+(tier?tier.name:'랭크 · 스쿼드')+'</small><p>순위 '+(Number(row.rank)>0?erNumber(row.rank)+'위':'—')+'</p></div></div><div class="profile-metrics">'+metric('평균 TK',row.totalGames?erNumber(row.totalTeamKills/row.totalGames,2):'—')+metric('승률',row.totalGames && erFinite(row.totalWins)?erNumber(row.totalWins/row.totalGames*100,1)+'%':'—')+metric('게임 수',erNumber(row.totalGames))+metric('평균 킬',erNumber(row.averageKills,2))+metric('TOP 2',row.top2==null?'—':erNumber(row.top2*100,1)+'%')+metric('평균 어시스트',erNumber(row.averageAssistants,2))+metric('평균 동물 킬',erNumber(row.averageHunts,2))+metric('TOP 3',row.top3==null?'—':erNumber(row.top3*100,1)+'%')+metric('평균 순위',erNumber(row.averageRank,1))+'</div>';
         document.querySelector('#rp-history').innerHTML=erRpGraph(rows,rankSeason);
         await metadata;

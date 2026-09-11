@@ -358,7 +358,7 @@ public class EternalReturnBO {
 
         // Current clients only consume character and item names, not skill descriptions.
         String names = new String(body, StandardCharsets.UTF_8).lines()
-                .filter(line -> line.startsWith("Character/Name/") || line.startsWith("Item/Name/") || line.startsWith("Trait/Name/"))
+                .filter(line -> line.startsWith("Character/Name/") || line.startsWith("Item/Name/") || line.startsWith("Trait/Name/") || line.startsWith("Skill/Group/Name/"))
                 .collect(java.util.stream.Collectors.joining("\n"));
         if (names.isEmpty()) throw new IOException("Localization name records were not found.");
         localizationBody = names.getBytes(StandardCharsets.UTF_8);
