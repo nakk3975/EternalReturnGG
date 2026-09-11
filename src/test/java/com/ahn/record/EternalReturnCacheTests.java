@@ -13,7 +13,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 class EternalReturnCacheTests {
     @Test
-    void localizationDownloadsOnceAndOnlyReturnsNames() throws Exception {
+    void localizationDownloadsOnceAndReturnsNamesAndSkillDescriptions() throws Exception {
         EternalReturnBO bo = new EternalReturnBO();
         try {
             ReflectionTestUtils.setField(bo, "apiValue", "test-key");
@@ -28,7 +28,7 @@ class EternalReturnCacheTests {
             String names = new String(first, StandardCharsets.UTF_8);
             assertTrue(names.contains("재키"));
             assertTrue(names.contains("Item/Name/1"));
-            assertFalse(names.contains("Skill/Description"));
+            assertTrue(names.contains("Skill/Description/1┃긴 설명"));
             mock.verify();
         } finally { bo.shutdownPrefetchExecutor(); }
     }
