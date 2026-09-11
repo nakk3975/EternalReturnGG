@@ -17,3 +17,7 @@ assert.equal(ctx.erIsStandardTrait({active:true,traitGroup:'Chaos',traitType:'Su
 assert.match(ctx.erSkillImage(7000200,'흡혈마'),/data-skill-code="7000200"/);
 assert.equal(ctx.erSkillDescription(new Map([['Skill/Group/Desc/7000200','공식 설명']]),7000200),'공식 설명');
 console.log('PASS: excludes cobalt and inactive traits, retains standard traits, shares skill tooltip identifiers');
+
+assert.equal(ctx.erSkillDescription(new Map([['Trait/Tooltip/7000201','특성 효과']]),7000200),'특성 효과');
+assert.equal(ctx.erSkillDescription(new Map([['Skill/LobbyDesc/1073100','로비 설명'],['Skill/Group/Desc/1073100','효과 {0}']]),1073100),'로비 설명');
+assert.equal(ctx.erSkillDescription(new Map([['Skill/Group/Desc/1073100','효과 {0}']]),1073100),'');
