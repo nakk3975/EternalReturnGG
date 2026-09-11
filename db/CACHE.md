@@ -17,3 +17,14 @@ token together. No browser, anon, or authenticated role has table privileges.
 Deploy `supabase/functions/er-cache/index.ts` with `verify_jwt=false` because
 this endpoint uses its own server credential check. Do not remove that check.
 The reviewed schema is in `db/er_api_cache.sql`.
+
+## Season skin aggregation
+
+`/er/user/season-skin` schedules a background season scan. Checkpoints (cursor,
+deduplicated game IDs, per-character skin counts) are saved under
+`/v2/user/skin-summary/{user}/{season}` in the same private cache table.
+A single worker spaces pagination requests and saves every five pages. It
+resumes saved scans and stops incremental refresh at already counted matches.
+Ranked-game totals are cross-checked against season stats: incomplete coverage
+or missing skin fields never replaces the default hero skin with a false winner.
+Ties use the lowest skin code. Completed summaries refresh after five minutes.

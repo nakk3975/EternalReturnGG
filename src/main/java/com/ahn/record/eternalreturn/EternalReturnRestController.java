@@ -58,6 +58,16 @@ public class EternalReturnRestController {
 		return erBo.userInfo(userId, next);
 	}
 	
+    @Autowired private com.ahn.record.eternalreturn.bo.SeasonSkinService seasonSkins;
+
+    @GetMapping("/user/season-skin")
+    public ResponseEntity<?> seasonSkin(@RequestParam("userNum") String userId,
+            @RequestParam("season") int season, @RequestParam("character") int character) throws URISyntaxException {
+        if(season != erBo.getCurrentSeasonId())return ResponseEntity.badRequest().body(java.util.Map.of("error","Current season only"));
+        try { return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore()).body(seasonSkins.get(userId,season,character)); }
+        catch(IllegalArgumentException e){return ResponseEntity.badRequest().body(java.util.Map.of("error","Invalid parameters"));}
+    }
+
 	@GetMapping("/skin/info")
 	public String skinInfo() throws URISyntaxException {
 		return erBo.characterSkin();

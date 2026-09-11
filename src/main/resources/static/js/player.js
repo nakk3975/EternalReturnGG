@@ -135,14 +135,33 @@ async function startPlayer() {
     const encoded=encodeURIComponent(userId);
     let rows=[];let placementRows=[];let selectedMode='';let rankSeason=null;let next=null;let loading=false;
     let heroStats=[];
+    let heroSkin=null, skinLookup='';
+    const loadSeasonSkin=async(code,season)=>{
+        const lookup=season+':'+code;
+        if(skinLookup===lookup)return;
+        skinLookup=lookup;heroSkin=null;
+        for(let attempt=0;attempt<180 && skinLookup===lookup;attempt++){
+            try {
+                const result=await erRequest('/er/user/season-skin?userNum='+encoded+'&season='+encodeURIComponent(season)+'&character='+encodeURIComponent(code));
+                if(skinLookup!==lookup)return;
+                if(result.status==='incomplete')return;
+                if(result.status==='complete'){
+                    heroSkin={code,skin:result.skinCode,uses:result.uses};updateHero();return;
+                }
+            }catch(_){}
+            await new Promise(resolve=>setTimeout(resolve,5000));
+        }
+    };
     const updateHero=()=>{
         const code=erMostPlayed(heroStats,rows);
         if(code==null)return;
         const img=document.querySelector('#detailImage');
-        img.dataset.character=String(code);img.dataset.skin='0';
+        img.dataset.character=String(code);img.dataset.skin=String(heroSkin?.code===code?heroSkin.skin:0);
         img.title=heroStats.length?'이번 시즌 가장 많이 플레이한 실험체':'최근 경기에서 가장 많이 플레이한 실험체';
         document.querySelector('#hero-caption').textContent=heroStats.length?'시즌 주력 실험체':'최근 주력 실험체';
+        if(heroSkin?.code===code)img.title+=' · 시즌 최다 사용 스킨 ('+heroSkin.uses+'경기)';
         erEnhancePlayer(document.querySelector('.player-hero'));
+        if(rankSeason && heroStats.length)loadSeasonSkin(code,rankSeason);
     };
     const getPage=erMatchPages(userId);
     const prefetchNext=()=>{if(next)getPage(next).catch(()=>{});};
