@@ -146,23 +146,13 @@
 	
 	<script src="/static/js/getAjax.js"></script>
 	<script src="/static/js/getName.js"></script>
+	<script src="/static/js/assetImages.js"></script>
+	<script src="/static/js/matchDetails.js"></script>
 	<script src="/static/js/fetchWeaponBgImg.js"></script>
 	<script src="/static/js/fetchTraitIcon.js"></script>
 	<script>
 		$(document).ready(async function() {
-			
-			$(".plus-btn").on("click", function() {
-				let gameId = $(this).data("id");
-				
-				$.ajax({
-					type:"get"
-					, url:"/er/game"
-					, data:{"gameId" : gameId}
-					, success:function(data) {
-						
-					}
-				});
-			});
+            await loadAssetConfig();
 			
 			$("#refresh").on("click", function() {
 				location.reload();
@@ -228,7 +218,7 @@
 								let games = characterStat.usages;
 								let wins = characterStat.wins;
 								let maxKillings = characterStat.maxKillings;
-								let sideCharImg = "https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharResult_" + sideCharacterName + "_S000.png"
+								let sideCharImg = "" + erAssetBase + "CharResult_" + sideCharacterName + "_S000.png"
 								return "<tr class='side-main'>"
 										+ "<td class='align-middle'><a class='image-wrapper'><img src='" + sideCharImg + "' width='67px' height='56px'></a></td>"
 										+ "<td class='align-middle'>" + sideKorName + "<br><a class='side-total-games'>" + games + "게임</a></td>"
@@ -377,13 +367,13 @@
 					            }
 			                }
 				            skinImageCode = skinImageCode + "";
-				            skinImageCode = skinImageCode.substring(4, 7);
+				            skinImageCode = skinImageCode.slice(-3).padStart(3, '0');
 	
 				            if(skinImageCode == " ") {
 				            	
 				            }
 				            
-			                let image = "https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharResult_" + characterName + "_S" + skinImageCode + ".png";
+			let image = "" + erAssetBase + "CharResult_" + characterName + "_S" + skinImageCode + ".png";
 			                $("#detailImage").attr("src", image);
 			                
 			            });
@@ -476,7 +466,7 @@
 										let resultTacticalSkillCode = gameItems[j].tacticalSkillGroup;
 										let resultSkinCode = gameItems[j].skinCode + "";
 										
-										resultSkinCode = resultSkinCode.substring(4,7);
+										resultSkinCode = resultSkinCode.slice(-3).padStart(3, '0');
 										// 메인특성
 										let resultTraitFirst = gameItems[j].traitFirstCore - 1;
 										// 메인특성 서브
@@ -540,18 +530,18 @@
 												+ "</div>"
 											
 												+ "<div class='d-flex ml-1'>"
-													+ "<img class='character-image image-all' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
+													+ "<img class='character-image image-all' src='" + erAssetBase + "CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
 													+ "<div class='character-level'>" + gameItems[j].characterLevel + "</div>"
 												+ "</div>"
 											
 												+ "<div class='image-group align-items-center'>"
 													+ "<div>"
-														+ "<img class='image-weapon mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
-														+ "<img class='tactical-skill mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultTactical + ".png' width='25' height='25'>"
+														+ "<img class='image-weapon mt-2' src='" + erAssetBase + "Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
+														+ "<img class='tactical-skill mt-2' src='" + erAssetBase + "" + resultTactical + ".png' width='25' height='25'>"
 													+ "</div>"
 													+ "<div>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultIcon + ".png' width='25' height='25'><br>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "" + resultIcon + ".png' width='25' height='25'><br>"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'>"
 													+ "</div>"
 												+ "</div>"
 											
@@ -576,25 +566,25 @@
 													+ "<div class='d-flex text-center mb-2 justify-content-center align-items-top'>"
 														+ "<div >"
 										 	 				+ "<img class='item-back' src='" + resultWeaponBgImg + "'>"
-											 	 			+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem1 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem1 + ".png'>"
 											 	 		+ "</div>"
 											 	 		+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg1 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem2 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem2 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg2 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem3 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem3 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 									 	 			+ "<div class='d-flex text-center align-items-center justify-content-center mb-2'>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg3 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem4 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem4 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg4 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem5 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem5 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 								 	 			+ "</div>"
@@ -608,18 +598,18 @@
 												+ "</div>"
 											
 												+ "<div class='d-flex ml-1'>"
-													+ "<img class='character-image image-all' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
+													+ "<img class='character-image image-all' src='" + erAssetBase + "CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
 													+ "<div class='character-level'>" + gameItems[j].characterLevel + "</div>"
 												+ "</div>"
 											
 												+ "<div class='image-group align-items-center'>"
 													+ "<div>"
-														+ "<img class='image-weapon mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
-														+ "<img class='tactical-skill mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultTactical + ".png' width='25' height='25'>"
+														+ "<img class='image-weapon mt-2' src='" + erAssetBase + "Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
+														+ "<img class='tactical-skill mt-2' src='" + erAssetBase + "" + resultTactical + ".png' width='25' height='25'>"
 													+ "</div>"
 													+ "<div>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultIcon + ".png' width='25' height='25'><br>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "" + resultIcon + ".png' width='25' height='25'><br>"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'>"
 													+ "</div>"
 												+ "</div>"
 											
@@ -644,25 +634,25 @@
 													+ "<div class='d-flex text-center mb-2 justify-content-center align-items-top'>"
 														+ "<div >"
 										 	 				+ "<img class='item-back' src='" + resultWeaponBgImg + "'>"
-											 	 			+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem1 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem1 + ".png'>"
 											 	 		+ "</div>"
 											 	 		+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg1 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem2 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem2 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg2 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem3 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem3 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 									 	 			+ "<div class='d-flex text-center align-items-center justify-content-center mb-2'>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg3 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem4 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem4 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg4 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem5 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem5 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 								 	 			+ "</div>"
@@ -676,18 +666,18 @@
 												+ "</div>"
 											
 												+ "<div class='d-flex ml-1'>"
-													+ "<img class='character-image image-all' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
+													+ "<img class='character-image image-all' src='" + erAssetBase + "CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
 													+ "<div class='character-level'>" + gameItems[j].characterLevel + "</div>"
 												+ "</div>"
 											
 												+ "<div class='image-group align-items-center'>"
 													+ "<div>"
-														+ "<img class='image-weapon mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
-														+ "<img class='tactical-skill mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultTactical + ".png' width='25' height='25'>"
+														+ "<img class='image-weapon mt-2' src='" + erAssetBase + "Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
+														+ "<img class='tactical-skill mt-2' src='" + erAssetBase + "" + resultTactical + ".png' width='25' height='25'>"
 													+ "</div>"
 													+ "<div>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultIcon + ".png' width='25' height='25'><br>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "" + resultIcon + ".png' width='25' height='25'><br>"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'>"
 													+ "</div>"
 												+ "</div>"
 											
@@ -712,25 +702,25 @@
 													+ "<div class='d-flex text-center mb-2 justify-content-center align-items-top'>"
 														+ "<div >"
 										 	 				+ "<img class='item-back' src='" + resultWeaponBgImg + "'>"
-											 	 			+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem1 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem1 + ".png'>"
 											 	 		+ "</div>"
 											 	 		+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg1 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem2 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem2 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg2 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem3 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem3 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 									 	 			+ "<div class='d-flex text-center align-items-center justify-content-center mb-2'>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg3 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem4 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem4 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg4 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem5 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem5 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 								 	 			+ "</div>"
@@ -743,18 +733,18 @@
 												+ "</div>"
 											
 												+ "<div class='d-flex ml-1'>"
-													+ "<img class='character-image image-all' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
+													+ "<img class='character-image image-all' src='" + erAssetBase + "CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
 													+ "<div class='character-level'>" + gameItems[j].characterLevel + "</div>"
 												+ "</div>"
 											
 												+ "<div class='image-group align-items-center'>"
 													+ "<div>"
-														+ "<img class='image-weapon mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
-														+ "<img class='tactical-skill mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultTactical + ".png' width='25' height='25'>"
+														+ "<img class='image-weapon mt-2' src='" + erAssetBase + "Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
+														+ "<img class='tactical-skill mt-2' src='" + erAssetBase + "" + resultTactical + ".png' width='25' height='25'>"
 													+ "</div>"
 													+ "<div>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultIcon + ".png' width='25' height='25'><br>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "" + resultIcon + ".png' width='25' height='25'><br>"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'>"
 													+ "</div>"
 												+ "</div>"
 											
@@ -779,25 +769,25 @@
 													+ "<div class='d-flex text-center mb-2 justify-content-center align-items-top'>"
 														+ "<div >"
 										 	 				+ "<img class='item-back' src='" + resultWeaponBgImg + "'>"
-											 	 			+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem1 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem1 + ".png'>"
 											 	 		+ "</div>"
 											 	 		+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg1 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem2 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem2 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg2 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem3 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem3 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 									 	 			+ "<div class='d-flex text-center align-items-center justify-content-center mb-2'>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg3 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem4 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem4 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg4 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem5 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem5 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 								 	 			+ "</div>"
@@ -810,18 +800,18 @@
 												+ "</div>"
 											
 												+ "<div class='d-flex ml-1'>"
-													+ "<img class='character-image image-all' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
+													+ "<img class='character-image image-all' src='" + erAssetBase + "CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
 													+ "<div class='character-level'>" + gameItems[j].characterLevel + "</div>"
 												+ "</div>"
 											
 												+ "<div class='image-group align-items-center'>"
 													+ "<div>"
-														+ "<img class='image-weapon mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
-														+ "<img class='tactical-skill mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultTactical + ".png' width='25' height='25'>"
+														+ "<img class='image-weapon mt-2' src='" + erAssetBase + "Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
+														+ "<img class='tactical-skill mt-2' src='" + erAssetBase + "" + resultTactical + ".png' width='25' height='25'>"
 													+ "</div>"
 													+ "<div>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultIcon + ".png' width='25' height='25'><br>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "" + resultIcon + ".png' width='25' height='25'><br>"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'>"
 													+ "</div>"
 												+ "</div>"
 											
@@ -846,25 +836,25 @@
 													+ "<div class='d-flex text-center mb-2 justify-content-center align-items-top'>"
 														+ "<div >"
 										 	 				+ "<img class='item-back' src='" + resultWeaponBgImg + "'>"
-											 	 			+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem1 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem1 + ".png'>"
 											 	 		+ "</div>"
 											 	 		+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg1 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem2 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem2 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg2 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem3 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem3 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 									 	 			+ "<div class='d-flex text-center align-items-center justify-content-center mb-2'>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg3 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem4 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem4 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg4 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem5 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem5 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 								 	 			+ "</div>"
@@ -877,18 +867,18 @@
 												+ "</div>"
 											
 												+ "<div class='d-flex ml-1'>"
-													+ "<img class='character-image image-all' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
+													+ "<img class='character-image image-all' src='" + erAssetBase + "CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
 													+ "<div class='character-level'>" + gameItems[j].characterLevel + "</div>"
 												+ "</div>"
 											
 												+ "<div class='image-group align-items-center'>"
 													+ "<div>"
-														+ "<img class='image-weapon mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
-														+ "<img class='tactical-skill mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultTactical + ".png' width='25' height='25'>"
+														+ "<img class='image-weapon mt-2' src='" + erAssetBase + "Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
+														+ "<img class='tactical-skill mt-2' src='" + erAssetBase + "" + resultTactical + ".png' width='25' height='25'>"
 													+ "</div>"
 													+ "<div>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultIcon + ".png' width='25' height='25'><br>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "" + resultIcon + ".png' width='25' height='25'><br>"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'>"
 													+ "</div>"
 												+ "</div>"
 											
@@ -913,25 +903,25 @@
 													+ "<div class='d-flex text-center mb-2 justify-content-center align-items-top'>"
 														+ "<div >"
 										 	 				+ "<img class='item-back' src='" + resultWeaponBgImg + "'>"
-											 	 			+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem1 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem1 + ".png'>"
 											 	 		+ "</div>"
 											 	 		+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg1 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem2 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem2 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg2 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem3 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem3 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 									 	 			+ "<div class='d-flex text-center align-items-center justify-content-center mb-2'>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg3 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem4 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem4 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg4 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem5 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem5 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 								 	 			+ "</div>"
@@ -944,18 +934,18 @@
 												+ "</div>"
 											
 												+ "<div class='d-flex ml-1'>"
-													+ "<img class='character-image image-all' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
+													+ "<img class='character-image image-all' src='" + erAssetBase + "CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
 													+ "<div class='character-level'>" + gameItems[j].characterLevel + "</div>"
 												+ "</div>"
 											
 												+ "<div class='image-group align-items-center'>"
 													+ "<div>"
-														+ "<img class='image-weapon mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
-														+ "<img class='tactical-skill mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultTactical + ".png' width='25' height='25'>"
+														+ "<img class='image-weapon mt-2' src='" + erAssetBase + "Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
+														+ "<img class='tactical-skill mt-2' src='" + erAssetBase + "" + resultTactical + ".png' width='25' height='25'>"
 													+ "</div>"
 													+ "<div>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultIcon + ".png' width='25' height='25'><br>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "" + resultIcon + ".png' width='25' height='25'><br>"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'>"
 													+ "</div>"
 												+ "</div>"
 											
@@ -980,25 +970,25 @@
 													+ "<div class='d-flex text-center mb-2 justify-content-center align-items-top'>"
 														+ "<div >"
 										 	 				+ "<img class='item-back' src='" + resultWeaponBgImg + "'>"
-											 	 			+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem1 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem1 + ".png'>"
 											 	 		+ "</div>"
 											 	 		+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg1 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem2 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem2 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg2 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem3 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem3 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 									 	 			+ "<div class='d-flex text-center align-items-center justify-content-center mb-2'>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg3 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem4 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem4 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg4 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem5 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem5 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 								 	 			+ "</div>"
@@ -1011,18 +1001,18 @@
 												+ "</div>"
 											
 												+ "<div class='d-flex ml-1'>"
-													+ "<img class='character-image image-all' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
+													+ "<img class='character-image image-all' src='" + erAssetBase + "CharProfile_" + resultCharacterImgName + "_S" + resultSkinCode + ".png' width='60' height='62'>"
 													+ "<div class='character-level'>" + gameItems[j].characterLevel + "</div>"
 												+ "</div>"
 											
 												+ "<div class='image-group align-items-center'>"
 													+ "<div>"
-														+ "<img class='image-weapon mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
-														+ "<img class='tactical-skill mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultTactical + ".png' width='25' height='25'>"
+														+ "<img class='image-weapon mt-2' src='" + erAssetBase + "Ico_Ability_" + resultWeaponName + ".png' width='25' height='25'><br>"
+														+ "<img class='tactical-skill mt-2' src='" + erAssetBase + "" + resultTactical + ".png' width='25' height='25'>"
 													+ "</div>"
 													+ "<div>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + resultIcon + ".png' width='25' height='25'><br>"
-														+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "" + resultIcon + ".png' width='25' height='25'><br>"
+														+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "TraitSkillIcon_" + resultMainIcon + "02.png' width='25' height='25'>"
 													+ "</div>"
 												+ "</div>"
 											
@@ -1047,25 +1037,25 @@
 													+ "<div class='d-flex text-center mb-2 justify-content-center align-items-top'>"
 														+ "<div >"
 										 	 				+ "<img class='item-back' src='" + resultWeaponBgImg + "'>"
-											 	 			+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem1 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem1 + ".png'>"
 											 	 		+ "</div>"
 											 	 		+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg1 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem2 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem2 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg2 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem3 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem3 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 									 	 			+ "<div class='d-flex text-center align-items-center justify-content-center mb-2'>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg3 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem4 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem4 + ".png'>"
 										 	 			+ "</div>"
 										 	 			+ "<div>"
 									 	 					+ "<img class='item-back' src='" + resultArmorBgImg4 + "'>"
-										 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + resultItem5 + ".png'>"
+															+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + resultItem5 + ".png'>"
 										 	 			+ "</div>"
 									 	 			+ "</div>"
 								 	 			+ "</div>"
@@ -1106,7 +1096,7 @@
 						
 						skinCode = skinCode + "";
 						// 스킨 코드 이미지 적용 번호
-						skinCode = skinCode.substring(4,7);
+						skinCode = skinCode.slice(-3).padStart(3, '0');
 						
 						
 						// 매칭 모드(2:일반, 3:랭크, 4:코발트)
@@ -1139,7 +1129,7 @@
 			            
 			   	
 						let html = 
-							"<div class='one-record btn-group mt-2' role='group'>"
+							"<div class='one-record btn-group mt-2' role='button' tabindex='0' aria-expanded='false'>"
 								+ "<div class='d-flex justify-content-around align-items-center one'>"	
 									+ "<div class='user-rank text-center'>"
 										+ "<div class='rank text-primary'>#" + items[i].gameRank + "</div>"
@@ -1149,18 +1139,18 @@
 									+ "</div>"
 									
 									+ "<div class='d-flex ml-1'>"
-										+ "<img class='character-image image-all' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + characterImgName + "_S" + skinCode + ".png' width='60' height='62'>"
+										+ "<img class='character-image image-all' src='" + erAssetBase + "CharProfile_" + characterImgName + "_S" + skinCode + ".png' width='60' height='62'>"
 										+ "<div class='character-level'>" + charLevel + "</div>"
 									+ "</div>"
 									
 									+ "<div class='image-group align-items-center'>"
 										+ "<div>"
-											+ "<img class='image-weapon mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + weaponName + ".png' width='25' height='25'><br>"
-											+ "<img class='tactical-skill mt-2' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + tactical + ".png' width='25' height='25'>"
+											+ "<img class='image-weapon mt-2' src='" + erAssetBase + "Ico_Ability_" + weaponName + ".png' width='25' height='25'><br>"
+											+ "<img class='tactical-skill mt-2' src='" + erAssetBase + "" + tactical + ".png' width='25' height='25'>"
 										+ "</div>"
 										+ "<div>"
-											+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/" + icon + ".png' width='25' height='25'><br>"
-											+ "<img class='trait-image mt-2 ml-1' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/TraitSkillIcon_" + mainIcon + "02.png' width='25' height='25'"
+											+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "" + icon + ".png' width='25' height='25'><br>"
+											+ "<img class='trait-image mt-2 ml-1' src='" + erAssetBase + "TraitSkillIcon_" + mainIcon + "02.png' width='25' height='25'>"
 										+ "</div>"
 									+ "</div>"
 									
@@ -1185,37 +1175,34 @@
 										+ "<div class='d-flex text-center mb-2 justify-content-center align-items-top'>"
 											+ "<div >"
 							 	 				+ "<img class='item-back' src='" + weaponBgImg + "'>"
-								 	 			+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + item1 + ".png'>"
+												+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + item1 + ".png'>"
 								 	 		+ "</div>"
 								 	 		+ "<div>"
 						 	 					+ "<img class='item-back' src='" + armorBgImg1 + "'>"
-							 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + item2 + ".png'>"
+												+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + item2 + ".png'>"
 							 	 			+ "</div>"
 							 	 			+ "<div>"
 						 	 					+ "<img class='item-back' src='" + armorBgImg2 + "'>"
-							 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + item3 + ".png'>"
+												+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + item3 + ".png'>"
 							 	 			+ "</div>"
 						 	 			+ "</div>"
 						 	 			+ "<div class='d-flex text-center align-items-center justify-content-center mb-2'>"
 							 	 			+ "<div>"
 						 	 					+ "<img class='item-back' src='" + armorBgImg3 + "'>"
-							 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + item4 + ".png'>"
+												+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + item4 + ".png'>"
 							 	 			+ "</div>"
 							 	 			+ "<div>"
 						 	 					+ "<img class='item-back' src='" + armorBgImg4 + "'>"
-							 	 				+ "<img class='route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + item5 + ".png'>"
+												+ "<img class='route-item' src='" + erAssetBase + "ItemIcon_" + item5 + ".png'>"
 							 	 			+ "</div>"
 						 	 			+ "</div>"
 						 	 		+ "</div>"
 								+ "</div>"
-							+ "</div>"
 						 	+ "<button type='button' data-id='" + gameId + "' class='btn btn-primary plus-btn btn-group-sm'>▼</button>"
 						 	+ "</div>"
-						 	+ "<div class='detail-box'>" + resultHtml + "</div>"
+							+ "<div class='detail-box' hidden>" + resultHtml + "</div>"
 						 	
-						 	$(".plus-btn").on("click",function() {
-						 		
-						 	});
+
 						 	
 						
 						$("#record").append(html);

@@ -41,9 +41,11 @@
 	</div>
 	
 	<script src="/static/js/getName.js"></script>
+	<script src="/static/js/assetImages.js"></script>
 	<script src="/static/js/fetchWeaponBgImg.js"></script>
 	<script>
 		$(document).ready(async function() {
+            await loadAssetConfig();
 			try {
 		    	let data = await $.ajax({
 		            type: "get",
@@ -85,17 +87,17 @@
 
 					let itemHtml = "";
 					if (weaponItem) {
-						itemHtml += "<div><img class='main-item-back' src='https://cdn.dak.gg/er/images/item/ico-itemgradebg-0" + weaponBgImg + ".svg'><img class='main-route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + weaponItem + ".png'></div>";
+						itemHtml += "<div><img class='main-item-back' src='" + weaponBgImg + "'><img class='main-route-item' src='" + erAssetBase + "ItemIcon_" + weaponItem + ".png'></div>";
 					}
 					for (let j = 0; j < armorArray.length && j < 4; j++) {
-						itemHtml += "<div><img class='main-item-back' src='https://cdn.dak.gg/er/images/item/ico-itemgradebg-0" + armorBg[j] + ".svg'><img class='main-route-item' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/ItemIcon_" + armorArray[j] + ".png'></div>";
+						itemHtml += "<div><img class='main-item-back' src='" + armorBg[j] + "'><img class='main-route-item' src='" + erAssetBase + "ItemIcon_" + armorArray[j] + ".png'></div>";
 					}
 
 					let html = 
 						"<div class='recommend-route d-flex'><div><div class='route d-flex justify-content-between align-items-center'>"
 						+ "<div class='col-2'><div class='d-flex align-items-end'>"
-						+ "<img class='character-image image-all' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharProfile_" + characterName + "_S000.png' width='36' height='36'>"
-						+ "<img class='image-all cook-image absolute' src='https://cdn.dak.gg/assets/er/game-assets/1.13.0/Ico_Ability_" + weaponName + ".png' width='16' height='16'>"
+						+ "<img class='character-image image-all' src='" + erAssetBase + "CharProfile_" + characterName + "_S000.png' width='36' height='36'>"
+						+ "<img class='image-all cook-image absolute' src='" + erAssetBase + "Ico_Ability_" + weaponName + ".png' width='16' height='16'>"
 						+ "</div></div>"
 						+ "<div class='col-2'>"+ korName + "</div>"
 						+ "<div class='col-5 text-center'><div class='destination-title mt-2' data-routeId='" + id + "'>" + title + "</div>"

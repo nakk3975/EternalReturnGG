@@ -1,0 +1,31 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const listeners = {};
+const context = vm.createContext({document: {addEventListener: (name, handler) => { listeners[name] = handler; }}});
+vm.runInContext(fs.readFileSync('src/main/resources/static/js/matchDetails.js', 'utf8'), context);
+const panel = {hidden: true, classList: {contains: name => name === 'detail-box'}};
+const attrs = {};
+const button = {textContent: '▼', setAttribute() {}};
+const card = {nextElementSibling: panel, setAttribute: (k, v) => {attrs[k] = v;}, querySelector: () => button};
+listeners.click({target: {closest: () => card}});
+assert.equal(panel.hidden, false);
+assert.equal(attrs['aria-expanded'], 'true');
+assert.equal(button.textContent, '▲');
+listeners.click({target: {closest: () => card}});
+assert.equal(panel.hidden, true);
+assert.equal(button.textContent, '▼');
+vm.runInContext(fs.readFileSync('src/main/resources/static/js/assetImages.js', 'utf8'), context);
+const img = {tagName: 'IMG', dataset: {}, src: 'https://cdn.dak.gg/assets/er/game-assets/12.3.0/CharProfile_Tazia_S012.png'};
+listeners.error({target: img});
+assert.ok(img.src.endsWith('_S000.png'));
+listeners.error({target: img});
+assert.equal(img.src, '/static/images/asset-placeholder.svg');
+listeners.error({target: img});
+assert.equal(img.src, '/static/images/asset-placeholder.svg');
+for (const page of ['main', 'usersearch']) {
+    const text = fs.readFileSync('src/main/webapp/WEB-INF/jsp/main/' + page + '.jsp', 'utf8');
+    for (const script of text.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)) new vm.Script(script[1]);
+    assert.ok(!text.includes('game-assets/1.13.0'));
+}
+console.log('PASS: click expand/collapse, skin fallback, no fallback loop, JSP JavaScript syntax');

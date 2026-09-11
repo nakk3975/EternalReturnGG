@@ -421,6 +421,8 @@ thead {
 	height:70px;
 }
 
+.detail-box[hidden] { display: none !important; }
+#record .one-record { cursor: pointer; }
 .detail-box{
 	background-color: yellow;
 	border:0.3px black solid;
