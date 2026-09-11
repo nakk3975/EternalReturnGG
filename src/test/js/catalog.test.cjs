@@ -21,3 +21,8 @@ console.log('PASS: excludes cobalt and inactive traits, retains standard traits,
 assert.equal(ctx.erSkillDescription(new Map([['Trait/Tooltip/7000201','특성 효과']]),7000200),'특성 효과');
 assert.equal(ctx.erSkillDescription(new Map([['Skill/LobbyDesc/1073100','로비 설명'],['Skill/Group/Desc/1073100','효과 {0}']]),1073100),'로비 설명');
 assert.equal(ctx.erSkillDescription(new Map([['Skill/Group/Desc/1073100','효과 {0}']]),1073100),'');
+
+const top=ctx.erRankingCharacters({totalGames:100,characterStats:[{characterCode:1,usages:20},{characterCode:2,usages:40},{characterCode:1,usages:10},{characterCode:3,usages:15},{characterCode:4,usages:5}]});
+assert.equal(top.length,3);assert.equal(top[0].code,2);assert.equal(top[0].percent,40);assert.equal(top[1].uses,30);
+assert.equal(ctx.erRankingCharacters({characterStats:[{characterCode:1,usages:5}]})[0].percent,null);
+console.log('PASS: character usage ranking merges duplicate entries and uses total season games as denominator');
