@@ -180,7 +180,8 @@
                 var averageDamage = 0;
 
                 const recentRequest = Promise.resolve($.ajax({type: 'get', url: '/er/user/detail', dataType: 'json', data: {userNum: userNum}, timeout: 15000})).then(data => ({data}), error => ({error}));
-                // 유저 상세 정보
+                // Rank and recent records render independently.
+                const renderRank = async () => {
                 try {
                     let data = await $.ajax({
                         type:"get",
@@ -190,7 +191,7 @@
                     });
 
                         // 랭크 플레이 한 유저만 불러오기
-                        if(data.code != 404){
+                        if(Array.isArray(data.userStats) && data.userStats.length){
                             let rankItems = data.userStats[0];
                             mmr = rankItems.mmr;
                             rank = rankItems.rank;
@@ -198,14 +199,14 @@
                             game = rankItems.totalGames;
                             // 킬 수
                             let totalKill = rankItems.totalTeamKills;
-                            averageTotalKill = totalKill/game;
+                            averageTotalKill = game ? totalKill/game : 0;
                             topOne = rankItems.top1 * 100;
                             topTwo = rankItems.top2 * 100;
                             topThree = rankItems.top3 * 100;
                             averageKill = rankItems.averageKills;
                             averageAsist = rankItems.averageAssistants;
                             averageRank = rankItems.averageRank;
-                            var sideCharacter = rankItems.characterStats;
+                            var sideCharacter = rankItems.characterStats || [];
                             // 내가 플레이 한 캐릭터 전적
                             let sideCharacterRows = await Promise.all(sideCharacter.map(async function(characterStat) {
                                 let sideCharacterCode = characterStat.characterCode;
@@ -234,7 +235,7 @@
                         }
                 } catch(error) {
                     console.error("Error fetching user rank: ", error);
-                        alert("유저 랭크 정보 불러오기 오류");
+                        $("#rankText").text("랭크 정보를 불러오지 못했습니다.");
                 }
 
                 // 화면에 표시
@@ -254,7 +255,7 @@
                 // mmr에 따라 티어 정보 불러오기
                 let mmrImg = 0;
                 let tier = "";
-                mmrStr = mmr + "";
+                let mmrStr = mmr + "";
                 mmrStr = mmrStr.substring(1,4);
                 if(mmrStr < 250) {
                     mmrStr = 4;
@@ -300,6 +301,9 @@
                 $("#tier").append(tier);
                 $("#rank").append(rank + "위");
                 var rankImg = "https://cdn.dak.gg/er/images/tier/round/" + mmrImg + ".png";
+                $("#rankImg").attr("src", rankImg);
+                };
+                renderRank().catch(console.error);
 
                 recentRequest.then(async function (result) {
                         if (result.error) { $('#record').text('최근 전적 조회에 실패했습니다. 새로고침해 주세요.'); return; }
@@ -312,77 +316,11 @@
                     let level = items[0].accountLevel;
 
                     $("#userLevel").append("레벨 " + level);
-                    $("#nickname").append(firstUserNickname);
+                    $("#nickname").text(firstUserNickname);
 
-                    // 가장 많이한 캐릭터
-                    // Fetch character and skin information in advance to avoid duplicate calls
-                    getAjax("/er/character", {}, function (characterData) {
-                        let charItems = characterData.data;
-                        let duplicatedCharInfo = characterCodes
-                            .filter((value, index, self) => self.indexOf(value) !== index)
-                            .map(duplicatedCode => charItems.find(item => item.code === duplicatedCode));
-                        let codeFrequency = {};
-                         // 가장 많이 중복된 코드 찾기
-                        let mostFrequentCode = "";
-                        if(duplicatedCharInfo.length == 0) {
-                            mostFrequentCode = characterCodes[0];
-                        } else {
-                            for (let i = 0; i < duplicatedCharInfo.length; i++) {
-                                let code = duplicatedCharInfo[i].code;
-                                codeFrequency[code] = (codeFrequency[code] || 0) + 1;
-                            }
-                            let maxCount = 0;
-                            for (let code in codeFrequency) {
-                                if (codeFrequency[code] > maxCount) {
-                                    maxCount = codeFrequency[code];
-                                    mostFrequentCode = code;
-                                }
-                            }
-                        }
-                        // 가장 많이 한 캐릭터 이름 가져오기
-                        let characterName = "";
-                        for (let i = 0; i < charItems.length; i++) {
-                             if(mostFrequentCode == charItems[i].code) {
-                                 characterName = charItems[i].name;
-                             }
-                        }
-                        // 가장 많이 쓴 스킨 정보 가져오기
-                        getAjax("/er/skin/info", {}, function (skinData) {
-                            let skinItems = skinData.data;
-                            let duplicatedSkinInfo = skinCodes
-                                .filter((value, index, self) => self.indexOf(value) !== index)
-                                .map(duplicatedCode => skinItems.find(item => item.code === duplicatedCode));
-
-                            let skinImageCode = "";
-                            let skinCodeFrequency = {};
-                            if(duplicatedSkinInfo.length == 0) {
-                                skinImageCode = skinCodes[0];
-                            } else {
-                                for (let i = 0; i < duplicatedSkinInfo.length; i++) {
-                                    let code = duplicatedSkinInfo[i].code;
-                                    skinCodeFrequency[code] = (skinCodeFrequency[code] || 0) + 1;
-                                }
-                                let maxCount = 0;
-                                for (let code in skinCodeFrequency) {
-                                    if (skinCodeFrequency[code] > maxCount) {
-                                        maxCount = skinCodeFrequency[code];
-                                        skinImageCode = code;
-                                    }
-                                }
-                            }
-                            skinImageCode = skinImageCode + "";
-                            skinImageCode = skinImageCode.slice(-3).padStart(3, '0');
-
-                            if(skinImageCode == " ") {
-
-                            }
-
-            let image = "" + erAssetBase + "CharResult_" + characterName + "_S" + skinImageCode + ".png";
-                            $("#detailImage").attr("src", image);
-
-                        });
+                    getCharacterName(items[0].characterNum).then(name => {
+                        $('#detailImage').attr('src', erAssetBase + 'CharResult_' + name + '_S000.png');
                     });
-
                     let commonMetadata = await Promise.all([
                         $.ajax({type:"get", url:"/er/trait", dataType:"json"}),
                         $.ajax({type:"get", url:"/er/skillInfo", dataType:"json"}),
@@ -1206,14 +1144,12 @@
 
 
                         $("#record").append(html);
-                        $("#rankImg").attr("src", rankImg);
+
                         var averageDamage = 0;
-                        if(game != 0) {
-                            averageDamage = Math.floor(totalDamage / 10);
-                        }
+                        averageDamage = Math.floor(totalDamage / items.length);
                     }
-                    $("#averageDamage").append(averageDamage);
-                });
+                    $("#averageDamage").text(averageDamage);
+                }).catch(error => { console.error(error); $("#record").append("<p>일부 전적을 불러오지 못했습니다. 다시 시도해 주세요.</p>"); });
             }
         });
     </script>

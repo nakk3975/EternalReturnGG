@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,12 +48,21 @@ public class EternalReturnBO {
     @Value("${eternal-return.api-key:}")
     private String apiValue;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = new RestTemplate(httpFactory());
+    private static SimpleClientHttpRequestFactory httpFactory() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(3000);
+        factory.setReadTimeout(10000);
+        return factory;
+    }
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ExecutorService prefetchExecutor = Executors.newFixedThreadPool(6);
 
     private final Map<String, CacheEntry> responseCache = new ConcurrentHashMap<>();
-    private final Map<String, Object> cacheLocks = new ConcurrentHashMap<>();
+    private final Object[] cacheLocks = java.util.stream.IntStream.range(0, 64)
+            .mapToObj(i -> new Object()).toArray();
+    private byte[] localizationBody;
+    private long localizationExpiresAt;
 
     @PostConstruct
     public void warmStaticCache() {
@@ -122,7 +132,7 @@ public class EternalReturnBO {
 
     public String userRank(String userId) throws URISyntaxException {
         // 랭크 요청과 동시에 최근 전적/게임 상세를 미리 조회한다.
-        prefetchUserInfo(userId);
+        // The browser loads recent games independently, including in multi-search.
 
         int currentSeasonId = getCurrentSeasonId();
         String path = "/v2/user/stats/uid/" + encodePathSegment(userId)
@@ -213,7 +223,7 @@ public class EternalReturnBO {
             return cached.body;
         }
 
-        Object lock = cacheLocks.computeIfAbsent(path, key -> new Object());
+        Object lock = cacheLocks[(path.hashCode() & Integer.MAX_VALUE) % cacheLocks.length];
 
         synchronized(lock) {
             now = System.currentTimeMillis();
@@ -224,7 +234,14 @@ public class EternalReturnBO {
             }
 
             String response = request(path, useMetaHash);
-            responseCache.put(path, new CacheEntry(response, now + ttlMillis));
+            if (responseCache.size() >= 500) {
+                long expiryNow = System.currentTimeMillis();
+                responseCache.entrySet().removeIf(entry -> entry.getValue().expiresAt <= expiryNow);
+                if (responseCache.size() >= 500) {
+                    responseCache.keySet().stream().limit(100).forEach(responseCache::remove);
+                }
+            }
+            responseCache.put(path, new CacheEntry(response, System.currentTimeMillis() + ttlMillis));
             return response;
         }
     }
@@ -306,7 +323,10 @@ public class EternalReturnBO {
         return gameIds;
     }
 
-    public ResponseEntity<byte[]> loadTextFile() throws IOException, URISyntaxException {
+    public synchronized ResponseEntity<byte[]> loadTextFile() throws IOException, URISyntaxException {
+        if (localizationBody != null && localizationExpiresAt > System.currentTimeMillis()) {
+            return localizationResponse(localizationBody);
+        }
         String l10nInfo = requestCached("/v1/l10n/Korean", false, STATIC_CACHE_MS);
         String l10nPath;
 
@@ -328,6 +348,17 @@ public class EternalReturnBO {
             throw new IOException("Localization data could not be downloaded.");
         }
 
+        // Current clients only consume character and item names, not skill descriptions.
+        String names = new String(body, StandardCharsets.UTF_8).lines()
+                .filter(line -> line.startsWith("Character/Name/") || line.startsWith("Item/Name/"))
+                .collect(java.util.stream.Collectors.joining("\n"));
+        if (names.isEmpty()) throw new IOException("Localization name records were not found.");
+        localizationBody = names.getBytes(StandardCharsets.UTF_8);
+        localizationExpiresAt = System.currentTimeMillis() + STATIC_CACHE_MS;
+        return localizationResponse(localizationBody);
+    }
+
+    private ResponseEntity<byte[]> localizationResponse(byte[] body) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(new MediaType("text", "plain", StandardCharsets.UTF_8));
         headers.setCacheControl(CacheControl.maxAge(Duration.ofHours(12)).cachePublic());

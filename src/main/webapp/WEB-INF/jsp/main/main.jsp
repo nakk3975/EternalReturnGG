@@ -6,6 +6,7 @@
 <head>
 <meta charset="UTF-8">
 <title>ERGG</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     
   	<script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
@@ -30,7 +31,7 @@
 			</div>
 			<div class="d-flex justify-content-center">
 				<div class="m-4">
-					<h6 id="recommendRouteTitle">최신 루트</h6>
+					<h2 id="recommendRouteTitle">추천 루트</h2><p id="home-status" role="status" aria-live="polite"></p><a href="/er/routes">전체 루트 보기 →</a>
 					<div class="d-flex">
 						<div id="recommendRouteBox"></div>
 					</div>
@@ -43,92 +44,6 @@
 	<script src="/static/js/getName.js"></script>
 	<script src="/static/js/assetImages.js"></script>
 	<script src="/static/js/fetchWeaponBgImg.js"></script>
-	<script>
-		$(document).ready(async function() {
-            await loadAssetConfig();
-			try {
-		    	let data = await $.ajax({
-		            type: "get",
-		            url: "/er/main",
-		            dataType: "json"
-		        });
-
-		        let items = data.result || [];
-		        for (let i = 0; i < Math.min(10, items.length); i++) {
-		            let route = items[i].recommendWeaponRoute;
-		            if (!route) {
-		                continue;
-		            }
-
-		            let id = route.id;
-		            let title = route.title;
-		            let userNickname = route.userNickname;
-		            let characterCode = route.characterCode;
-		            let weaponCodes = route.weaponType;
-		            let itemCode = route.weaponCodes || "";
-
-		            let itemArray = itemCode.match(/\d{6}/g) || [];
-		            let weaponItem = "";
-		            let armorArray = [];
-		            for (let j = 0; j < itemArray.length; j++) {
-		                if (itemArray[j].charAt(0) == 1) {
-		                    weaponItem = itemArray[j];
-		                } else {
-		                    armorArray.push(itemArray[j]);
-		                }
-		            }
-
-		            let characterName = await getCharacterName(characterCode);
-		            let weaponName = getWeaponName(weaponCodes);
-		            let korName = await getKoreanCharacterName(characterCode);
-
-		            let weaponBgImg = weaponItem ? await fetchWeaponAndArmorBgImg(weaponItem, "weapon") : "";
-		            let armorBg = await Promise.all(armorArray.slice(0, 4).map(code => fetchWeaponAndArmorBgImg(code, "armor")));
-
-					let itemHtml = "";
-					if (weaponItem) {
-						itemHtml += "<div><img class='main-item-back' src='" + weaponBgImg + "'><img class='main-route-item' src='" + erAssetBase + "ItemIcon_" + weaponItem + ".png'></div>";
-					}
-					for (let j = 0; j < armorArray.length && j < 4; j++) {
-						itemHtml += "<div><img class='main-item-back' src='" + armorBg[j] + "'><img class='main-route-item' src='" + erAssetBase + "ItemIcon_" + armorArray[j] + ".png'></div>";
-					}
-
-					let html = 
-						"<div class='recommend-route d-flex'><div><div class='route d-flex justify-content-between align-items-center'>"
-						+ "<div class='col-2'><div class='d-flex align-items-end'>"
-						+ "<img class='character-image image-all' src='" + erAssetBase + "CharProfile_" + characterName + "_S000.png' width='36' height='36'>"
-						+ "<img class='image-all cook-image absolute' src='" + erAssetBase + "Ico_Ability_" + weaponName + ".png' width='16' height='16'>"
-						+ "</div></div>"
-						+ "<div class='col-2'>"+ korName + "</div>"
-						+ "<div class='col-5 text-center'><div class='destination-title mt-2' data-routeId='" + id + "'>" + title + "</div>"
-						+ "<div class='d-flex justify-content-around align-items-top text-center'>" + itemHtml + "</div></div>"
-						+ "<div class='col-2 text-center'><div class='text-secondary'>" + userNickname + "</div></div>"
-						+ "</div></div></div>";
-					$("#recommendRouteBox").append(html);
-		        }
-		    } catch (error) {
-		        console.error("Error fetching data: ", error);
-		    }
-			
-			$("#searchForm").on("submit", function(event) {
-		         event.preventDefault();
-		         let nickName = $("#searchInput").val();
-		
-		         $.ajax({
-		             type: "get"
-		             , url: "/er/search/nickname"
-		             , dataType: "json"
-		             , data: {"nickname": nickName}
-		             , success: function(data) {
-		                 if (data && data.user && data.user.userId) {
-		                     location.href = "/er/user/detail/view?userNum=" + encodeURIComponent(data.user.userId);
-		                 } else {
-		                     alert("존재하지 않는 닉네임입니다.");
-		                 }
-		             }
-		         });
-		    });
-		});
-	</script>
+	<script src="/static/js/home.js"></script>
 </body>
 </html>

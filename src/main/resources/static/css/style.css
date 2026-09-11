@@ -1,7 +1,15 @@
 #wrap{
-	width:1200px;
+	width:min(1200px, 100%);
 	margin:auto;
 }
+
+.home-route { display: flex; gap: 18px; padding: 18px; margin: 12px 0; border: 1px solid #d5dce5; border-radius: 12px; }
+.home-route h3 { font-size: 17px; }
+.home-route p, #home-status { font-size: 14px; color: #667085; }
+.home-route img { object-fit: contain; }
+#recommendRouteBox { width: min(960px, 100%); }
+#searchBox { background-image: linear-gradient(125deg, #172635, #384667) !important; }
+@media(max-width: 640px) { header { flex-wrap: wrap; } #recordDetail { overflow-x: auto; } }
 
 header {
 	background-color:#2d2f37;
