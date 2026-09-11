@@ -43,7 +43,9 @@ function erStatHtml(row) {
         .map(([key, label]) => '<dt>' + label + '</dt><dd>' + erEscape(row[key]) + '</dd>').join('') + '</dl>';
 }
 async function startExplorer() {
-    const page = location.pathname.split('/').filter(Boolean).pop();
+    const page = location.pathname.split('/').filter(Boolean)[1];
+    const special = {characters: erCharacterPage, items: erItemsPage, routes: erRoutesPage, leaderboard: erRankingPage};
+    if (special[page]) return special[page]();
     const info = ER_PAGES[page];
     if (!info) return;
     document.title = info[0] + ' · ER.GG';
@@ -99,50 +101,8 @@ async function startExplorer() {
         };
         return;
     }
-    if (page === 'leaderboard') {
-        const data = await erJson('/er/leaderboard/data');
-        if (!Array.isArray(data.topRanks)) throw new Error('현재 랭킹 응답을 확인할 수 없습니다.');
-        results.innerHTML = data.topRanks.map(p => card('<p>#' + erEscape(p.rank) + '</p><h2>' + erEscape(p.nickname) + '</h2><p>' + erEscape(p.mmr) + ' RP</p><button data-player="' + erEscape(p.nickname) + '">전적 보기</button>')).join('');
-        results.onclick = async event => { const b = event.target.closest('[data-player]'); if (!b) return; b.disabled = true; try { const {user} = await erJson('/er/search/nickname?nickname=' + encodeURIComponent(b.dataset.player)); if (!user?.userId) throw new Error('플레이어를 찾지 못했습니다.'); location.href = erPlayerLink(user); } catch (e) { showError(e); b.disabled = false; } };
-        status.textContent = data.topRanks.length + '명'; return;
-    }
-    const equipmentRequest = page === 'routes' ? erLoadEquipment() : null;
-    const sources = page === 'characters' ? ['/er/character'] : page === 'items' ? ['/er/weapon', '/er/armor'] : ['/er/main'];
-    const [textResponse, , sourceData] = await Promise.all([fetch('/er/loadTextFile'), loadAssetConfig(), Promise.all(sources.map(erJson))]);
-    const names = textResponse.ok ? erNames(await textResponse.text()) : new Map();
-    let records = [];
-    if (page === 'characters') {
-        records = sourceData[0].data.map(row => ({row, name: names.get('Character/Name/' + row.code) || row.name, group: '', file: 'CharCommunity_' + row.name + '_S000.png'}));
-    } else if (page === 'items') {
-        const data = sourceData;
-        records = data.flatMap((body, i) => body.data.map(row => ({row, name: names.get('Item/Name/' + row.code) || row.name, group: i ? '방어구' : '무기', file: 'ItemIcon_' + row.code + '.png'})));
-    } else {
-        const body = sourceData[0];
-        records = (body.result || []).filter(v => v.recommendWeaponRoute).map(v => ({row: v.recommendWeaponRoute, name: v.recommendWeaponRoute.title, group: '', file: ''}));
-    }
-    controls.innerHTML = '<label for="catalog-search">검색</label><input id="catalog-search" placeholder="이름 또는 코드"><select id="catalog-filter" aria-label="분류"><option value="">전체</option></select>';
-    const filter = controls.querySelector('select');
-    for (const group of [...new Set(records.map(v => v.group).filter(Boolean))]) filter.add(new Option(group, group));
-    let visible = 40;
-    const more = document.createElement('button'); more.textContent = '더 보기'; results.after(more);
-    const render = () => {
-        const query = controls.querySelector('input').value.trim().toLowerCase();
-        const selected = records.filter(v => (!filter.value || v.group === filter.value) && (String(v.name) + ' ' + v.row.code + ' ' + (v.row.name || '')).toLowerCase().includes(query));
-        results.innerHTML = selected.slice(0, visible).map(v => {
-            if (page === 'routes') {
-                const items = String(v.row.weaponCodes || '').match(/\d{6}/g) || [];
-                return card('<p>루트 #' + erEscape(v.row.id) + '</p><h2>' + erEscape(v.name) + '</h2><p>제작자 ' + erEscape(v.row.userNickname) + '</p>' + '<div class="route-build"><span class="build-label">아이템 빌드</span><div class="item-slots">' + items.map(code => '<span class="item-slot" data-item-code="' + code + '">' + image('ItemIcon_' + code + '.png', names.get('Item/Name/' + code) || code) + '</span>').join('') + '</div></div>');
-            }
-            return card((page === 'items' ? '<div class="catalog-item item-slot" data-grade="' + erEscape(Object.hasOwn(erGradeNames, v.row.itemGrade) ? v.row.itemGrade : 'Unknown') + '">' + image(v.file, v.name) + '</div>' : image(v.file, v.name)) + '<h2>' + erEscape(v.name) + '</h2><p>' + erEscape(v.row.itemGrade || '') + ' · #' + erEscape(v.row.code) + '</p><details><summary>능력치 보기</summary>' + erStatHtml(v.row) + '</details>');
-        }).join('');
-        if (equipmentRequest) equipmentRequest.then(catalog => erApplyItemGrades(results, catalog));
-        more.hidden = visible >= selected.length;
-        status.textContent = selected.length ? selected.length + '개 중 ' + Math.min(visible, selected.length) + '개 표시' : '검색 결과가 없습니다.';
-    };
-    const reset = () => { visible = 40; render(); };
-    more.onclick = () => { visible += 40; render(); };
-    controls.querySelector('input').oninput = reset; filter.onchange = reset; render();
 }
+
 if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', () => {
     startExplorer().catch(error => {
         document.querySelector('#explorer-status').textContent = error.message;

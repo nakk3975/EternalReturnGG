@@ -1,0 +1,16 @@
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const context = {document:{addEventListener(){}}, erAssetBase:'https://example.test/'};
+vm.createContext(context);
+for (const file of ['siteData.js','player.js']) vm.runInContext(fs.readFileSync('src/main/resources/static/js/'+file,'utf8'),context);
+assert.equal(context.erKda({}), '—');
+assert.equal(context.erKda({playerDeaths:0,playerKill:3,playerAssistant:2}), 'PERFECT');
+assert.equal(context.erKda({playerDeaths:2,playerKill:3,playerAssistant:2}), '2.5');
+const row={gameId:123,gameRank:1,nickname:'<script>alert(1)</script>',equipment:{0:101101,1:202202},characterNum:1};
+const card=context.erPlayerCard(row);
+assert(card.includes('aria-expanded="false"'));
+assert(card.includes('id="game-123"'));
+assert.equal((card.match(/class="item-slot[" ]/g)||[]).length,5);
+assert(!context.erPlayerCard(row,true).includes('<script>'));
+console.log('PASS: missing KDA is unknown, zero deaths is perfect, cards collapsed, five equipment slots, names escaped');

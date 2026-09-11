@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/explorer.css">
     <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
+<link rel="stylesheet" href="/static/css/dataPages.css">
 </head>
 <body>
 <div id="wrap">
@@ -26,6 +27,8 @@
 </div>
 <script src="/static/js/assetImages.js"></script>
 <script src="/static/js/itemSlots.js"></script>
+<script src="/static/js/siteData.js"></script>
+<script src="/static/js/catalogPages.js"></script>
 <script src="/static/js/explorer.js"></script>
 </body>
 </html>

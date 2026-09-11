@@ -18,6 +18,9 @@ public class EternalReturnRestController {
 	
 	@Autowired
 	private EternalReturnBO erBo;
+
+	@Autowired
+	private com.ahn.record.eternalreturn.bo.LeaderboardService rankings;
 	
 	@GetMapping("/main")
 	public String mainCharater() throws URISyntaxException {
@@ -25,8 +28,8 @@ public class EternalReturnRestController {
 	}
 
 	@GetMapping("/leaderboard/data")
-	public String leaderboard() throws URISyntaxException {
-		return erBo.leaderboard();
+	public ResponseEntity<com.fasterxml.jackson.databind.JsonNode> leaderboard() {
+		return rankings.get();
 	}
 
 	@GetMapping("/search/nickname")

@@ -1,0 +1,106 @@
+'use strict';
+const erBaseStats = {maxHp:'체력',maxSp:'스태미나',attackPower:'공격력',defense:'방어력',moveSpeed:'이동 속도',attackSpeed:'공격 속도',hpRegen:'체력 재생',spRegen:'스태미나 재생',criticalStrikeChance:'치명타 확률',skillAmp:'스킬 증폭',cooldownReduction:'쿨다운 감소'};
+function erStatCells(row) { return Object.entries(erBaseStats).filter(([k])=>row[k]!=null).map(([k,label])=>'<div class="data-stat"><span>'+label+'</span><strong>'+erNumber(row[k],3)+'</strong></div>').join(''); }
+function erPageShell(title,description) {
+    document.querySelector('#page-title').textContent=title;
+    document.querySelector('#page-description').textContent=description;
+    document.querySelector('#explorer-controls').hidden=true;
+    const results=document.querySelector('#explorer-results');results.className='database-layout';
+    return results;
+}
+async function erCharacterPage() {
+    const root=erPageShell('실험체 분석','실험체별 능력치와 추천 루트, 스킬 정보를 확인하세요.');
+    root.innerHTML='<aside class="database-sidebar surface"><h2>실험체</h2><input id="character-search" aria-label="실험체 검색" placeholder="실험체 검색"><div id="character-picker" class="character-picker"></div></aside><div class="database-content" id="character-content"><p class="empty-state">실험체 정보를 불러오는 중입니다.</p></div>';
+    const status=document.querySelector('#explorer-status');
+    const assets = loadAssetConfig();
+    const [body,names]=await Promise.all([erStatic('/er/character'),erDictionary()]);
+    if(!Array.isArray(body.data))throw new Error('실험체 응답을 확인할 수 없습니다.');
+    const chars=body.data.slice().sort((a,b)=>(names.get('Character/Name/'+a.code)||a.name).localeCompare(names.get('Character/Name/'+b.code)||b.name,'ko'));
+    let selected;let generation=0;
+    const picker=root.querySelector('#character-picker'),content=root.querySelector('#character-content');
+    const label=c=>names.get('Character/Name/'+c.code)||c.name;
+    const drawPicker=()=>{const q=root.querySelector('input').value.trim().toLowerCase();picker.innerHTML=chars.filter(c=>(label(c)+' '+c.name).toLowerCase().includes(q)).map(c=>'<a class="character-choice '+(selected?.code===c.code?'selected':'')+'" href="/er/characters/'+encodeURIComponent(c.name)+'" title="'+erText(label(c))+'"><img loading="lazy" src="'+erText(erCharacterImage(c.name))+'" alt=""><span>'+erText(label(c))+'</span></a>').join('');};
+    async function select(name,tab,replace=false) {
+        const current=++generation;
+        selected=chars.find(c=>c.name.toLowerCase()===String(name).toLowerCase()||String(c.code)===String(name));
+        if(!selected){content.innerHTML='<p class="empty-state">해당 실험체를 찾을 수 없습니다. 왼쪽에서 선택해 주세요.</p>';status.textContent='';return;}
+        tab=['overview','routes','items','skills'].includes(tab)?tab:'overview';
+        if(replace)history.replaceState(null,'','/er/characters/'+encodeURIComponent(selected.name)+'?tab='+tab);
+        document.title=label(selected)+' · 실험체 분석 · ER.GG';drawPicker();status.textContent='';
+        content.innerHTML='<section class="character-hero surface"><img src="'+erText(erCharacterImage(selected.name))+'" alt="'+erText(label(selected))+'"><div><small>실험체 분석</small><h2>'+erText(label(selected))+'</h2><p>'+erText(selected.name)+'</p></div><span class="mode-chip">기본 정보</span></section><div class="sub-tabs">'+[['overview','개요'],['items','아이템'],['routes','추천 루트'],['skills','스킬']].map(([key,title])=>'<a class="'+(key===tab?'active':'')+'" href="/er/characters/'+encodeURIComponent(selected.name)+'?tab='+key+'">'+title+'</a>').join('')+'</div><div id="character-tab"></div>';
+        const target=content.querySelector('#character-tab');
+        if(tab==='overview') {
+            target.innerHTML='<section class="surface"><h3 class="panel-title">기본 능력치</h3><div class="data-stats">'+erStatCells(selected)+'</div></section><section class="surface"><h3 class="panel-title">추천 루트</h3><div id="character-routes"><p class="empty-state">루트를 불러오는 중입니다.</p></div></section><p class="data-note">승률·픽률·스킬 순서는 집계 데이터가 준비되면 제공됩니다.</p>';
+        }else target.innerHTML='<p class="empty-state">정보를 불러오는 중입니다.</p>';
+        try {
+            if(tab==='skills') {
+                const skills=await erStatic('/er/skillInfo');if(current!==generation)return;
+                const list=(skills.data||[]).filter(s=>String(s.characterCode)===String(selected.code));
+                target.innerHTML=list.length?'<section class="surface"><h3 class="panel-title">스킬 정보</h3>'+list.map(s=>'<div class="skill-row">'+(s.icon?'<img src="'+erText(erAssetBase+s.icon+'.png')+'" alt="">':'')+'<div><strong>'+erText(s.name||s.skillName||'스킬 '+s.group)+'</strong><p>'+erText(s.skillSlot||'')+'</p></div></div>').join('')+'</section>':'<p class="empty-state">이 실험체에 연결된 스킬 정보가 제공되지 않았습니다.</p>';
+                return;
+            }
+            const data=await erStatic('/er/main');if(current!==generation)return;
+            const routes=(data.result||[]).map(v=>v.recommendWeaponRoute).filter(r=>r&&String(r.characterCode)===String(selected.code));
+            if(tab==='items') {
+                const codes=[...new Set(routes.flatMap(r=>String(r.weaponCodes||'').match(/\d{6}/g)||[]))];
+                const catalog=await erLoadEquipment();if(current!==generation)return;
+                target.innerHTML='<section class="surface"><h3 class="panel-title">추천 루트에 사용된 장비</h3><div class="related-items">'+(codes.map(code=>'<a href="/er/items/'+code+'">'+erItemHtml(code)+'<span>'+erText(names.get('Item/Name/'+code)||catalog.get(code)?.name||code)+'</span></a>').join('')||'<p class="empty-state">현재 추천 장비가 없습니다.</p>')+'</div></section>';
+                erApplyItemGrades(target,catalog);
+            }else {
+                const destination=tab==='overview'?target.querySelector('#character-routes'):target;
+                destination.innerHTML=erRoutesMarkup(routes,names);
+                erLoadEquipment().then(catalog=>{if(current===generation)erApplyItemGrades(destination,catalog);});
+            }
+        }catch(e){if(current===generation)target.insertAdjacentHTML('beforeend','<p class="empty-state">'+erText(e.message)+'</p>');}
+    }
+    root.onclick=e=>{const link=e.target.closest('a[href^="/er/characters/"]');if(!link)return;e.preventDefault();history.pushState(null,'',link.href);select(decodeURIComponent(location.pathname.split('/')[3]),new URLSearchParams(location.search).get('tab'));};
+    root.querySelector('input').oninput=drawPicker;
+    const initial=decodeURIComponent(location.pathname.split('/')[3]||'');
+    await assets;
+    await select(initial||chars[0]?.name,new URLSearchParams(location.search).get('tab'),!initial);
+
+    window.addEventListener('popstate',()=>select(decodeURIComponent(location.pathname.split('/')[3]||''),new URLSearchParams(location.search).get('tab')));
+}
+function erRoutesMarkup(routes,names) {
+    return routes.length ? '<div class="route-list">'+routes.map(r=>'<article class="route-list-row"><div><span class="route-number">#'+erText(r.id)+'</span><h3>'+erText(r.title)+'</h3><p>'+erText(r.userNickname)+'</p></div><div class="route-list-items"><span>아이템 빌드</span><div class="item-slots">'+(String(r.weaponCodes||'').match(/\d{6}/g)||[]).slice(0,5).map(erItemHtml).join('')+'</div></div><button class="copy-route" data-route-id="'+erText(r.id)+'">번호 복사</button></article>').join('')+'</div>':'<p class="empty-state">현재 제공되는 추천 루트가 없습니다.</p>';
+}
+async function erRoutesPage() {
+    const root=erPageShell('루트 검색','실험체와 루트 이름으로 추천 빌드를 찾아보세요.');root.className='route-browser';
+    root.innerHTML='<div class="catalog-toolbar surface"><label>실험체 <select id="route-character"><option value="">전체 실험체</option></select></label><input id="route-query" aria-label="루트 검색" placeholder="루트 이름 / 제작자 / 번호"></div><div id="route-results"></div>';
+    const assets=loadAssetConfig();const [data,characters,names]=await Promise.all([erStatic('/er/main'),erStatic('/er/character'),erDictionary()]);await assets;
+    const select=root.querySelector('select');for(const c of characters.data||[])select.add(new Option(names.get('Character/Name/'+c.code)||c.name,String(c.code)));
+    const routes=(data.result||[]).map(v=>v.recommendWeaponRoute).filter(Boolean);
+    select.value=new URLSearchParams(location.search).get('character')||'';
+    let limit=20;const more=document.createElement('button');more.textContent='더 보기';root.append(more);
+    const render=()=>{const q=root.querySelector('input').value.trim().toLowerCase();const found=routes.filter(r=>(!select.value||String(r.characterCode)===select.value)&&(r.title+' '+r.userNickname+' '+r.id).toLowerCase().includes(q));root.querySelector('#route-results').innerHTML=erRoutesMarkup(found.slice(0,limit),names);document.querySelector('#explorer-status').textContent=found.length+'개 루트';more.hidden=limit>=found.length;erLoadEquipment().then(c=>erApplyItemGrades(root,c));};
+    more.onclick=()=>{limit+=20;render();};select.onchange=()=>{limit=20;render();};root.querySelector('input').oninput=()=>{limit=20;render();};render();
+}
+async function erItemsPage() {
+    const root=erPageShell('아이템','장비 분류와 등급으로 검색하고 상세 능력치를 확인하세요.');root.className='items-layout';
+    root.innerHTML='<aside class="database-sidebar surface"><h2>아이템 필터</h2><input id="item-query" aria-label="아이템 검색" placeholder="아이템 이름 / 코드"><label>분류<select id="item-category"><option value="">전체 아이템</option><option value="weapon">무기</option><option value="armor">방어구</option></select></label><label>등급<select id="item-grade"><option value="">전체 등급</option>'+Object.entries(erGradeNames).map(([key,name])=>'<option value="'+key+'">'+name+'</option>').join('')+'</select></label></aside><section class="surface item-table-panel"><div id="item-list"></div><button id="more-items">더 보기</button></section><aside id="item-detail" class="surface item-detail"><p class="empty-state">아이템을 선택해 주세요.</p></aside>';
+    const assets=loadAssetConfig();const [weapons,armor,names]=await Promise.all([erStatic('/er/weapon'),erStatic('/er/armor'),erDictionary()]);await assets;
+    const rows=[...(weapons.data||[]).map(r=>({...r,category:'weapon'})),...(armor.data||[]).map(r=>({...r,category:'armor'}))];const catalog=new Map(rows.map(r=>[String(r.code),r]));let selected=location.pathname.split('/')[3];let limit=40;
+    const label=r=>names.get('Item/Name/'+r.code)||r.name||String(r.code);
+    function detail(code,push=false) {const row=catalog.get(String(code));if(!row)return;selected=String(code);if(push)history.pushState(null,'','/er/items/'+encodeURIComponent(code));root.querySelector('#item-detail').innerHTML='<h2>아이템 정보</h2>'+erItemHtml(row.code)+'<h3>'+erText(label(row))+'</h3><p>'+erText(erGradeNames[row.itemGrade]||'등급 미확인')+' · '+erText(row.weaponType||row.armorType||'')+'</p><div class="data-stats">'+erStatCells(row)+'</div>';erApplyItemGrades(root.querySelector('#item-detail'),catalog);}
+    const render=()=>{const q=root.querySelector('input').value.trim().toLowerCase();const category=root.querySelector('#item-category').value,grade=root.querySelector('#item-grade').value;const filtered=rows.filter(r=>(!category||r.category===category)&&(!grade||r.itemGrade===grade)&&(label(r)+' '+r.code).toLowerCase().includes(q));root.querySelector('#item-list').innerHTML='<table class="data-table"><thead><tr><th>아이템</th><th>분류</th><th>등급</th></tr></thead><tbody>'+filtered.slice(0,limit).map(r=>'<tr class="'+(String(r.code)===selected?'selected':'')+'"><td><a href="/er/items/'+r.code+'" data-select-item="'+r.code+'">'+erItemHtml(r.code)+'<span>'+erText(label(r))+'</span></a></td><td>'+erText(r.category==='weapon'?'무기':'방어구')+'</td><td>'+erText(erGradeNames[r.itemGrade]||'—')+'</td></tr>').join('')+'</tbody></table>';root.querySelector('#more-items').hidden=limit>=filtered.length;document.querySelector('#explorer-status').textContent=filtered.length+'개 아이템';erApplyItemGrades(root.querySelector('#item-list'),catalog);};
+    root.onclick=e=>{const link=e.target.closest('[data-select-item]');if(link){e.preventDefault();detail(link.dataset.selectItem,true);render();}};
+    root.querySelectorAll('input,select').forEach(el=>el.addEventListener(el.tagName==='INPUT'?'input':'change',()=>{limit=40;render();}));root.querySelector('#more-items').onclick=()=>{limit+=40;render();};detail(selected||rows[0]?.code);render();window.addEventListener('popstate',()=>{detail(location.pathname.split('/')[3]);render();});
+}
+async function erRankingPage() {
+    const root=erPageShell('랭킹','현재 시즌 스쿼드 랭킹');root.className='ranking-layout';
+    root.innerHTML='<aside class="surface ranking-guide"><h2>랭킹</h2><p class="selected">스쿼드 · 현재 시즌</p><p>순위는 제공된 RP 랭킹 기준입니다.</p><a href="/er/multi">플레이어 전적 비교 →</a></aside><section class="surface ranking-main"><div class="ranking-toolbar"><h2>RP 랭킹</h2><input id="rank-query" aria-label="랭킹 닉네임 검색" placeholder="목록에서 닉네임 검색"><button id="rank-retry">새로고침</button></div><div id="rank-table"><p class="empty-state">랭킹을 불러오는 중입니다.</p></div><div class="pagination"><button id="rank-prev">이전</button><span id="rank-page"></span><button id="rank-next">다음</button></div></section>';
+    const status=document.querySelector('#explorer-status');let rows=[];let page=0;let busy=false;let updated='';
+    const render=()=>{const q=root.querySelector('input').value.trim().toLowerCase();const filtered=rows.filter(r=>String(r.nickname||'').toLowerCase().includes(q));const count=Math.max(1,Math.ceil(filtered.length/50));page=Math.min(page,count-1);root.querySelector('#rank-table').innerHTML='<table class="data-table ranking-table"><thead><tr><th>순위</th><th>플레이어</th><th>RP</th></tr></thead><tbody>'+filtered.slice(page*50,page*50+50).map(r=>'<tr><td><span class="rank-position '+(Number(r.rank)<=3?'top-rank':'')+'">'+erNumber(r.rank)+'</span></td><td>'+(r.userId?'<a href="/er/user/detail/view?userNum='+encodeURIComponent(r.userId)+'">'+erText(r.nickname)+'</a>':'<button class="rank-player" data-rank-player="'+erText(r.nickname)+'">'+erText(r.nickname)+'</button>')+'</td><td><strong>'+erNumber(r.mmr)+'</strong> <small>RP</small></td></tr>').join('')+'</tbody></table>'+(filtered.length?'':'<p class="empty-state">검색 결과가 없습니다.</p>');root.querySelector('#rank-page').textContent=(page+1)+' / '+count;root.querySelector('#rank-prev').disabled=page===0;root.querySelector('#rank-next').disabled=page+1>=count;};
+    root.querySelector('input').oninput=()=>{page=0;render();};root.querySelector('#rank-prev').onclick=()=>{page--;render();};root.querySelector('#rank-next').onclick=()=>{page++;render();};
+    try{const saved=JSON.parse(sessionStorage.getItem('ergg.ranking')||'null');if(saved&&Date.now()-saved.at<1800000&&Array.isArray(saved.data.topRanks)){rows=saved.data.topRanks;render();status.textContent='이전에 받은 랭킹 표시 중 · 최신 결과 확인 중';}}catch(_){}
+    const load=async()=>{if(busy)return;busy=true;root.querySelector('#rank-retry').disabled=true;try{
+        let data;for(let attempt=0;attempt<12;attempt++){data=await erRequest('/er/leaderboard/data');if(!data.loading)break;status.textContent='최신 랭킹을 준비하고 있습니다…';await new Promise(resolve=>setTimeout(resolve,1500));}
+        if(data.loading)throw new Error('랭킹 준비에 시간이 걸리고 있습니다. 잠시 후 새로고침해 주세요.');
+        if(!Array.isArray(data.topRanks))throw new Error('랭킹 응답을 확인할 수 없습니다.');
+        rows=data.topRanks.slice().sort((a,b)=>Number(a.rank)-Number(b.rank));updated=data.updatedAt?new Date(data.updatedAt).toLocaleTimeString('ko-KR'):'';render();status.textContent=rows.length+'명 · '+(data.refreshFailed?'이전 결과 표시 · 갱신 실패':data.stale?'이전 결과 표시 · 갱신 중':'최신 결과')+(updated?' · '+updated+' 갱신':'');try{sessionStorage.setItem('ergg.ranking',JSON.stringify({at:Date.now(),data}));}catch(_){}
+    }catch(e){status.textContent=(rows.length?'이전에 받은 랭킹을 표시합니다. ':'')+e.message;if(!rows.length)root.querySelector('#rank-table').innerHTML='<p class="empty-state">랭킹을 불러오지 못했습니다. 새로고침 버튼으로 다시 시도해 주세요.</p>';}finally{busy=false;root.querySelector('#rank-retry').disabled=false;}};
+    root.querySelector('#rank-retry').onclick=load;
+    root.addEventListener('click',async e=>{const button=e.target.closest('[data-rank-player]');if(!button)return;button.disabled=true;try{const {user}=await erRequest('/er/search/nickname?nickname='+encodeURIComponent(button.dataset.rankPlayer));if(!user?.userId)throw new Error('플레이어를 찾을 수 없습니다.');location.href='/er/user/detail/view?userNum='+encodeURIComponent(user.userId);}catch(error){status.textContent=error.message;button.disabled=false;}});
+    await load();
+}
+document.addEventListener('click',async e=>{const button=e.target.closest('.copy-route');if(!button)return;try{await navigator.clipboard.writeText(button.dataset.routeId);button.textContent='복사됨';}catch(_){button.textContent=button.dataset.routeId;}});

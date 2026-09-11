@@ -21,6 +21,15 @@ function erApplyItemGrades(root, catalog) {
         slot.dataset.grade = Object.hasOwn(erGradeNames, grade) ? grade : 'Unknown';
         const label = (item?.name || '아이템 ' + slot.dataset.itemCode) + ' · ' + (erGradeNames[grade] || '등급 정보 없음');
         slot.title = label;
-        slot.querySelector('img')?.setAttribute('alt', label);
+        const img = slot.querySelector('img');
+        img?.setAttribute('alt', label);
+        if (img && typeof erAssetBase !== 'undefined' && erAssetBase) {
+            const src = erAssetBase + 'ItemIcon_' + slot.dataset.itemCode + '.png';
+            if (img.getAttribute('src') !== src && img.dataset.assetBase !== erAssetBase) {
+                delete img.dataset.fallback;
+                img.dataset.assetBase = erAssetBase;
+                img.src = src;
+            }
+        }
     });
 }

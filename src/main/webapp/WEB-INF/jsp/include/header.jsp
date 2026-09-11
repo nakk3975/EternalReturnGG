@@ -30,7 +30,7 @@
     <script>
         $(document).ready(function() {
             document.querySelectorAll('nav a').forEach(link => {
-                if (link.pathname === location.pathname) link.setAttribute('aria-current', 'page');
+                if (link.pathname === location.pathname || (link.pathname !== '/er/search/view' && location.pathname.startsWith(link.pathname + '/'))) link.setAttribute('aria-current', 'page');
             });
 
             $("#searchHeaderForm").on("submit", function(event) {
