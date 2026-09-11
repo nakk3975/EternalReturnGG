@@ -65,3 +65,19 @@
 .cube-Red{color:#d64e67;}.cube-Purple{color:#9163ce;}.cube-Green{color:#4caf85;}.cube-Gold{color:#ca9a35;}.cube-SkyBlue{color:#489cd4;}
 html[data-theme=dark] .match-detail-tabs button[aria-selected=true]{background:#545e74;border-color:#76839e;}
 @media(max-width:760px){.detail-stat-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 10px;}.detail-section-body{padding:16px 12px;}.match-detail-tabs{padding:9px;}.match-detail-tabs button{padding:7px 11px;}.credit-chart-layout{grid-template-columns:1fr;padding:14px 10px;}.credit-chart-legend{flex-direction:row;flex-wrap:wrap;}.detail-trait-layout{grid-template-columns:1fr;gap:12px;}.detail-trait-layout>div+div{border-left:0;border-top:1px solid var(--line);padding:10px 0;}.detail-selected-trait{display:inline-flex;margin:10px;}.detail-cubes{gap:16px;padding:12px 0;}.detail-cube{font-size:36px;}}
+
+/* A heavy team boundary differs clearly from the thin player row separators. */
+.team-scoreboard .score-team+.score-team,.detail-kills-table .score-team+.score-team{border-top:8px solid var(--page);}
+.team-scoreboard .score-team:nth-of-type(even),.detail-kills-table .score-team:nth-of-type(even){background:#f1f4f8;}
+.team-scoreboard .score-team>tr:first-child>*,.detail-kills-table .score-team>tr:first-child>*{border-top:2px solid #bac4d1;}
+.team-scoreboard .score-team>tr:last-child>*,.detail-kills-table .score-team>tr:last-child>*{border-bottom:2px solid #bac4d1;}
+.team-scoreboard .score-placement,.detail-kills-table .score-placement{width:64px;min-width:64px;border-left:4px solid #9daabb;border-bottom:2px solid #bac4d1;}
+.detail-kills-table .score-team>tr+tr>td{border-top:1px solid var(--line);}
+.score-placement .team-escape{display:block;width:max-content;margin:7px auto 0;padding:2px 6px;border-radius:4px;background:#e5e0f5;color:#645094;font-size:11px;font-weight:700;}
+.team-scoreboard .score-own-team,.detail-kills-table .score-own-team{background:#eaf6f6!important;}
+.team-scoreboard .score-own-team .score-placement,.detail-kills-table .score-own-team .score-placement{border-left-color:#078b99;background:#d9f2f3;color:#086574;}
+html[data-theme=dark] .team-scoreboard .score-team:nth-of-type(even),html[data-theme=dark] .detail-kills-table .score-team:nth-of-type(even){background:#292d35;}
+html[data-theme=dark] .score-team>tr:first-child>*,html[data-theme=dark] .score-team>tr:last-child>*,html[data-theme=dark] .score-team .score-placement{border-top-color:#586373;border-bottom-color:#586373;}
+html[data-theme=dark] .score-placement .team-escape{background:#423651;color:#e0c9ff;}
+html[data-theme=dark] .team-scoreboard .score-own-team,html[data-theme=dark] .detail-kills-table .score-own-team{background:#1c3438!important;}
+html[data-theme=dark] .team-scoreboard .score-own-team .score-placement,html[data-theme=dark] .detail-kills-table .score-own-team .score-placement{background:#24454a;color:#a5e9eb;}

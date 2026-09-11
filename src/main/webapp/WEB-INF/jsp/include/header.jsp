@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 
-        <link rel="stylesheet" href="/static/css/theme.css?v=20260912-detail-tabs">
+        <link rel="stylesheet" href="/static/css/theme.css?v=20260912-team-boundaries">
         <script>try{document.documentElement.dataset.theme=localStorage.getItem('ergg.theme')||'light';}catch(_){document.documentElement.dataset.theme='light';}</script>
         <style>
             header{padding-left:max(24px,calc((100% - 1232px)/2));padding-right:max(24px,calc((100% - 1232px)/2));background:radial-gradient(ellipse at 85% 0%,#39bed16b,transparent 60%),linear-gradient(110deg,#173f63,#147489 70%,#268ea5);border-bottom:1px solid #ffffff26;}

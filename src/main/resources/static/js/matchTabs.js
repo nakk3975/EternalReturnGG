@@ -45,13 +45,13 @@ function erDetailKillEvents(rows,killer){
     }
     return events;
 }
-function erDetailKills(teams){
+function erDetailKills(teams,ownRow={}){
     const all=teams.flat();
-    return '<p class="detail-footnote">API에 남아 있는 사망 기록(플레이어별 최대 3개)을 역조회한 로그입니다. 전체 킬·시간순 로그와 다를 수 있습니다.</p><div class="team-scoreboard-scroll"><table class="detail-kills-table"><thead><tr><th>#</th><th>플레이어</th><th>킬</th><th>확인된 처치 기록</th></tr></thead>'+teams.slice().sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(team=>'<tbody>'+team.map((row,i)=>{
+    return '<p class="detail-footnote">API에 남아 있는 사망 기록(플레이어별 최대 3개)을 역조회한 로그입니다. 전체 킬·시간순 로그와 다를 수 있습니다.</p><div class="team-scoreboard-scroll"><table class="detail-kills-table"><thead><tr><th>#</th><th>플레이어</th><th>킬</th><th>확인된 처치 기록</th></tr></thead>'+teams.slice().sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(team=>'<tbody class="score-team '+(erOwnTeam(team[0],ownRow)?'score-own-team':'')+'">'+team.map((row,i)=>{
         const events=erDetailKillEvents(all,row);
         const aggregate=Object.entries(erDetailObject(row.killDetails)).filter(([,n])=>Number(n)>0);
         const summary=aggregate.map(([code,n])=>erText(erPlayerNames.get('Character/Name/'+code)||erPlayerCharacters.get(String(code))?.name||'실험체 '+code)+' '+erNumber(n)+'회').join(' · ');
-        return '<tr>'+(i===0?'<th rowspan="'+team.length+'" scope="rowgroup">#'+erNumber(row.gameRank)+'</th>':'')+'<td><div class="detail-kill-player">'+erDetailPortrait(row)+'<div class="score-nickname">'+erScorePlayerLink(row)+'</div></div></td><td>'+erNumber(row.playerKill)+'킬</td><td>'+events.map(({victim,area})=>'<div class="detail-kill-event"><small>#'+erNumber(victim.gameRank)+'</small>'+erDetailPortrait(victim)+'<div class="score-nickname">'+erScorePlayerLink(victim)+'</div><span>'+erText(area)+'</span></div>').join('')+(events.length?'':'<p class="data-note">확인 가능한 개별 처치 로그 없음</p>')+(summary?'<small class="detail-kill-summary">캐릭터별 총 처치: '+summary+'</small>':'')+'</td></tr>';
+        return '<tr>'+(i===0?erTeamPlacement(team,ownRow):'')+'<td><div class="detail-kill-player">'+erDetailPortrait(row)+'<div class="score-nickname">'+erScorePlayerLink(row)+'</div></div></td><td>'+erNumber(row.playerKill)+'킬</td><td>'+events.map(({victim,area})=>'<div class="detail-kill-event"><small>#'+erNumber(victim.gameRank)+'</small>'+erDetailPortrait(victim)+'<div class="score-nickname">'+erScorePlayerLink(victim)+'</div><span>'+erText(area)+'</span></div>').join('')+(events.length?'':'<p class="data-note">확인 가능한 개별 처치 로그 없음</p>')+(summary?'<small class="detail-kill-summary">캐릭터별 총 처치: '+summary+'</small>':'')+'</td></tr>';
     }).join('')+'</tbody>').join('')+'</table></div>';
 }
 function erCreditSeries(row,mode){
@@ -117,7 +117,7 @@ function erDetailCubes(row){
     return erDetailSection('큐브','<div class="detail-cubes">'+cubes.map(([color,name])=>'<div><span class="detail-cube cube-'+color+'" aria-hidden="true">◆</span><strong>×'+erNumber(row['getBuffCube'+color])+'</strong><small>'+name+'</small></div>').join('')+'</div>')+erDetailSection('LUMI',erDetailMetrics({lumiCredit:erDetailObject(row.creditSource).AcquireLumiCredit},[['lumiCredit','LUMI로 얻은 크레딧']])+'<p class="data-note">LUMI 사용 횟수·피해량·아이템 등급별 획득 수는 현재 API 응답에 제공되지 않습니다.</p>');
 }
 function erRenderDetailTab(state,key){
-    switch(key){case 'rank':return erTeamScoreboard(state.teams,state.own);case 'build':return erDetailBuild(state.own);case 'kills':return erDetailKills(state.teams);case 'graph':return erDetailGraph(state);case 'traits':return erDetailTraits(state.own);case 'credit':return erDetailCredit(state.own);case 'cube':return erDetailCubes(state.own);default:return '';}
+    switch(key){case 'rank':return erTeamScoreboard(state.teams,state.own);case 'build':return erDetailBuild(state.own);case 'kills':return erDetailKills(state.teams,state.own);case 'graph':return erDetailGraph(state);case 'traits':return erDetailTraits(state.own);case 'credit':return erDetailCredit(state.own);case 'cube':return erDetailCubes(state.own);default:return '';}
 }
 function erSelectDetailTab(view,key){
     const state=erMatchTabGames.get(view.dataset.detailGame);if(!state)return;

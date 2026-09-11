@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="/static/css/style.css?v=20260911-analysis-final" type="text/css">
 <link rel="stylesheet" href="/static/css/dataPages.css?v=20260911-analysis-final">
 <link rel="stylesheet" href="/static/css/player.css?v=20260911-analysis-final">
-<link rel="stylesheet" href="/static/css/matchTabs.css?v=20260912-detail-tabs">
+<link rel="stylesheet" href="/static/css/matchTabs.css?v=20260912-team-boundaries">
 </head>
 <body>
 <c:import url="/WEB-INF/jsp/include/header.jsp" />
@@ -28,9 +28,9 @@
 <c:import url="/WEB-INF/jsp/include/footer.jsp" />
 </div>
 <script src="/static/js/assetImages.js?v=20260911-weapon-skill"></script>
-<script src="/static/js/itemSlots.js?v=20260912-detail-tabs"></script>
+<script src="/static/js/itemSlots.js?v=20260912-team-boundaries"></script>
 <script src="/static/js/siteData.js?v=20260912-descriptions"></script>
 <script src="/static/js/matchDetails.js"></script>
-<script src="/static/js/player.js?v=20260912-detail-tabs"></script>
-<script src="/static/js/matchTabs.js?v=20260912-detail-tabs"></script>
+<script src="/static/js/player.js?v=20260912-team-boundaries"></script>
+<script src="/static/js/matchTabs.js?v=20260912-team-boundaries"></script>
 </body></html>
