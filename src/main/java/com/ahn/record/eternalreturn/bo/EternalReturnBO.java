@@ -100,7 +100,7 @@ public class EternalReturnBO {
 
     public String userInfo(String userId) throws URISyntaxException {
         String response = requestCached("/v1/user/games/uid/" + encodePathSegment(userId), false, USER_CACHE_MS);
-        prefetchRecentGames(response);
+        // Details are fetched on expansion; searchGame still caches them.
         return response;
     }
 
@@ -129,6 +129,11 @@ public class EternalReturnBO {
                 + "/" + currentSeasonId + "/" + RANKED_MODE;
 
         return requestCached(path, false, USER_CACHE_MS);
+    }
+
+    public String leaderboard() throws URISyntaxException {
+        return requestCached("/v1/rank/top/" + getCurrentSeasonId() + "/3", false,
+                Duration.ofMinutes(5).toMillis());
     }
 
     public int getCurrentSeasonId() throws URISyntaxException {

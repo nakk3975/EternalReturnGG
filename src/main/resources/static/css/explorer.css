@@ -1,0 +1,23 @@
+body { background: #131720; color: #e7edf5; }
+#wrap { width: min(1200px, 100%); }
+.explorer { padding: 40px 24px 64px; min-height: 70vh; }
+.explorer h1 { font-size: 32px; font-weight: 750; }
+.eyebrow { font-size: 12px; letter-spacing: .15em; color: #63d1ec; }
+#page-description, #explorer-status { color: #aab8ca; }
+.explorer-controls { display: flex; gap: 12px; margin: 24px 0; flex-wrap: wrap; }
+.explorer input, .explorer select, .explorer textarea { background: #222b39; color: #fff; border: 1px solid #526174; border-radius: 7px; padding: 10px 14px; max-width: 100%; }
+.explorer textarea { width: 100%; min-height: 90px; }
+.explorer button, .explorer .action { border: 1px solid #41556c; background: #273d52; color: #c9f3ff; padding: 8px 14px; border-radius: 7px; cursor: pointer; }
+.explorer button:focus-visible, .explorer a:focus-visible { outline: 3px solid #63d1ec; }
+.explorer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+.explorer-card { border: 1px solid #354052; background: #1d2532; border-radius: 12px; padding: 18px; overflow: hidden; }
+.explorer-card h2 { font-size: 19px; margin: 12px 0; }
+.explorer-card p { color: #b4c2d4; font-size: 14px; }
+.explorer-card img { height: 90px; max-width: 100%; object-fit: contain; }
+.explorer-card .equipment-icon { height: 42px; width: 42px; }
+.explorer-card a { color: #7cdeff; }
+.explorer-card details { margin: 12px 0; }
+.explorer-card dl { display: grid; grid-template-columns: 1fr 1fr; font-size: 13px; gap: 5px; margin-top: 14px; }
+.explorer-card dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.explorer-card .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 640px) { .explorer { padding: 24px 14px; } header { flex-wrap: wrap; } .explorer-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); } }

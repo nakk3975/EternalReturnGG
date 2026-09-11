@@ -1,3 +1,4 @@
+const equipmentMetadata = new Map();
 async function fetchWeaponAndArmorBgImg(item, category) {
     let url;
     if (category === "weapon") {
@@ -10,11 +11,14 @@ async function fetchWeaponAndArmorBgImg(item, category) {
     }
 
     try {
-        let response = await fetch(url);
-        if (!response.ok) {
-            throw new Error("이미지 가져오기 오류");
+        if (!equipmentMetadata.has(url)) {
+            const pending = fetch(url).then(response => {
+                if (!response.ok) throw new Error('장비 정보 조회 실패');
+                return response.json();
+            }).catch(error => { equipmentMetadata.delete(url); throw error; });
+            equipmentMetadata.set(url, pending);
         }
-        let data = await response.json();
+        let data = await equipmentMetadata.get(url);
         let bgImgCode = fetchWeaponBgImg(item, data.data);
         return bgImgCode;
     } catch (error) {

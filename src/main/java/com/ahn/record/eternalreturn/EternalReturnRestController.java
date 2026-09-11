@@ -24,6 +24,11 @@ public class EternalReturnRestController {
 		return erBo.searchAllRoute();
 	}
 
+	@GetMapping("/leaderboard/data")
+	public String leaderboard() throws URISyntaxException {
+		return erBo.leaderboard();
+	}
+
 	@GetMapping("/search/nickname")
 	public String searchNickname(@RequestParam("nickname") String nickName) throws URISyntaxException, IOException {
 		return erBo.searchNickname(nickName);
