@@ -26,3 +26,15 @@ function erItemHtml(code) {
 }
 function erEquipmentHtml(equipment) { return '<div class="item-slots">'+Array.from({length:5},(_,i)=>erItemHtml(equipment?.[i])).join('')+'</div>'; }
 function erCharacterImage(name, skin = 0) { return name && erAssetBase ? erAssetBase+'CharProfile_'+name+'_S'+String(skin || 0).slice(-3).padStart(3,'0')+'.png' : '/static/images/asset-placeholder.svg'; }
+
+const erFinite = value => value != null && value !== '' && Number.isFinite(Number(value));
+// RP bands: official ranked FAQ, updated 2026-08-19 (article 21812479709081).
+// Keep this table explicit: Meteorite divisions are now 300 RP, Mythril starts at 7600.
+function erTier(row) {
+    if (!erFinite(row.mmr) || Number(row.mmr)<0 || !erFinite(row.totalGames) || Number(row.totalGames)<=0) return null;
+    const rp=Number(row.mmr), rank=Number(row.rank);
+    if (rp>=8300 && rank>0 && rank<=1000) return rank<=300 ? {name:'이터니티',image:8} : {name:'데미갓',image:7};
+    const bands=[[7600,0,'미스릴',66],[6400,300,'메테오라이트',63],[5000,350,'다이아몬드',6],[3600,350,'플래티넘',5],[2400,300,'골드',4],[1400,250,'실버',3],[600,200,'브론즈',2],[0,150,'아이언',1]];
+    const [min,step,name,image]=bands.find(([min])=>rp>=min);
+    return {name:name+(step?' '+['IV','III','II','I'][Math.min(3,Math.floor((rp-min)/step))]:''),image};
+}

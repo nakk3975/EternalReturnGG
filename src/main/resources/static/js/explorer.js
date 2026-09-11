@@ -57,6 +57,7 @@ async function startExplorer() {
     const card = html => '<article class="explorer-card">' + html + '</article>';
     const image = (file, name) => '<img loading="lazy" src="' + erEscape(erAssetBase + file) + '" alt="' + erEscape(name) + '">';
     const showError = error => { status.textContent = error.message; };
+    if (page === 'multi') return startMulti();
     if (page === 'guide') {
         results.innerHTML = Object.entries(ER_PAGES).filter(([key]) => key !== 'guide').map(([key, value]) => '<a class="explorer-card guide-card" href="/er/' + key + '"><h2>' + value[0] + '</h2><p>' + value[1] + '</p></a>').join('');
         status.textContent = ''; return;
