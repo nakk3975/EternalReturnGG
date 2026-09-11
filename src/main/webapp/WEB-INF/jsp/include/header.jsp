@@ -28,32 +28,27 @@
         </nav>
 
     <script>
-        $(document).ready(function() {
+        document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('nav a').forEach(link => {
                 if (link.pathname === location.pathname || (link.pathname !== '/er/search/view' && location.pathname.startsWith(link.pathname + '/'))) link.setAttribute('aria-current', 'page');
             });
-
-            $("#searchHeaderForm").on("submit", function(event) {
+            const form = document.getElementById('searchHeaderForm');
+            const button = document.getElementById('searchHeaderBtn');
+            form.addEventListener('submit', async function(event) {
                 event.preventDefault();
-
-                let nickName = $("#searchHeaderInput").val();
-
-                $.ajax({
-                    type: "get",
-                    url: "/er/search/nickname",
-                    dataType: "json",
-                    data: {"nickname": nickName},
-                    success: function(data) {
-                        if (data && data.user && data.user.userId) {
-                            var items = data.user;
-                            location.href = "/er/user/detail/view?userNum=" + encodeURIComponent(items.userId);
-                        } else {
-                            alert("존재하지 않는 닉네임입니다.");
-                        }
-                    }
-                });
+                const nickname = document.getElementById('searchHeaderInput').value.trim();
+                if (!nickname || button.disabled) return;
+                button.disabled = true;
+                try {
+                    const response = await fetch('/er/search/nickname?nickname=' + encodeURIComponent(nickname), {signal: AbortSignal.timeout(15000)});
+                    const data = await response.json();
+                    if (!response.ok) throw new Error('검색 요청에 실패했습니다. 다시 시도해 주세요.');
+                    if (!data.user?.userId) throw new Error('존재하지 않는 닉네임입니다.');
+                    location.href = '/er/user/detail/view?userNum=' + encodeURIComponent(data.user.userId);
+                } catch (error) {
+                    alert(error.name === 'TimeoutError' ? '검색 응답이 지연되고 있습니다. 다시 시도해 주세요.' : error.message);
+                } finally { button.disabled = false; }
             });
-
         });
     </script>
 
