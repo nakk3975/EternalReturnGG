@@ -149,7 +149,7 @@
 	<script src="/static/js/fetchWeaponBgImg.js"></script>
 	<script src="/static/js/fetchTraitIcon.js"></script>
 	<script>
-		$(document).ready(function() {
+		$(document).ready(async function() {
 			
 			$(".plus-btn").on("click", function() {
 				let gameId = $(this).data("id");
@@ -190,13 +190,14 @@
 				var averageDamage = 0;
 				
 				// 유저 상세 정보
-				$.ajax({
-					type:"get"
-					, url:"/er/userRank"
-					, dataType:"json"
-					, async:false
-					, data:{"userNum":userNum}
-					, success:async function(data) {
+				try {
+					let data = await $.ajax({
+						type:"get",
+						url:"/er/userRank",
+						dataType:"json",
+						data:{"userNum":userNum}
+					});
+
 						// 랭크 플레이 한 유저만 불러오기
 						if(data.code != 404){
 							let rankItems = data.userStats[0];
@@ -215,33 +216,35 @@
 							averageRank = rankItems.averageRank;
 							var sideCharacter = rankItems.characterStats;
 							// 내가 플레이 한 캐릭터 전적
-							for(let i = 0; i < sideCharacter.length; i++) {
-								let sideCharacterCode = sideCharacter[i].characterCode;
-								let sideCharacterName = await getCharacterName(sideCharacterCode);
-								let sideKorName = await getKoreanCharacterName(sideCharacterCode)
-								let winRate = (sideCharacter[i].wins / sideCharacter[i].usages) * 100;
-								let games = sideCharacter[i].usages;
-								let wins = sideCharacter[i].wins;
-								let maxKillings = sideCharacter[i].maxKillings;
+							let sideCharacterRows = await Promise.all(sideCharacter.map(async function(characterStat) {
+								let sideCharacterCode = characterStat.characterCode;
+								let names = await Promise.all([
+									getCharacterName(sideCharacterCode),
+									getKoreanCharacterName(sideCharacterCode)
+								]);
+								let sideCharacterName = names[0];
+								let sideKorName = names[1];
+								let winRate = (characterStat.wins / characterStat.usages) * 100;
+								let games = characterStat.usages;
+								let wins = characterStat.wins;
+								let maxKillings = characterStat.maxKillings;
 								let sideCharImg = "https://cdn.dak.gg/assets/er/game-assets/1.13.0/CharResult_" + sideCharacterName + "_S000.png"
-								let html=
-									"<tr class='side-main'>"
+								return "<tr class='side-main'>"
 										+ "<td class='align-middle'><a class='image-wrapper'><img src='" + sideCharImg + "' width='67px' height='56px'></a></td>"
 										+ "<td class='align-middle'>" + sideKorName + "<br><a class='side-total-games'>" + games + "게임</a></td>"
 										+ "<td class='align-middle'>" + winRate.toFixed(2) + "%</td>"
 										+ "<td class='align-middle'>" + wins + "</td>"
 										+ "<td class='align-middle'>" + maxKillings + "</td>"
 									+ "</tr>";
-								$("#sideRecord").append(html);
-							}
+							}));
+							$("#sideRecord").append(sideCharacterRows.join(""));
 						} else {
 							mmr = 0;
 						}
-					}
-					, error:function() {
+				} catch(error) {
+					console.error("Error fetching user rank: ", error);
 						alert("유저 랭크 정보 불러오기 오류");
-					}
-				});
+				}
 				
 				// 화면에 표시
 				$("#averageTk").append(averageTotalKill.toFixed(2));
@@ -386,7 +389,24 @@
 			            });
 			        });
 	
-			        for (let i = 0; i < items.length; i++) {
+					let commonMetadata = await Promise.all([
+						$.ajax({type:"get", url:"/er/trait", dataType:"json"}),
+						$.ajax({type:"get", url:"/er/skillInfo", dataType:"json"}),
+						$.ajax({type:"get", url:"/er/tacticalSkill", dataType:"json"})
+					]);
+					let traitItems = commonMetadata[0].data || [];
+					let allSkillItems = commonMetadata[1].data || [];
+					let tacticalItems = commonMetadata[2].data || [];
+					let gameDetails = await Promise.all(items.map(function(item) {
+						return $.ajax({
+							type:"get",
+							url:"/er/game",
+							dataType:"json",
+							data:{"gameId":item.gameId}
+						});
+					}));
+
+				        for (let i = 0; i < items.length; i++) {
 			        	// 유저 고유 번호
 						let characterCode = items[i].characterNum;
 						// 캐릭터 이름
@@ -444,15 +464,10 @@
 			           	var resultHtml6 = "";
 			           	var resultHtml7 = "";
 			           	var resultHtml8 = "";
-			           	await new Promise((resolve) => {
-				         	// 게임 상세 정보, 게임 결과
-				            $.ajax({
-			            		type:"get"
-				            	, url:"/er/game"
-				            	, dataType:"json"
-				            	, data:{"gameId" : gameId}
-				            	, success:async function(data) {
-				            		let gameItems = data.userGames;
+							{
+								// 최근 10게임 상세는 위에서 병렬 조회한 결과를 순서대로 렌더링한다.
+								let data = gameDetails[i];
+								let gameItems = data.userGames;
 				            		for(let j = 0; j < gameItems.length; j++) {
 				            			console.log(j);
 				            			// 캐릭터 이름
@@ -473,36 +488,9 @@
 										let resultTactical = "";
 										let resultMainIcon = "";
 										let resultIcon = "";
-							            await $.ajax({
-											type:"get"
-											, url:"/er/tacticalSkill"
-											, dataType: "json"
-											, success:function(data) {
-												let tacticalItems = data.data;
-												resultTactical = fetchTacticalIcon(resultTacticalSkillCode, tacticalItems);
-											}
-							            });
-										
-							        	// 메인 특성 정보 가져오기
-							            await $.ajax({
-											type:"get"
-											, url:"/er/trait"
-											, dataType:"json"
-											, success:function(data) {
-												let traitItems = data.data;
-						           	 			resultMainIcon = fetchTraitMainIcon(resultTraitSecondSub, traitItems);
-											}
-							            });
-							            // 특성 스킬 정보 가져오기
-							            await $.ajax({
-								        	type:"get"
-								        	, url:"/er/skillInfo"
-								        	, dataType:"json"
-								        	, success:function(data) {
-								        		let allSkillItems = data.data;
-						            			resultIcon = fetchSkillIcon(resultTraitFirst, allSkillItems);
-								        	}
-							            });
+								            resultTactical = fetchTacticalIcon(resultTacticalSkillCode, tacticalItems);
+								            resultMainIcon = fetchTraitMainIcon(resultTraitSecondSub, traitItems);
+								            resultIcon = fetchSkillIcon(resultTraitFirst, allSkillItems);
 							            
 							         	// 팀 전체 킬
 										let resultTotalKill = gameItems[j].totalFieldKill;
@@ -524,11 +512,18 @@
 										let resultItem5 = gameItems[j].equipment[4];
 										
 										// 장비 등급 및 아이템 이미지 경로 가져오기
-										let resultWeaponBgImg = await fetchWeaponAndArmorBgImg(resultItem1, "weapon");
-							            let resultArmorBgImg1 = await fetchWeaponAndArmorBgImg(resultItem2, "armor");
-										let resultArmorBgImg2 = await fetchWeaponAndArmorBgImg(resultItem3, "armor");
-										let resultArmorBgImg3 = await fetchWeaponAndArmorBgImg(resultItem4, "armor");
-										let resultArmorBgImg4 = await fetchWeaponAndArmorBgImg(resultItem5, "armor");
+										let resultItemBackgrounds = await Promise.all([
+											fetchWeaponAndArmorBgImg(resultItem1, "weapon"),
+											fetchWeaponAndArmorBgImg(resultItem2, "armor"),
+											fetchWeaponAndArmorBgImg(resultItem3, "armor"),
+											fetchWeaponAndArmorBgImg(resultItem4, "armor"),
+											fetchWeaponAndArmorBgImg(resultItem5, "armor")
+										]);
+										let resultWeaponBgImg = resultItemBackgrounds[0];
+							            let resultArmorBgImg1 = resultItemBackgrounds[1];
+										let resultArmorBgImg2 = resultItemBackgrounds[2];
+										let resultArmorBgImg3 = resultItemBackgrounds[3];
+										let resultArmorBgImg4 = resultItemBackgrounds[4];
 										
 										let resultKDA = 0;
 										// kda 계산
@@ -1075,12 +1070,9 @@
 									 	 			+ "</div>"
 								 	 			+ "</div>"
 											+ "</div></div>"
-				            			}
-				            		}
-				            		resolve();
-				            	}
-				            });
-				        });
+									}
+								}
+							}
 						
 			         	var resultHtml = resultHtml1 + "<hr>" + resultHtml2 + "<hr>" + resultHtml3 + "<hr>" 
 			         	+ resultHtml4 + "<hr>" + resultHtml5 + "<hr>" + resultHtml6 + "<hr>"
@@ -1127,45 +1119,22 @@
 						}
 			        	
 			            // 장비 등급 및 아이템 이미지 경로 가져오기
-						let weaponBgImg = await fetchWeaponAndArmorBgImg(item1, "weapon");
-			            let armorBgImg1 = await fetchWeaponAndArmorBgImg(item2, "armor");
-						let armorBgImg2 = await fetchWeaponAndArmorBgImg(item3, "armor");
-						let armorBgImg3 = await fetchWeaponAndArmorBgImg(item4, "armor");
-						let armorBgImg4 = await fetchWeaponAndArmorBgImg(item5, "armor");
-	
-						
-						
-			            // 메인 특성 정보 가져오기
-			            await $.ajax({
-							type:"get"
-							, url:"/er/trait"
-							, dataType:"json"
-							, success:function(data) {
-								let traitItems = data.data;
-		           	 			mainIcon = fetchTraitMainIcon(traitSecondSub, traitItems);
-							}
-			            });
-			            // 특성 스킬 정보 가져오기
-			            await $.ajax({
-				        	type:"get"
-				        	, url:"/er/skillInfo"
-				        	, dataType:"json"
-				        	, success:function(data) {
-				        		let allSkillItems = data.data;
-		            			icon = fetchSkillIcon(traitFirst, allSkillItems);
-				        	}
-			            });
-	
-			            // 전술 스킬 정보 가져오기
-			            await $.ajax({
-							type:"get"
-							, url:"/er/tacticalSkill"
-							, dataType: "json"
-							, success:function(data) {
-								let tacticalItems = data.data;
-		            			tactical = fetchTacticalIcon(tacticalSkillCode, tacticalItems);
-							}
-			            });
+						let itemBackgrounds = await Promise.all([
+							fetchWeaponAndArmorBgImg(item1, "weapon"),
+							fetchWeaponAndArmorBgImg(item2, "armor"),
+							fetchWeaponAndArmorBgImg(item3, "armor"),
+							fetchWeaponAndArmorBgImg(item4, "armor"),
+							fetchWeaponAndArmorBgImg(item5, "armor")
+						]);
+						let weaponBgImg = itemBackgrounds[0];
+			            let armorBgImg1 = itemBackgrounds[1];
+						let armorBgImg2 = itemBackgrounds[2];
+						let armorBgImg3 = itemBackgrounds[3];
+						let armorBgImg4 = itemBackgrounds[4];
+
+			            mainIcon = fetchTraitMainIcon(traitSecondSub, traitItems);
+			            icon = fetchSkillIcon(traitFirst, allSkillItems);
+			            tactical = fetchTacticalIcon(tacticalSkillCode, tacticalItems);
 			            
 			            
 			   	

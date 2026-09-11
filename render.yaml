@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: eternalreturngg
+    runtime: docker
+    repo: https://github.com/nakk3975/EternalReturnGG
+    branch: main
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /er/search/view
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+      - key: ETERNAL_RETURN_API_KEY
+        sync: false
