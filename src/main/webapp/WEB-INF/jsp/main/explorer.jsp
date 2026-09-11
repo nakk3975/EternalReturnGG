@@ -25,6 +25,7 @@
     <c:import url="/WEB-INF/jsp/include/footer.jsp" />
 </div>
 <script src="/static/js/assetImages.js"></script>
+<script src="/static/js/itemSlots.js"></script>
 <script src="/static/js/explorer.js"></script>
 </body>
 </html>

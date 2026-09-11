@@ -106,6 +106,7 @@ async function startExplorer() {
         results.onclick = async event => { const b = event.target.closest('[data-player]'); if (!b) return; b.disabled = true; try { const {user} = await erJson('/er/search/nickname?nickname=' + encodeURIComponent(b.dataset.player)); if (!user?.userId) throw new Error('플레이어를 찾지 못했습니다.'); location.href = erPlayerLink(user); } catch (e) { showError(e); b.disabled = false; } };
         status.textContent = data.topRanks.length + '명'; return;
     }
+    const equipmentRequest = page === 'routes' ? erLoadEquipment() : null;
     const sources = page === 'characters' ? ['/er/character'] : page === 'items' ? ['/er/weapon', '/er/armor'] : ['/er/main'];
     const [textResponse, , sourceData] = await Promise.all([fetch('/er/loadTextFile'), loadAssetConfig(), Promise.all(sources.map(erJson))]);
     const names = textResponse.ok ? erNames(await textResponse.text()) : new Map();
@@ -130,10 +131,11 @@ async function startExplorer() {
         results.innerHTML = selected.slice(0, visible).map(v => {
             if (page === 'routes') {
                 const items = String(v.row.weaponCodes || '').match(/\d{6}/g) || [];
-                return card('<p>루트 #' + erEscape(v.row.id) + '</p><h2>' + erEscape(v.name) + '</h2><p>제작자 ' + erEscape(v.row.userNickname) + '</p>' + items.map(code => image('ItemIcon_' + code + '.png', names.get('Item/Name/' + code) || code)).join(''));
+                return card('<p>루트 #' + erEscape(v.row.id) + '</p><h2>' + erEscape(v.name) + '</h2><p>제작자 ' + erEscape(v.row.userNickname) + '</p>' + '<div class="route-build"><span class="build-label">아이템 빌드</span><div class="item-slots">' + items.map(code => '<span class="item-slot" data-item-code="' + code + '">' + image('ItemIcon_' + code + '.png', names.get('Item/Name/' + code) || code) + '</span>').join('') + '</div></div>');
             }
-            return card(image(v.file, v.name) + '<h2>' + erEscape(v.name) + '</h2><p>' + erEscape(v.row.itemGrade || '') + ' · #' + erEscape(v.row.code) + '</p><details><summary>능력치 보기</summary>' + erStatHtml(v.row) + '</details>');
+            return card((page === 'items' ? '<div class="catalog-item item-slot" data-grade="' + erEscape(Object.hasOwn(erGradeNames, v.row.itemGrade) ? v.row.itemGrade : 'Unknown') + '">' + image(v.file, v.name) + '</div>' : image(v.file, v.name)) + '<h2>' + erEscape(v.name) + '</h2><p>' + erEscape(v.row.itemGrade || '') + ' · #' + erEscape(v.row.code) + '</p><details><summary>능력치 보기</summary>' + erStatHtml(v.row) + '</details>');
         }).join('');
+        if (equipmentRequest) equipmentRequest.then(catalog => erApplyItemGrades(results, catalog));
         more.hidden = visible >= selected.length;
         status.textContent = selected.length ? selected.length + '개 중 ' + Math.min(visible, selected.length) + '개 표시' : '검색 결과가 없습니다.';
     };

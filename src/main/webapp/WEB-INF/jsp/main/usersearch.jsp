@@ -2,9 +2,10 @@
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ERGG - 유저 검색 결과</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
@@ -27,7 +28,7 @@
                     <button type="button" id="refresh" class="btn btn-primary mt-4">최신 정보</button>
                 </div>
             </div>
-            <div class="d-flex">
+            <div class="player-layout">
                 <!-- 좌측 유저 상세 정보 -->
                 <div id="sideUserInfo" class="mt-4 text-center">
                     <div class="user-record">

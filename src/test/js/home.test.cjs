@@ -10,7 +10,7 @@ const $ = value => {
 $.ajax = () => pending;
 vm.runInNewContext(fs.readFileSync('src/main/resources/static/js/home.js', 'utf8'), {
     $, loadAssetConfig: () => pending, loadCharacterData: () => pending,
-    loadKoreanCharacterNames: () => pending
+    loadKoreanCharacterNames: () => pending, erLoadEquipment: () => pending
 });
 assert.equal(typeof events.get('#searchForm:submit'), 'function');
 console.log('PASS: search handler available while every home data request remains pending');

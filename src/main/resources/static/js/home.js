@@ -19,6 +19,7 @@ $(function() {
     async function loadRoutes() {
         $('#home-status').text('추천 루트를 불러오는 중입니다.');
         try {
+            const equipmentRequest = erLoadEquipment();
             const [data, , characters, names] = await Promise.all([
                 $.ajax({url: '/er/main', dataType: 'json', timeout: 15000}),
                 loadAssetConfig(), loadCharacterData(), loadKoreanCharacterNames()
@@ -29,9 +30,10 @@ $(function() {
                 const character = charMap.get(String(route.characterCode));
                 const name = names.get(String(route.characterCode)) || character?.name || '실험체';
                 const equipment = (String(route.weaponCodes || '').match(/\d{6}/g) || []).slice(0, 5);
-                return '<article class="home-route"><img loading="lazy" width="64" height="64" src="' + escape(erAssetBase + 'CharCommunity_' + (character?.name || '') + '_S000.png') + '" alt="' + escape(name) + '"><div><h3>' + escape(route.title) + '</h3><p>' + escape(name) + ' · ' + escape(route.userNickname) + ' · 루트 #' + escape(route.id) + '</p><div>' + equipment.map(code => '<img loading="lazy" width="40" height="40" src="' + escape(erAssetBase + 'ItemIcon_' + code + '.png') + '" alt="아이템 ' + code + '">').join('') + '</div></div></article>';
+                return '<article class="home-route"><div class="route-heading"><img class="route-character" loading="lazy" width="48" height="48" src="' + escape(erAssetBase + 'CharCommunity_' + (character?.name || '') + '_S000.png') + '" alt="' + escape(name) + '"><div><span class="route-character-name">' + escape(name) + '</span><span class="route-id">#' + escape(route.id) + '</span></div></div><h3 title="' + escape(route.title) + '">' + escape(route.title) + '</h3><p class="route-author">' + escape(route.userNickname) + '</p><div class="route-build"><span class="build-label">아이템 빌드</span><div class="item-slots">' + equipment.map(code => '<span class="item-slot" data-item-code="' + code + '"><img loading="lazy" width="40" height="32" src="' + escape(erAssetBase + 'ItemIcon_' + code + '.png') + '" alt="아이템 ' + code + '"></span>').join('') + '</div></div></article>';
             }).join('');
             $('#recommendRouteBox').html(html);
+            equipmentRequest.then(catalog => erApplyItemGrades(document.querySelector('#recommendRouteBox'), catalog));
             $('#home-status').text(routes.length ? '' : '현재 제공되는 추천 루트가 없습니다.');
         } catch (_) {
             $('#home-status').text('추천 루트를 불러오지 못했습니다. 닉네임 검색은 계속 사용할 수 있습니다.');
