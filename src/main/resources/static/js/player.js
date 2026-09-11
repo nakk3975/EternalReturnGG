@@ -133,12 +133,12 @@ function erTeamScoreboard(teams,ownRow) {
 }
 async function erRenderGame(gameId, ownRow) {
     const panel=document.getElementById('game-'+gameId);
-    if(panel){panel.innerHTML=erPersonalDetails(ownRow)+'<p class="empty-state">팀별 경기 결과를 불러오는 중입니다.</p>';erEnhancePlayer(panel);}
+    if(panel){panel.innerHTML='<p class="empty-state">팀별 경기 결과를 불러오는 중입니다.</p>';erEnhancePlayer(panel);}
     const data=await erRequest('/er/game?gameId='+encodeURIComponent(gameId));
     if (!Array.isArray(data.userGames)) throw new Error('경기 응답을 확인할 수 없습니다.');
     const teams=new Map();
     for(const row of data.userGames){const key=String(row.teamNumber ?? row.gameRank ?? '기타');if(!teams.has(key))teams.set(key,[]);teams.get(key).push(row);}
-    const html=erPersonalDetails(ownRow)+erTeamScoreboard([...teams.values()],ownRow);
+    const html=erMatchTabs([...teams.values()],ownRow);
     const fragment=document.createElement('div');fragment.innerHTML=html;erEnhancePlayer(fragment);return fragment.innerHTML;
 }
 // Share speculative and clicked pagination requests; failures can be retried.

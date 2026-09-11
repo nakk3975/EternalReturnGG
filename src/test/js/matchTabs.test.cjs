@@ -1,0 +1,35 @@
+const fs=require('node:fs');
+const vm=require('node:vm');
+const assert=require('node:assert/strict');
+const context={document:{addEventListener(){}},erAssetBase:'https://assets.example/'};
+vm.createContext(context);
+for(const file of ['siteData.js','player.js','matchTabs.js'])vm.runInContext(fs.readFileSync('src/main/resources/static/js/'+file,'utf8'),context);
+assert.deepEqual(JSON.parse(JSON.stringify(context.erDetailObject('{"12":2}'))),{'12':2});
+assert.deepEqual(JSON.parse(JSON.stringify(context.erDetailObject('broken'))),{});
+const own={gameId:50,nickname:'<test>',teamNumber:1,gameRank:1,totalTime:125,totalVFCredits:[10,20,30,0,0],usedVFCredits:[0,5,10,0,0],killDetails:'{}'};
+assert.deepEqual(Array.from(context.erCreditSeries(own,'earned')),[0,10,30,60]);
+assert.deepEqual(Array.from(context.erCreditSeries(own,'spent')),[0,0,5,15]);
+assert.equal(context.erCreditSeries({},'earned'),null);
+assert.equal(context.erCreditSeries({totalVFCredit:[1,null]},'earned'),null);
+const victim={nickname:'victim',teamNumber:2,gameRank:2,killer:'player',killDetail:'<test>',placeOfDeath:'190',killer2:'restrictedArea',killDetail2:'<test>'};
+assert.equal(context.erDetailKillEvents([victim],own).length,1);
+assert.equal(context.erDetailKillEvents([victim],own)[0].area,'학교');
+const html=context.erMatchTabs([[own],[victim]],own);
+assert.equal((html.match(/role="tab"/g)||[]).length,7);
+assert.equal((html.match(/aria-selected="true"/g)||[]).length,1);
+assert(!html.includes('<test>'));
+const state={teams:[[own],[victim]],own,graphMode:'earned',hiddenTeams:new Set()};
+for(const tab of ['rank','build','kills','graph','traits','credit','cube']){
+ const output=context.erRenderDetailTab(state,tab);
+ assert(output.length>0,tab);
+ assert(!output.includes('NaN'),tab);
+ assert(!output.includes('undefined'),tab);
+ assert(!output.includes('<test>'),tab);
+}
+assert(context.erDetailCubes({getBuffCubeRed:0}).includes('×0'));
+assert(context.erDetailCubes({}).includes('×—'));
+assert.match(context.erDetailKills([[own],[victim]]),/최대 3개/);
+assert.equal((context.erDetailGraph(state).match(/<polyline/g)||[]).length,1);
+state.hiddenTeams.add('1');
+assert.equal((context.erDetailGraph(state).match(/<polyline/g)||[]).length,0);
+console.log('PASS: seven scoped tabs, sparse fields, cumulative credit intervals, partial kill records, escaping and graph toggles');
