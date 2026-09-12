@@ -38,7 +38,7 @@ let filtered=ctx.erFilterStatistics(filteredFixture,filters,clock);
 assert.equal(filtered.rows.length,1);assert.equal(filtered.rows[0].games,10);assert.equal(filtered.rows[0].rank,4.6);assert.equal(filtered.rows[0].damage,190);assert.equal(filtered.rows[0].rp,10);
 assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,days:'1'},clock).rows[0].games,1);
 assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,mode:'2'},clock).rows[0].games,40);
-assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,tier:'5+'},clock).rows.length,0);
+assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,tier:'5'},clock).rows.length,0);
 assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,season:'10'},clock).rows.length,0);
 assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,days:'1'},Date.parse('2026-09-11T16:00:00Z')).rows[0].games,1);
 console.log('PASS: intersecting season/mode/tier/date filters, weighted averages, null RP, KST boundary and empty samples');

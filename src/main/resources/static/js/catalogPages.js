@@ -4,7 +4,7 @@ function erFilterStatistics(data, filters, now=Date.now()) {
     if(!buckets)return {...data,rows:[],builds:[],items:[],filterLabel:'통계 갱신 대기'};
     const day=new Date(now+9*3600000).toISOString().slice(0,10);
     const from=filters.days==='all'?'0000-01-01':new Date(Date.parse(day+'T00:00:00Z')-(Number(filters.days)-1)*86400000).toISOString().slice(0,10);
-    const matches=r=>String(r.mode)===String(filters.mode)&&String(r.season)===String(filters.season)&&r.day>=from&&r.day<=day&&(filters.mode!=='3'||filters.tier==='all'||(filters.tier==='5+'?r.tier>=5:String(r.tier)===filters.tier));
+    const matches=r=>String(r.mode)===String(filters.mode)&&String(r.season)===String(filters.season)&&r.day>=from&&r.day<=day&&(filters.mode!=='3'||filters.tier==='all'||String(r.tier)===filters.tier);
     const merge=(rows,keys)=>{
         const groups=new Map();
         for(const r of (rows||[]).filter(matches)){
@@ -23,7 +23,7 @@ function erStatisticsControls(data) {
     return '<div class="catalog-toolbar stats-filters">'+[
         ['season','시즌',seasons.length?seasons.map(s=>[s,'시즌 '+s]):[['','수집된 시즌 없음']]],
         ['mode','모드',[['3','랭크'],['2','일반'],['6','코발트'],['9','론울프']]],
-        ['tier','티어',[['all','전체 티어'],['5+','다이아몬드 이상'],['7','미스릴 이상'],['6','메테오라이트'],['5','다이아몬드'],['4','플래티넘'],['3','골드'],['2','실버'],['1','브론즈'],['0','아이언'],['-1','티어 미확인']]],
+        ['tier','티어',[['all','전체 티어'],['7','미스릴 이상'],['6','메테오라이트'],['5','다이아몬드'],['4','플래티넘'],['3','골드'],['2','실버'],['1','브론즈'],['0','아이언'],['-1','티어 미확인']]],
         ['days','기간',[['7','최근 7일'],['1','오늘'],['14','최근 14일'],['30','최근 30일'],['all','시즌 전체']]]
     ].map(([key,label,values])=>'<label>'+label+'<select data-stat-filter="'+key+'">'+options(values)+'</select></label>').join('')+'</div><p class="data-note">보유 경기 표본 기준 · 랭크 티어는 경기 시작 RP 구간 기준입니다. 미스릴·데미갓·이터니티는 당시 랭킹 정보가 없어 미스릴 이상으로 합산합니다. 시즌 전체도 저장된 기간만 포함합니다.</p>';
 }
