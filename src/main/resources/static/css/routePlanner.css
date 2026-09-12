@@ -18,3 +18,26 @@
 
 /* Bootstrap reboot sets dialog display:block, including closed dialogs. */
 #planner-picker:not([open]){display:none;}
+
+/* Keep required materials beside the map instead of below regional loot. */
+.planner-body{grid-template-columns:minmax(0,1fr) 390px;}
+.planner-map{max-width:min(100%,calc(68dvh * .965));margin-inline:auto;}
+.planner-map-image{min-height:0;}
+.planner-sidebar{position:sticky;top:12px;min-width:0;}
+.planner-sidebar section{padding:12px;margin-bottom:10px;}
+.planner-material-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:48dvh;overflow-y:auto;}
+.planner-material{padding:7px 5px;border:1px solid var(--line);border-radius:6px;gap:6px;min-width:0;}
+.planner-material>div{min-width:0;}.planner-material strong{font-size:13px;overflow-wrap:anywhere;}.planner-material small{font-size:11px;}
+.planner-material .item-slot{width:36px;height:27px;}.planner-material.is-covered{background:color-mix(in srgb,var(--route-green) 10%,var(--panel));padding-left:5px;}
+#planner-materials>.data-note{font-size:11px;line-height:1.5;margin:8px 0 0;}
+.planner-area-items{grid-template-columns:repeat(5,minmax(0,1fr));max-height:24dvh;}.planner-area-items>div{font-size:11px;padding:4px 2px;}.planner-area-items .item-slot{width:36px;height:26px;}
+#planner-build>button{padding:8px;}#planner-build strong{width:auto;flex:1;}
+#planner-picker .planner-dialog-heading{position:sticky;top:-22px;z-index:5;background:var(--panel);padding:16px 0;margin-top:-6px;border-bottom:1px solid var(--line);}
+#planner-picker-close{flex-shrink:0;min-height:44px;}
+#planner-choices{display:block;}.planner-grade-group{margin:20px 0;}.planner-grade-group h3{font-size:17px;padding:10px 12px;border-left:4px solid #7b8794;background:var(--panel-alt);}.planner-grade-group h3 small{font-size:13px;color:var(--muted);}
+.planner-grade-group[data-grade=Epic] h3{border-color:#aa75df;}.planner-grade-group[data-grade=Legend] h3{border-color:#e6b34c;}.planner-grade-group[data-grade=Mythic] h3{border-color:#ed6e77;}.planner-grade-group[data-grade=Rare] h3{border-color:#62b5dc;}.planner-grade-group[data-grade=Uncommon] h3{border-color:#66ba89;}
+.planner-grade-items{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;}.planner-grade-items>button{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 5px;background:var(--panel-alt);color:var(--ink);border:1px solid var(--line);font-size:13px;}.planner-grade-items>button[aria-pressed=true]{border:2px solid var(--route-blue);}
+@media(max-width:1050px){.planner-body{grid-template-columns:minmax(0,1fr) 320px;}.planner-area-items{grid-template-columns:repeat(4,minmax(0,1fr));}}
+@media(max-width:760px){.planner-body{display:flex;flex-direction:column;}.planner-map-panel{width:100%;}.planner-sidebar{position:static;width:100%;}.planner-material-grid{max-height:none;grid-template-columns:repeat(3,minmax(0,1fr));}.planner-material{flex-direction:column;text-align:center;}.planner-map{max-width:100%;}#planner-picker .planner-dialog-heading{top:-14px;padding:12px 0;}.planner-grade-items{grid-template-columns:repeat(3,minmax(0,1fr));}}
+
+@media(max-width:760px){.planner-sidebar:not([hidden]){display:contents;}#planner-materials:not([hidden]){order:-1;width:100%;}#planner-area{width:100%;}}
