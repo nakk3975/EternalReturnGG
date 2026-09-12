@@ -149,3 +149,12 @@ html[data-theme=dark] .boss-wickline{background:#334a25;color:#c5ec9e;}html[data
 .score-nickname .score-player-link:hover,.score-nickname .score-player-link:active{background:transparent!important;color:var(--ink);text-decoration:none;box-shadow:none;cursor:pointer;}
 .score-nickname .score-player-link:disabled{opacity:.65;cursor:progress;}
 .score-player-error{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:4px;}
+
+/* Keep weapon filters centered without changing the responsive grid. */
+.item-filters .item-type-buttons button,.item-filters #item-all{text-align:center;}
+/* White Steam artwork needs a dark surface in both themes. */
+footer.er-footer{gap:16px;flex-wrap:wrap;}
+footer.er-footer>div{flex:1 1 240px;min-width:0;}
+footer.er-footer .er-steam-link{flex:0 0 120px;width:120px;max-width:100%;margin:0;background:#171d25;border-color:#344354;}
+footer.er-footer .er-steam-link:hover{background:#24354b;}
+footer.er-footer .er-steam-link img{display:block;width:94px;max-width:calc(100% - 20px);height:30px;object-fit:contain;opacity:1;filter:brightness(0) invert(1);}
