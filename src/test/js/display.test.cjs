@@ -29,3 +29,11 @@ for (const page of ['main', 'usersearch']) {
     assert.ok(!text.includes('game-assets/1.13.0'));
 }
 console.log('PASS: click expand/collapse, skin fallback, no fallback loop, JSP JavaScript syntax');
+const variant={tagName:'IMG',dataset:{},src:'https://cdn.dak.gg/assets/er/game-assets/12.3.0/SkillIcon_1060430.png',alt:'프리치아'};
+listeners.error({target:variant});
+assert.ok(variant.src.endsWith('SkillIcon_1060400.png'));
+listeners.error({target:variant});
+assert.equal(variant.src,'/static/images/asset-placeholder.svg');
+listeners.error({target:variant});
+assert.equal(variant.src,'/static/images/asset-placeholder.svg');
+console.log('PASS: recast icon uses its base group once, then stops retrying');

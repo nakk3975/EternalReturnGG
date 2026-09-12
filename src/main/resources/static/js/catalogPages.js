@@ -72,7 +72,7 @@ async function erCharacterPage() {
         try {
             if(tab==='traits' || tab==='tactical') {
                 const data=await erStatic(tab==='traits'?'/er/trait':'/er/tacticalSkill');if(current!==generation)return;
-                const list=tab==='traits'?(data.data||[]).filter(erIsStandardTrait).sort((a,b)=>a.traitSortOrder-b.traitSortOrder):(data.data||[]);
+                const list=tab==='traits'?(data.data||[]).filter(erIsStandardTrait).sort((a,b)=>a.traitSortOrder-b.traitSortOrder):(data.data||[]).filter(s=>erIsAvailableTactical(s)).sort((a,b)=>a.sortOrder-b.sortOrder);
                 target.innerHTML='<section class="surface"><h3 class="panel-title">'+(tab==='traits'?'특성 도감':'전술 스킬 도감')+'</h3><div class="skill-grid">'+list.map(s=>{
                     const code=tab==='traits'?Number(s.code)-1:(s.icon?.match(/(\d+)$/)?.[1]||s.group);
                     const title=names.get('Skill/Group/Name/'+code)||names.get('Trait/Name/'+s.code)||s.name||'스킬 '+code;
@@ -234,10 +234,10 @@ function erAnalysisMarkup(data,code,names,mode='3',tactical=[]) {
     const builds=(data.builds||[]).filter(r=>String(r.character)===String(code)&&r.season===season&&String(r.mode)===mode).sort((a,b)=>b.games-a.games);
     const skill=code=>erSkillImage(code,names.get('Skill/Group/Name/'+code));
     const sections=[['skills','스킬 습득 순서'],['tactical','추천 전술 스킬'],['traits','추천 특성']].map(([kind,title])=>{
-        const choices=builds.filter(r=>r.kind===kind).slice(0,5);
+        const choices=builds.filter(r=>r.kind===kind && (kind!=='tactical'||tactical.some(t=>String(t.group)===String(r.value)&&erIsAvailableTactical(t,mode)))).slice(0,5);
         return '<section class="surface analysis-builds"><h3 class="panel-title">'+title+'</h3>'+choices.map(r=>{
             const v=r.value;let body='';
-            if(kind==='skills')body='<div class="analysis-skill-order">'+Object.entries(v||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([order,code])=>'<span title="'+erText(names.get('Skill/Group/Name/'+code)||code)+'"><small>'+erText(order)+'</small>'+skill(code)+'</span>').join('')+'</div>';
+            if(kind==='skills')body='<div class="analysis-skill-order">'+erLearnedSkills(v,names).map(([order,code])=>'<span title="'+erText(names.get('Skill/Group/Name/'+code)||code)+'"><small>'+erText(order)+'</small>'+skill(code)+'</span>').join('')+'</div>';
             if(kind==='tactical'){const meta=tactical.find(s=>String(s.group)===String(v));const iconCode=meta?.icon?.match(/(\d+)$/)?.[1];body=erSkillImage(iconCode,names.get('Skill/Group/Name/'+iconCode))+'<strong>'+erText(names.get('Skill/Group/Name/'+iconCode)||'전술 스킬 '+v)+'</strong>';}
             if(kind==='traits')body='<div class="analysis-traits">'+[v.core,...(v.first||[]),...(v.second||[])].filter(c=>Number(c)>=7000000&&Number(c)<7400000).map(c=>'<span title="'+erText(names.get('Skill/Group/Name/'+(Number(c)-1))||names.get('Trait/Name/'+c)||c)+'">'+skill(Number(c)-1)+'</span>').join('')+'</div>';
             return '<div class="analysis-build"><div>'+body+'</div><p>사용 '+erNumber(r.games/row.games*100,1)+'%<br>승률 '+erNumber(r.wins/r.games*100,1)+'%<small>'+erNumber(r.games)+'개 기록</small></p></div>';

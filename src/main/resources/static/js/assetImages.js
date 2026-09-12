@@ -27,6 +27,17 @@ document.addEventListener('error', function(event) {
         img.src = img.src.replace(/_S\d+\.png$/, '_S000.png');
         return;
     }
+    // Localization includes recasts that share the parent skill's artwork.
+    // Try the exact image first, then its base group once; retain the original tooltip code.
+    const variant=img.src.match(/\/SkillIcon_(\d+)\.png$/);
+    if(variant && !img.dataset.skillBaseFallback){
+        const code=Number(variant[1]), base=Math.floor(code/100)*100;
+        if(code>=1000000 && code<2000000 && code!==base){
+            img.dataset.skillBaseFallback='true';
+            img.src=img.src.replace('SkillIcon_'+code+'.png','SkillIcon_'+base+'.png');
+            return;
+        }
+    }
     const weaponSkill=img.src.match(/\/WeaponSkillIcon_(\d+)\.png$/);
     if(weaponSkill){
         const types={1:'Glove',2:'Tonfa',3:'Bat',4:'Whip',5:'HighAngleFire',6:'DirectFire',7:'Bow',8:'CrossBow',9:'Pistol',10:'AssaultRifle',11:'SniperRifle',13:'Hammer',14:'Axe',15:'OneHandSword',16:'TwoHandSword',17:'Polearm',18:'DualSword',19:'Spear',20:'Nunchaku',21:'Rapier',22:'Guitar',23:'Camera',24:'Arcana',25:'VFArm'};

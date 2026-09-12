@@ -47,7 +47,7 @@ function erPersonalDetails(row) {
     return '<section class="personal-detail"><h3>내 경기 분석 <small>'+erText(row.serverName||'')+' · 경기 #'+erText(row.gameId)+'</small></h3><div class="detail-metrics">'+metrics.map(([k,v])=>erMetric(k,v)).join('')+'</div><div class="detail-traits"><strong>특성</strong>'+traitCodes.map(code=>'<span data-trait="'+code+'" title="특성 '+code+'"></span>').join('')+'<span>'+erText(erWeapons[row.bestWeapon]?.[1]||'무기군 미제공')+' · 루트 '+erRoute(row)+'</span></div>'+erSkillOrder(row)+'</section>';
 }
 function erSkillOrder(row) {
-    const entries=Object.entries(row.skillOrderInfo||{}).filter(([order,code])=>erFinite(order)&&erFinite(code)).sort((a,b)=>Number(a[0])-Number(b[0]));
+    const entries=erLearnedSkills(row.skillOrderInfo,erPlayerNames);
     if(!entries.length)return '';
     return '<div class="skill-order"><h4>스킬 습득 순서</h4><ol>'+entries.map(([order,code])=>'<li><small>'+erText(order)+'</small>'+erSkillImage(code,erPlayerNames.get('Skill/Group/Name/'+code))+'<span>'+erText(erPlayerNames.get('Skill/Group/Name/'+code)||'스킬 '+code)+'</span></li>').join('')+'</ol></div>';
 }

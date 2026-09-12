@@ -55,3 +55,14 @@ function erSkillDescription(names,code){
     for(const prefix of keys){const text=names.get(prefix+code);if(text&&!/\{\d+\}/.test(text))return text;}
     return '';
 }
+
+// Keep combat-only/basic-attack entries out of the skill learning timeline.
+function erIsBasicAttack(code,names=new Map()) {
+    return /평타|기본\s*공격|basic\s*attack/i.test(names.get('Skill/Group/Name/'+code)||'');
+}
+function erLearnedSkills(order,names=new Map()) {
+    return Object.entries(order||{}).filter(([index,code])=>erFinite(index)&&erFinite(code)&&!erIsBasicAttack(code,names)).sort((a,b)=>Number(a[0])-Number(b[0]));
+}
+function erIsAvailableTactical(row,mode='3') {
+    return row.active===true && row.equipWithStart===true && String(row.modeType).split(',').map(v=>v.trim()).includes(String(mode));
+}
