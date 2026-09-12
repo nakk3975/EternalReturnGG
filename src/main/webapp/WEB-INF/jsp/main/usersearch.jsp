@@ -35,5 +35,5 @@
 <script src="/static/js/matchDetails.js"></script>
 <script src="/static/js/player.js?v=20260912-native-links"></script>
 <script src="/static/js/matchTabs.js?v=20260912-native-links"></script>
-<script src="/static/js/seasonHistory.js?v=20260912-seasons"></script>
+<script src="/static/js/seasonHistory.js?v=20260912-season-names"></script>
 </body></html>

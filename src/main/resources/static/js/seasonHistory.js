@@ -1,13 +1,15 @@
 function erSeasonOptions(rows){
     return (rows||[]).map(s=>({id:Number(s.seasonID??s.seasonId??s.id),name:String(s.seasonName??s.name??''),current:s.isCurrent===true||Number(s.isCurrent)===1})).filter(s=>s.id>0).sort((a,b)=>b.id-a.id);
 }
-function erSeasonLabel(s){return s.name?s.name.replace(/^SEASON[_ ]?(\d+)$/i,'시즌 $1').replace(/^PRE[_ ]?SEASON[_ ]?(\d+)$/i,'프리시즌 $1'):'시즌 ID '+s.id;}
+function erSeasonNumber(s){const n=Number(s.name.match(/\d+/)?.[0]);return n>0?(s.id>=18?n-9:n):null;}
+function erSeasonLabel(s){const n=erSeasonNumber(s);if(!n)return '시즌 ID '+s.id;return (s.id<18?'얼리액세스 ':'')+(/pre/i.test(s.name)?'프리시즌 ':'시즌 ')+n;}
+
 function erSeasonReport(data,season,characters,names){
     const row=(data.userStats||[]).find(r=>Number(r.seasonId)===season.id)||data.userStats?.[0];
     if(!row||!(Number(row.totalGames)>0))return '<p class="empty-state">'+erText(erSeasonLabel(season))+'의 랭크 기록이 없습니다.</p>';
     // Earlier seasons had different RP thresholds; never apply today's bands silently.
-    const number=Number(season.name.match(/\d+/)?.[0]);
-    const tier=season.current||number>=11?erTier(row):null;
+    const number=erSeasonNumber(season);
+    const tier=season.current||(season.id>=18&&number>=11)?erTier(row):null;
     const metric=(label,value)=>'<div><small>'+label+'</small><strong>'+value+'</strong></div>';
     const chars=(row.characterStats||[]).slice().sort((a,b)=>Number(b.usages??b.totalGames)-Number(a.usages??a.totalGames)).slice(0,5);
     return '<div class="season-score">'+(tier?'<img width="72" height="72" src="https://cdn.dak.gg/er/images/tier/full/'+tier.image+'.png" alt="'+erText(tier.name)+'">':'')+'<div><h3>'+erText(erSeasonLabel(season))+'</h3><strong>'+erNumber(row.mmr)+' RP</strong><p>'+erText(tier?.name||'과거 시즌 티어 기준 미확인')+' · '+(Number(row.rank)>0?erNumber(row.rank)+'위':'순위 미제공')+'</p></div></div><div class="season-metrics">'+metric('플레이 수',erNumber(row.totalGames))+metric('승률',erNumber(row.totalWins/row.totalGames*100,1)+'%')+metric('승리',erNumber(row.totalWins))+metric('평균 킬',erNumber(row.averageKills,2))+metric('평균 순위',erNumber(row.averageRank,2))+metric('TOP 3',row.top3==null?'—':erNumber(row.top3*100,1)+'%')+'</div><div class="season-characters">'+chars.map(c=>{const code=String(c.characterCode),meta=characters.get(code),name=names.get('Character/Name/'+code)||meta?.name||'실험체';return '<a href="/er/characters/'+encodeURIComponent(meta?.name||code)+'"><img width="36" height="36" loading="lazy" src="'+erText(erCharacterImage(meta?.name))+'" alt=""><span>'+erText(name)+'<small>'+erNumber(c.usages??c.totalGames)+'게임</small></span></a>';}).join('')+'</div>';
