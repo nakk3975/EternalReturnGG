@@ -110,7 +110,7 @@ public class EternalReturnBO {
     }
 
     public String routeData(String table) throws URISyntaxException {
-        if (!java.util.Set.of("Area", "ItemSpawn", "DropGroup", "Collectible", "ItemConsumable", "ItemSpecial", "NearByArea").contains(table))
+        if (!java.util.Set.of("Area", "ItemSpawn", "DropGroup", "Collectible", "ItemConsumable", "ItemSpecial", "NearByArea", "NaviCollectAndHunt").contains(table))
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Unsupported route table");
         return requestCached("/v2/data/" + table, false, STATIC_CACHE_MS);
     }
