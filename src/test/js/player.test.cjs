@@ -94,3 +94,7 @@ assert.match(scoreboard,/우리 팀/);
 assert(!scoreboard.includes('<script>'));
 assert(!scoreboard.includes('NaN'));
 console.log('PASS: shared team rank cell, per-player boss kills only, escaped names and missing fields');
+assert.match(context.erScorePlayerLink({nickname:'한 글&name'}), /href="\/er\/user\/detail\/view\?nickname=%ED%95%9C%20%EA%B8%80%26name"/);
+assert.match(context.erScorePlayerLink({nickname:'name',userId:'a/b'}), /userNum=a%2Fb/);
+assert(!context.erScorePlayerLink({nickname:'name'}).includes('<button'));
+console.log('PASS: native player anchors support new tabs and encode nickname/ID parameters');

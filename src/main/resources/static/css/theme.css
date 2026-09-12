@@ -146,6 +146,6 @@ html[data-theme=dark] .score-win strong{color:#43d9b5;}html[data-theme=dark] .sc
 html[data-theme=dark] .boss-wickline{background:#334a25;color:#c5ec9e;}html[data-theme=dark] .boss-alpha{background:#492651;color:#edb1ff;}html[data-theme=dark] .boss-omega{background:#243d60;color:#accbff;}
 
 .score-nickname .score-player-link{display:inline;padding:0;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer;overflow-wrap:anywhere;}
-.score-nickname .score-player-link:hover,.score-nickname .score-player-link:focus-visible{color:var(--link);text-decoration:underline;}
+.score-nickname .score-player-link:hover,.score-nickname .score-player-link:active{background:transparent!important;color:var(--ink);text-decoration:none;box-shadow:none;cursor:pointer;}
 .score-nickname .score-player-link:disabled{opacity:.65;cursor:progress;}
 .score-player-error{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:4px;}

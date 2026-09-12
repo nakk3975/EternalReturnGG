@@ -99,22 +99,7 @@ function erScorePlayerLink(row) {
     const nickname=String(row.nickname||'').trim();
     if(!nickname)return '알 수 없는 플레이어';
     if(row.userId)return '<a class="score-player-link" href="/er/user/detail/view?userNum='+encodeURIComponent(row.userId)+'">'+erText(nickname)+'</a>';
-    return '<button type="button" class="score-player-link" data-score-player="'+erText(nickname)+'">'+erText(nickname)+'</button>';
-}
-async function erOpenScorePlayer(event) {
-    const button=event.target.closest('[data-score-player]');
-    if(!button || button.disabled)return;
-    event.preventDefault();event.stopPropagation();
-    button.disabled=true;button.setAttribute('aria-busy','true');
-    const container=button.closest('.score-nickname');
-    container?.querySelector('.score-player-error')?.remove();
-    try{
-        const {user}=await erRequest('/er/search/nickname?nickname='+encodeURIComponent(button.dataset.scorePlayer));
-        if(!user?.userId)throw new Error('플레이어를 찾을 수 없습니다. 닉네임이 변경되었을 수 있습니다.');
-        location.href='/er/user/detail/view?userNum='+encodeURIComponent(user.userId);
-    }catch(error){
-        const message=document.createElement('small');message.className='score-player-error';message.setAttribute('role','status');message.textContent='전적 조회 실패 · 다시 눌러주세요';container?.append(message);
-    }finally{button.disabled=false;button.removeAttribute('aria-busy');}
+    return '<a class="score-player-link" href="/er/user/detail/view?nickname='+encodeURIComponent(nickname)+'">'+erText(nickname)+'</a>';
 }
 function erTeamPlacement(rows,ownRow={}) {
     const rank=Number(rows[0].gameRank);
@@ -183,8 +168,23 @@ function erMostPlayed(stats, recent) {
     return [...counts].sort((a,b)=>b[1]-a[1]||Number(a[0])-Number(b[0]))[0]?.[0] ?? null;
 }
 async function startPlayer() {
-    const userId=new URLSearchParams(location.search).get('userNum');
+    const params=new URLSearchParams(location.search);
+    let userId=params.get('userNum');
     const records=document.querySelector('#record');
+    const nickname=params.get('nickname')?.trim();
+    if(!userId && nickname){
+        document.querySelector('#nickname').textContent=nickname;
+        try{
+            const {user}=await erRequest('/er/search/nickname?nickname='+encodeURIComponent(nickname));
+            if(!user?.userId)throw new Error('플레이어를 찾을 수 없습니다. 닉네임이 변경되었을 수 있습니다.');
+            userId=user.userId;
+        }catch(error){
+            records.textContent=error.message;
+            document.querySelector('#hero-loading').hidden=true;
+            document.querySelector('#refresh').onclick=()=>location.reload();
+            return;
+        }
+    }
     if(!userId){records.textContent='플레이어를 먼저 검색해 주세요.';return;}
     const encoded=encodeURIComponent(userId);
     let rows=[];let graphRows=[];let placementRows=[];let selectedMode='';let rankSeason=null;let next=null;let loading=false;
@@ -313,5 +313,4 @@ async function startPlayer() {
         }).catch(()=>{});
     }catch(error){records.innerHTML='<p class="empty-state">'+erText(error.message)+'</p>';}
 }
-document.addEventListener('click',erOpenScorePlayer);
 document.addEventListener('DOMContentLoaded',startPlayer);
