@@ -42,3 +42,6 @@ assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,tier:'5'},clock)
 assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,season:'10'},clock).rows.length,0);
 assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,days:'1'},Date.parse('2026-09-11T16:00:00Z')).rows[0].games,1);
 console.log('PASS: intersecting season/mode/tier/date filters, weighted averages, null RP, KST boundary and empty samples');
+
+assert.equal(ctx.erItemStats({cooldownReduction:10})[0].value,'10%');
+assert.equal(ctx.erItemStats({cooldownReduction:5})[0].value,'5%');
