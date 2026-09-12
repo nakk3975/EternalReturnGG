@@ -4,7 +4,8 @@ const erNumber = (value, digits = 0) => value == null || value === '' || !Number
 const erStaticRequests = new Map();
 async function erRequest(url) {
     const response = await fetch(url, {signal:AbortSignal.timeout(15000)});
-    const data = await response.json();
+    let data;
+    try { data=await response.json(); } catch (_) { throw new Error('서버가 응답을 준비 중이거나 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'); }
     if (!response.ok || (data.code != null && ![0,200].includes(Number(data.code)))) throw new Error(data.message || '데이터를 불러오지 못했습니다. 다시 시도해 주세요.');
     return data;
 }
@@ -17,7 +18,7 @@ function erDictionary() {
     if (!erDictionaryRequest) erDictionaryRequest = fetch('/er/loadTextFile?schema=5', {signal:AbortSignal.timeout(15000)}).then(async r => {
         if (!r.ok) throw new Error('이름 정보 조회 실패');
         return new Map((await r.text()).split('\n').map(line => {const i=line.indexOf('┃');return i<0 ? ['', ''] : [line.slice(0,i).trim(),line.slice(i+1).trim()];}));
-    }).catch(() => new Map());
+    }).catch(() => {erDictionaryRequest=null;return new Map();});
     return erDictionaryRequest;
 }
 function erItemHtml(code) {
@@ -66,3 +67,5 @@ function erLearnedSkills(order,names=new Map()) {
 function erIsAvailableTactical(row,mode='3') {
     return row.active===true && row.equipWithStart===true && String(row.modeType).split(',').map(v=>v.trim()).includes(String(mode));
 }
+
+function erIsPlainClick(event){return event.button===0&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!event.altKey;}

@@ -9,9 +9,13 @@ function erLoadEquipment() {
             const response = await fetch(url, {signal: controller.signal});
             if (!response.ok) throw new Error('장비 조회 실패');
             const body = await response.json();
-            return Array.isArray(body.data) ? body.data : [];
+            if(!Array.isArray(body.data)||(body.code!=null&&![0,200].includes(Number(body.code))))throw new Error('장비 응답 형식 오류');
+            return body.data;
         } finally { clearTimeout(timer); }
-    })).then(results => new Map(results.flatMap(result => result.status === 'fulfilled' ? result.value : []).map(item => [String(item.code), item])));
+    })).then(results => {
+        if(results.some(result=>result.status==='rejected'))erEquipmentPromise=null;
+        return new Map(results.flatMap(result=>result.status==='fulfilled'?result.value:[]).map(item=>[String(item.code),item]));
+    });
     return erEquipmentPromise;
 }
 function erApplyItemGrades(root, catalog) {
@@ -61,8 +65,8 @@ async function erShowItemTooltip(slot) {
     erItemTooltip.style.top=(rect.bottom+tip.height+10<innerHeight?rect.bottom+8:Math.max(8,rect.top-tip.height-8))+'px';
 }
 function erHideItemTooltip(){if(erHoverSlot)erHoverSlot.removeAttribute('aria-describedby');erHoverSlot=null;if(erItemTooltip)erItemTooltip.hidden=true;}
-document.addEventListener('pointerover',e=>{const slot=e.target.closest?.('[data-item-code],[data-skill-code]');if(slot&&slot!==erHoverSlot)erShowItemTooltip(slot);});
-document.addEventListener('focusin',e=>{const slot=e.target.closest?.('[data-item-code],[data-skill-code]');if(slot)erShowItemTooltip(slot);});
+document.addEventListener('pointerover',e=>{const slot=e.target.closest?.('[data-item-code],[data-skill-code]');if(slot&&slot!==erHoverSlot)erShowItemTooltip(slot).catch(erHideItemTooltip);});
+document.addEventListener('focusin',e=>{const slot=e.target.closest?.('[data-item-code],[data-skill-code]');if(slot)erShowItemTooltip(slot).catch(erHideItemTooltip);});
 document.addEventListener('pointerout',e=>{if(erHoverSlot&&!erHoverSlot.contains(e.relatedTarget))erHideItemTooltip();});
 document.addEventListener('focusout',erHideItemTooltip);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')erHideItemTooltip();});
