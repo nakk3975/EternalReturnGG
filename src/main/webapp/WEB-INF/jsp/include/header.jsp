@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 
-        <link rel="stylesheet" href="/static/css/theme.css?v=20260912-mobile-steam">
+        <link rel="stylesheet" href="/static/css/theme.css?v=20260912-ux">
         <script>try{document.documentElement.dataset.theme=localStorage.getItem('ergg.theme')||'light';}catch(_){document.documentElement.dataset.theme='light';}</script>
         <style>
             header{padding-left:max(24px,calc((100% - 1232px)/2));padding-right:max(24px,calc((100% - 1232px)/2));background:radial-gradient(ellipse at 85% 0%,#39bed16b,transparent 60%),linear-gradient(110deg,#173f63,#147489 70%,#268ea5);border-bottom:1px solid #ffffff26;}
@@ -14,7 +14,7 @@
         <header class="d-flex justify-content-between align-items-center">
             <a href="/er/search/view" class="p-2 ml-2 text-white" id="mainBanner" aria-label="ER.GG 홈"><img src="/static/images/ergg-logo.webp" width="42" height="42" alt=""><span>ER.GG</span></a>
             <button id="theme-toggle" type="button" aria-label="화면 테마 변경">라이트 / 다크</button>
-            <div class="p-2">
+            <div class="p-2 header-search-container">
                 <form class="search-form" id="searchHeaderForm">
                     <input type="text" aria-label="플레이어 닉네임" id="searchHeaderInput" class="search-input" placeholder="플레이어 닉네임을 입력해주세요." required>
                     <button class="search-button" id="searchHeaderBtn" aria-label="전적 검색">
@@ -23,6 +23,7 @@
                         </svg>
                     </button>
                 </form>
+                <p id="header-search-status" role="status" aria-live="polite" hidden></p>
             </div>
         </header>
         <nav>
@@ -41,7 +42,10 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('theme-toggle').addEventListener('click',()=>{const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=theme;try{localStorage.setItem('ergg.theme',theme);}catch(_){}});
+            const themeButton=document.getElementById('theme-toggle');
+            const updateThemeLabel=()=>{const dark=document.documentElement.dataset.theme==='dark';themeButton.textContent=dark?'☀ 라이트':'☾ 다크';themeButton.setAttribute('aria-label',dark?'라이트 모드로 변경':'다크 모드로 변경');};
+            updateThemeLabel();
+            document.getElementById('theme-toggle').addEventListener('click',()=>{const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=theme;try{localStorage.setItem('ergg.theme',theme);}catch(_){}updateThemeLabel();});
             document.querySelectorAll('nav a').forEach(link => {
                 if (link.pathname === location.pathname || (link.pathname !== '/er/search/view' && location.pathname.startsWith(link.pathname + '/'))) link.setAttribute('aria-current', 'page');
             });
@@ -52,6 +56,8 @@
                 const nickname = document.getElementById('searchHeaderInput').value.trim();
                 if (!nickname || button.disabled) return;
                 button.disabled = true;
+                const status=document.getElementById('header-search-status');
+                status.hidden=false;status.textContent='플레이어를 찾고 있습니다…';form.setAttribute('aria-busy','true');
                 try {
                     const response = await fetch('/er/search/nickname?nickname=' + encodeURIComponent(nickname), {signal: AbortSignal.timeout(15000)});
                     const data = await response.json();
@@ -59,8 +65,8 @@
                     if (!data.user?.userId) throw new Error('존재하지 않는 닉네임입니다.');
                     location.href = '/er/user/detail/view?userNum=' + encodeURIComponent(data.user.userId);
                 } catch (error) {
-                    alert(error.name === 'TimeoutError' ? '검색 응답이 지연되고 있습니다. 다시 시도해 주세요.' : error.message);
-                } finally { button.disabled = false; }
+                    status.textContent=error.name === 'TimeoutError' ? '검색 응답이 지연되고 있습니다. 다시 시도해 주세요.' : error.message;
+                } finally { button.disabled = false;form.removeAttribute('aria-busy'); }
             });
         });
     </script>

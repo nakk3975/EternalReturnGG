@@ -98,3 +98,8 @@ assert.match(context.erScorePlayerLink({nickname:'한 글&name'}), /href="\/er\/
 assert.match(context.erScorePlayerLink({nickname:'name',userId:'a/b'}), /userNum=a%2Fb/);
 assert(!context.erScorePlayerLink({nickname:'name'}).includes('<button'));
 console.log('PASS: native player anchors support new tabs and encode nickname/ID parameters');
+
+assert.equal(context.erMatchDate('2026-09-11T20:24:55.055+0900'),'09/11 20:24');
+assert.equal(context.erMatchDate('2026-09-11T23:30:00Z'),'09/12 08:30');
+assert.equal(context.erMatchDate('bad'),'—');
+assert.equal(context.erMatchDate(null),'—');
