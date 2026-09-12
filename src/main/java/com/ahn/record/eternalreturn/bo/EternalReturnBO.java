@@ -109,6 +109,12 @@ public class EternalReturnBO {
         return requestCached("/v2/data/ItemArmor", false, STATIC_CACHE_MS);
     }
 
+    public String routeData(String table) throws URISyntaxException {
+        if (!java.util.Set.of("Area", "ItemSpawn", "DropGroup", "Collectible", "ItemConsumable", "ItemSpecial", "NearByArea").contains(table))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Unsupported route table");
+        return requestCached("/v2/data/" + table, false, STATIC_CACHE_MS);
+    }
+
     public String materials() throws URISyntaxException { return requestCached("/v2/data/ItemMisc", false, STATIC_CACHE_MS); }
 
     public String searchWeapon() throws URISyntaxException {

@@ -83,6 +83,11 @@ public class EternalReturnRestController {
 		return erBo.tacticalSkill();
 	}
 	
+    @GetMapping("/route-data/{table}")
+    public String routeData(@org.springframework.web.bind.annotation.PathVariable("table") String table) throws URISyntaxException {
+        return erBo.routeData(table);
+    }
+
     @GetMapping("/materials")
     public String materials() throws URISyntaxException {return erBo.materials();}
 
