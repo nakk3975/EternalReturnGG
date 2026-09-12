@@ -54,12 +54,13 @@ async function startRoutePlanner(){
  }
  function drawChoices(){
   root.querySelector('#planner-slots').innerHTML=slots.map(([key,label])=>'<button data-slot="'+key+'" aria-pressed="'+(slot===key)+'">'+label+(selected.has(key)?' ✓':'')+'</button>').join('');
+  root.querySelector('#planner-slots').insertAdjacentHTML('beforeend','<button class="planner-remove-equipment" data-unset="'+slot+'" '+(selected.has(slot)?'':'disabled')+'>이 부위 비우기</button>');
   const q=root.querySelector('#planner-query').value.trim().toLowerCase(),type=root.querySelector('#planner-weapon').value,grade=root.querySelector('#planner-grade').value;
   root.querySelector('#planner-weapon').hidden=slot!=='Weapon';
   const rows=equipment.filter(r=>(slot==='Weapon'?!!r.weaponType:r.armorType===slot)&&(!type||slot!=='Weapon'||r.weaponType===type)&&(!grade||r.itemGrade===grade)&&name(r.code).toLowerCase().includes(q));
   const grades=['Epic','Legend','Mythic','Rare','Uncommon','Common'];
   const groups=grades.map(g=>({grade:g,items:rows.filter(r=>r.itemGrade===g).sort((a,b)=>name(a.code).localeCompare(name(b.code),'ko'))})).filter(g=>g.items.length);
-  root.querySelector('#planner-choices').innerHTML='<button class="planner-remove-equipment" data-unset="'+slot+'">이 부위 비우기</button>'+groups.map(g=>'<section class="planner-grade-group" data-grade="'+g.grade+'"><h3>'+erText(erGradeNames[g.grade])+' <small>'+g.items.length+'개</small></h3><div class="planner-grade-items">'+g.items.slice(0,limit).map(r=>'<button data-equipment="'+r.code+'" aria-pressed="'+(String(selected.get(slot))===String(r.code))+'">'+icon(r.code)+'<span>'+erText(name(r.code))+'</span></button>').join('')+'</div></section>').join('')+(rows.length?'':'<p class="empty-state">일치하는 장비가 없습니다.</p>');root.querySelector('#planner-more').hidden=!groups.some(g=>g.items.length>limit);erApplyItemGrades(picker,catalog);
+  root.querySelector('#planner-choices').innerHTML=groups.map(g=>'<section class="planner-grade-group" data-grade="'+g.grade+'"><h3>'+erText(erGradeNames[g.grade])+' <small>'+g.items.length+'개</small></h3><div class="planner-grade-items">'+g.items.slice(0,limit).map(r=>'<button data-equipment="'+r.code+'" aria-pressed="'+(String(selected.get(slot))===String(r.code))+'">'+icon(r.code)+'<span>'+erText(name(r.code))+'</span></button>').join('')+'</div></section>').join('')+(rows.length?'':'<p class="empty-state">일치하는 장비가 없습니다.</p>');root.querySelector('#planner-more').hidden=!groups.some(g=>g.items.length>limit);erApplyItemGrades(picker,catalog);
  }
  root.querySelector('#planner-equipment-open').onclick=()=>{drawChoices();picker.showModal();};root.querySelector('#planner-picker-close').onclick=()=>picker.close();picker.addEventListener('close',erHideItemTooltip);
  root.querySelector('#planner-reset').onclick=()=>{selected.clear();route=[];hover=null;draw();};root.querySelector('#planner-route-clear').onclick=()=>{route=[];draw();};

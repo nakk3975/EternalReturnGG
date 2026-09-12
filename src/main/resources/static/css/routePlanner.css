@@ -41,3 +41,6 @@
 @media(max-width:760px){.planner-body{display:flex;flex-direction:column;}.planner-map-panel{width:100%;}.planner-sidebar{position:static;width:100%;}.planner-material-grid{max-height:none;grid-template-columns:repeat(3,minmax(0,1fr));}.planner-material{flex-direction:column;text-align:center;}.planner-map{max-width:100%;}#planner-picker .planner-dialog-heading{top:-14px;padding:12px 0;}.planner-grade-items{grid-template-columns:repeat(3,minmax(0,1fr));}}
 
 @media(max-width:760px){.planner-sidebar:not([hidden]){display:contents;}#planner-materials:not([hidden]){order:-1;width:100%;}#planner-area{width:100%;}}
+
+#planner-slots .planner-remove-equipment{margin-left:auto;background:transparent;color:var(--muted);border:1px solid var(--line);font-size:12px;padding:6px 10px;}#planner-slots .planner-remove-equipment:disabled{opacity:.45;cursor:default;}
+@media(max-width:480px){#planner-slots{gap:4px;flex-wrap:nowrap;}#planner-slots>button{padding:6px;font-size:12px;white-space:nowrap;}#planner-slots .planner-remove-equipment{font-size:11px;padding:6px;}}
