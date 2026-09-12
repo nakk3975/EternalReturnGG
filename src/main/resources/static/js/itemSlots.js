@@ -58,6 +58,8 @@ async function erShowItemTooltip(slot) {
     const description=item?(names.get('Item/Desc/'+item.code)||''):erSkillDescription(names,code);
     const category=item?(erGradeNames[item.itemGrade]||'아이템'):Number(code)>=7000000?'특성':Number(code)>=4000000?'전술 스킬':Number(code)>=2000000?'무기 스킬':'실험체 스킬';
     if(!erItemTooltip){erItemTooltip=document.createElement('div');erItemTooltip.id='item-tooltip';erItemTooltip.setAttribute('role','tooltip');document.body.append(erItemTooltip);}
+    const tooltipHost=slot.closest('dialog[open]')||document.body;
+    if(erItemTooltip.parentElement!==tooltipHost)tooltipHost.append(erItemTooltip);
     erItemTooltip.innerHTML='<strong>'+erText(title)+'</strong><small>'+erText(category)+'</small>'+(item?'<dl>'+erItemStats(item).map(s=>'<div><dt>'+erText(s.label)+'</dt><dd>'+erText(s.value)+'</dd></div>').join('')+'</dl>':'')+'<p>'+erText(clean(description)||(item?'':'현재 공식 데이터에 상세 설명이 제공되지 않습니다.'))+'</p>';
     erItemTooltip.hidden=false;slot.setAttribute('aria-describedby','item-tooltip');
     const rect=slot.getBoundingClientRect(),tip=erItemTooltip.getBoundingClientRect();

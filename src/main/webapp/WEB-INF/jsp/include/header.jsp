@@ -34,6 +34,7 @@
                 <li class="nav-item"><a href="/er/statistics" class="nav-link font-weight-bold text-white">통계</a></li>
                 <li class="nav-item"><a href="/er/items" class="nav-link font-weight-bold text-white">아이템</a></li>
                 <li class="nav-item"><a href="/er/routes" class="nav-link font-weight-bold text-white">루트추천</a></li>
+                <li class="nav-item"><a href="/er/route-planner" class="nav-link font-weight-bold text-white">루트 만들기</a></li>
                 <li class="nav-item"><a href="/er/guide" class="nav-link font-weight-bold text-white">가이드</a></li>
                 <li class="nav-item"><a href="/er/multi" class="nav-link font-weight-bold text-white">멀티서치</a></li>
                 <li class="nav-item"><a href="/er/favorites" class="nav-link font-weight-bold text-white">즐겨찾기</a></li>

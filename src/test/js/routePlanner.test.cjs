@@ -1,0 +1,22 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const ctx=vm.createContext({});vm.runInContext(fs.readFileSync('src/main/resources/static/js/routePlanner.js','utf8'),ctx);
+const catalog=new Map([['1',{code:1,makeMaterial1:3,makeMaterial2:4}],['2',{code:2,makeMaterial1:3,makeMaterial2:4}],['3',{code:3,makeMaterial1:5,makeMaterial2:6,initialCount:2}],['4',{code:4}],['5',{code:5}],['6',{code:6}]]);
+let result=ctx.erRouteMaterials(['1','2'],catalog);
+assert.equal(result.required.get('4'),2);assert.equal(result.required.get('5'),1);assert.equal(result.required.get('6'),1);assert.equal(result.invalid.size,0);
+const areas=[{id:'a',items:[{code:4,quantity:1},{code:5,quantity:8}]},{id:'b',items:[{code:4,quantity:1}]},{id:'c',items:[{code:6,quantity:8}]}];
+let c=ctx.erRouteCoverage(result.required,['a','b'],areas);assert.equal(c.find(r=>r.code==='4').covered,true);assert.equal(c.find(r=>r.code==='6').covered,false);
+c=ctx.erRouteCoverage(result.required,['a','b','c'],areas);assert(c.every(r=>r.covered));assert.equal(c.find(r=>r.code==='6').step,3);
+c=ctx.erRouteCoverage(result.required,['a','c'],areas);assert.equal(c.find(r=>r.code==='4').covered,false);
+assert.equal(ctx.erRouteMaterials([],catalog).required.size,0);
+const cycle=new Map([['1',{makeMaterial1:2}],['2',{makeMaterial1:1}]]);assert.equal(ctx.erRouteMaterials(['1'],cycle).invalid.size,1);
+assert.equal(ctx.erRouteMaterials(['999'],catalog).invalid.has('999'),true);
+console.log('PASS: shared materials, multi-output recipes, 2/3 region coverage, undo, empty equipment, cycle and missing recipe');
+const areaRows=[{code:10,name:'Harbor',startingArea:true,areaType:'Lumia',modeType:'1,2,3'},{code:2010,name:'Cobalt1',startingArea:true,areaType:'Cobalt',modeType:4}];
+const normalized=ctx.erRouteAreas(areaRows,[{areaCode:10,itemCode:4,dropCount:2},{areaCode:10,itemCode:4,dropCount:3},{areaCode:2010,itemCode:5,dropCount:99}],[],[],new Map());
+assert.equal(normalized.length,1);assert.equal(normalized[0].name,'항구');assert.equal(normalized[0].items[0].quantity,5);
+assert.equal(ctx.erRouteCoverage(new Map([['4',2]]),['a','a'],areas)[0].covered,false);
+
+const gathered=ctx.erRouteAreas(areaRows,[],[{itemCode:108101,areaCodeList:'10,20'},{itemCode:401208,areaCodeList:''}],[],new Map());
+assert.equal(gathered[0].items[0].quantity,Infinity);
+assert.equal(gathered[0].items.some(r=>r.code==='401208'),false);
+assert.equal(ctx.erRouteCoverage(new Map([['108101',5]]),['10'],gathered)[0].covered,true);

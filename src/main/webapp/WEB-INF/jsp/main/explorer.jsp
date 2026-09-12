@@ -12,6 +12,7 @@
     <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
 <link rel="stylesheet" href="/static/css/dataPages.css?v=20260912-stat-filters">
 <link rel="stylesheet" href="/static/css/multi.css?v=1">
+<link rel="stylesheet" href="/static/css/routePlanner.css?v=20260912-planner">
 </head>
 <body>
 <c:import url="/WEB-INF/jsp/include/header.jsp" />
@@ -27,10 +28,11 @@
     <c:import url="/WEB-INF/jsp/include/footer.jsp" />
 </div>
 <script src="/static/js/assetImages.js?v=20260912-skills"></script>
-<script src="/static/js/itemSlots.js?v=20260912-unit-fix"></script>
+<script src="/static/js/itemSlots.js?v=20260912-planner"></script>
 <script src="/static/js/siteData.js?v=20260912-audit"></script>
 <script src="/static/js/catalogPages.js?v=20260912-audit"></script>
 <script src="/static/js/multi.js?v=1"></script>
-<script src="/static/js/explorer.js?v=20260912-audit"></script>
+<script src="/static/js/routePlanner.js?v=20260912-planner"></script>
+<script src="/static/js/explorer.js?v=20260912-planner"></script>
 </body>
 </html>
