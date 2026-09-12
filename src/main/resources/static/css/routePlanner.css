@@ -55,3 +55,5 @@ html[data-theme=dark] #planner-picker button:not([aria-pressed=true]){background
 html[data-theme=dark] #planner-picker button:not([aria-pressed=true]):hover,html[data-theme=dark] #planner-picker button:not([aria-pressed=true]):focus-visible{background:#394553;color:#fff;border-color:var(--route-blue);}
 
 .route-planner .planner-region:focus-visible{outline:2px solid #91bac8;outline-offset:2px;}
+
+.planner-areas{position:absolute;inset:0;width:100%;height:100%;}.planner-area-shape{fill:transparent;stroke:transparent;stroke-width:1.5;vector-effect:non-scaling-stroke;pointer-events:all;cursor:pointer;transition:fill .12s,stroke .12s;}.planner-area-shape.is-selected{fill:#29bc8b32;stroke:#56d4ab88;}.planner-area-shape:hover,.planner-area-shape.is-hovered{fill:#4bc5e044;stroke:#91def1;}.planner-area-shape.is-selected.is-hovered{fill:#29bc8b66;stroke:#8aefcd;}.route-planner .planner-region.is-hovered{background:#254554;border-color:#91bac8;}.planner-lines{pointer-events:none;}

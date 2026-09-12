@@ -20,3 +20,10 @@ const gathered=ctx.erRouteAreas(areaRows,[],[{itemCode:108101,areaCodeList:'10,2
 assert.equal(gathered[0].items[0].quantity,Infinity);
 assert.equal(gathered[0].items.some(r=>r.code==='401208'),false);
 assert.equal(ctx.erRouteCoverage(new Map([['108101',5]]),['10'],gathered)[0].covered,true);
+// Every region label must resolve to its own outline, never a neighbor.
+vm.runInContext('this.polygons=erRoutePolygons;this.positions=erRoutePositions',ctx);
+const regionNames={10:'항구',20:'창고',30:'연못',40:'개울',50:'모래사장',60:'고급 주택가',70:'골목길',80:'주유소',90:'호텔',100:'경찰서',110:'소방서',120:'병원',130:'절',140:'양궁장',150:'묘지',160:'숲',170:'공장',180:'성당',190:'학교',200:'바지선'};
+function contains(p,poly){let yes=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])yes=!yes;}return yes;}
+for(const [id,name] of Object.entries(regionNames)){const p=ctx.positions[name].map((v,i)=>v*(i?936:903)/100);assert.deepEqual(Object.entries(ctx.polygons).filter(([k,v])=>contains(p,v)).map(([k])=>k),[id],name+' outline');}
+assert(!Object.values(ctx.polygons).some(poly=>contains([426,414],poly)),'Laboratory is not a route region');
+console.log('PASS: all 20 labels belong to their own region; laboratory excluded');
