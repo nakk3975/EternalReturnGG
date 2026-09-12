@@ -31,6 +31,6 @@
 <script src="/static/js/siteData.js?v=20260912-audit"></script>
 <script src="/static/js/catalogPages.js?v=20260912-audit"></script>
 <script src="/static/js/multi.js?v=1"></script>
-<script src="/static/js/explorer.js?v=20260911-analysis-final"></script>
+<script src="/static/js/explorer.js?v=20260912-audit"></script>
 </body>
 </html>

@@ -20,5 +20,11 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
  assert.equal(ctx.erIsPlainClick({button:1}),false);
  ctx.fetch=async()=>({ok:false,json:async()=>{throw Error('Unexpected token <');}});
  await assert.rejects(ctx.erRequest('/test'),/잠시 후 다시 시도/);
+ let ready;const controls={hidden:true,append(button){this.button=button;}},status={};
+ const page=vm.createContext({document:{addEventListener:(event,fn)=>ready=fn,querySelector:id=>id==='#explorer-controls'?controls:status,createElement:()=>({})}});
+ vm.runInContext(fs.readFileSync('src/main/resources/static/js/explorer.js','utf8'),page);
+ vm.runInContext('startExplorer=async()=>{throw new Error("일시적인 조회 실패")}',page);
+ ready();await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(controls.hidden,false);assert.equal(controls.button.textContent,'다시 시도');assert.equal(status.textContent,'일시적인 조회 실패');
  console.log('PASS: transient dictionary/equipment failures recover, successful loads stay cached, modified clicks preserved, invalid JSON has readable error');
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -108,6 +108,6 @@ async function startExplorer() {
 if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', () => {
     startExplorer().catch(error => {
         document.querySelector('#explorer-status').textContent = error.message;
-        const retry = document.createElement('button'); retry.textContent = '다시 시도'; retry.onclick = () => location.reload(); document.querySelector('#explorer-controls').append(retry);
+        const retry = document.createElement('button'); retry.textContent = '다시 시도'; retry.onclick = () => location.reload(); const controls=document.querySelector('#explorer-controls');controls.hidden=false;controls.append(retry);
     });
 });
