@@ -27,3 +27,6 @@ function contains(p,poly){let yes=false;for(let i=0,j=poly.length-1;i<poly.lengt
 for(const [id,name] of Object.entries(regionNames)){const p=ctx.positions[name].map((v,i)=>v*(i?936:903)/100);assert.deepEqual(Object.entries(ctx.polygons).filter(([k,v])=>contains(p,v)).map(([k])=>k),[id],name+' outline');}
 assert(!Object.values(ctx.polygons).some(poly=>contains([426,414],poly)),'Laboratory is not a route region');
 console.log('PASS: all 20 labels belong to their own region; laboratory excluded');
+// Sample the map interior to reject outlines that overlap adjacent selectable regions.
+for(let x=0.3;x<903;x+=4)for(let y=0.7;y<936;y+=4){const owners=Object.entries(ctx.polygons).filter(([,poly])=>contains([x,y],poly));assert(owners.length<=1,'overlapping regions at '+x+','+y+': '+owners.map(([id])=>id));}
+console.log('PASS: region interiors do not overlap across the map');
