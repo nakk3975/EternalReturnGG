@@ -12,7 +12,7 @@
     <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
 <link rel="stylesheet" href="/static/css/dataPages.css?v=20260912-stat-filters">
 <link rel="stylesheet" href="/static/css/multi.css?v=1">
-<link rel="stylesheet" href="/static/css/routePlanner.css?v=20260912-planner">
+<link rel="stylesheet" href="/static/css/routePlanner.css?v=20260912-planner2">
 </head>
 <body>
 <c:import url="/WEB-INF/jsp/include/header.jsp" />
