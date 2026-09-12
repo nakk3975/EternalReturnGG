@@ -26,3 +26,19 @@ const top=ctx.erRankingCharacters({totalGames:100,characterStats:[{characterCode
 assert.equal(top.length,3);assert.equal(top[0].code,2);assert.equal(top[0].percent,40);assert.equal(top[1].uses,30);
 assert.equal(ctx.erRankingCharacters({characterStats:[{characterCode:1,usages:5}]})[0].percent,null);
 console.log('PASS: character usage ranking merges duplicate entries and uses total season games as denominator');
+const filteredFixture={buckets:{rows:[
+ {character:1,season:12,mode:3,tier:3,day:'2026-09-12',games:1,wins:1,rank:1,damage:100,rp:null},
+ {character:1,season:12,mode:3,tier:3,day:'2026-09-11',games:9,wins:0,rank:5,damage:200,rp:10,rpCount:2},
+ {character:1,season:12,mode:3,tier:1,day:'2026-09-12',games:20,wins:2},
+ {character:1,season:11,mode:3,tier:3,day:'2026-09-12',games:30},
+ {character:1,season:12,mode:2,tier:-1,day:'2026-09-12',games:40}
+],builds:[],items:[]}};
+const filters={season:'12',mode:'3',tier:'3',days:'7'},clock=Date.parse('2026-09-12T12:00:00Z');
+let filtered=ctx.erFilterStatistics(filteredFixture,filters,clock);
+assert.equal(filtered.rows.length,1);assert.equal(filtered.rows[0].games,10);assert.equal(filtered.rows[0].rank,4.6);assert.equal(filtered.rows[0].damage,190);assert.equal(filtered.rows[0].rp,10);
+assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,days:'1'},clock).rows[0].games,1);
+assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,mode:'2'},clock).rows[0].games,40);
+assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,tier:'5+'},clock).rows.length,0);
+assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,season:'10'},clock).rows.length,0);
+assert.equal(ctx.erFilterStatistics(filteredFixture,{...filters,days:'1'},Date.parse('2026-09-11T16:00:00Z')).rows[0].games,1);
+console.log('PASS: intersecting season/mode/tier/date filters, weighted averages, null RP, KST boundary and empty samples');

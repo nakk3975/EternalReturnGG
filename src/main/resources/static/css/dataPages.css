@@ -145,3 +145,10 @@
 @media(min-width:1181px){.items-layout{grid-template-columns:180px minmax(280px,.85fr) minmax(380px,1.15fr);}}.craft-tree{overflow-x:auto;padding-bottom:12px;}.craft-tree>li{min-width:320px;}
 
 .item-description{white-space:pre-line;}.item-table-panel{overflow-x:auto;}.item-table-panel .data-table{min-width:400px;}
+
+/* Shared statistics filters fit both wide analysis panels and the item sidebar. */
+.catalog-toolbar.stats-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;padding:12px 0;align-items:end;margin-bottom:8px;}
+.stats-filters label{display:flex;flex-direction:column;gap:6px;color:var(--ink);font-size:14px;min-width:0;}
+.catalog-toolbar.stats-filters select{width:100%;margin:0;min-width:0;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);}
+.stats-filters select:disabled{opacity:.55;cursor:not-allowed;}
+.item-filters .stats-filters{grid-template-columns:1fr;}

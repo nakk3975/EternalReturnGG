@@ -1,3 +1,37 @@
+// One filter model for character, build and item statistics. Dates are Korean calendar days.
+function erFilterStatistics(data, filters, now=Date.now()) {
+    const buckets=data.buckets;
+    if(!buckets)return {...data,rows:[],builds:[],items:[],filterLabel:'통계 갱신 대기'};
+    const day=new Date(now+9*3600000).toISOString().slice(0,10);
+    const from=filters.days==='all'?'0000-01-01':new Date(Date.parse(day+'T00:00:00Z')-(Number(filters.days)-1)*86400000).toISOString().slice(0,10);
+    const matches=r=>String(r.mode)===String(filters.mode)&&String(r.season)===String(filters.season)&&r.day>=from&&r.day<=day&&(filters.mode!=='3'||filters.tier==='all'||(filters.tier==='5+'?r.tier>=5:String(r.tier)===filters.tier));
+    const merge=(rows,keys)=>{
+        const groups=new Map();
+        for(const r of (rows||[]).filter(matches)){
+            const key=JSON.stringify(keys.map(k=>r[k]));
+            if(!groups.has(key))groups.set(key,{...r,games:0,wins:0,top3:0,_sums:{},_counts:{}});
+            const a=groups.get(key);for(const k of ['games','wins','top3'])a[k]+=Number(r[k]||0);
+            for(const k of ['rank','damage','kills','rp'])if(r[k]!=null){const n=Number(r[k+'Count']??r.games);a._sums[k]=(a._sums[k]||0)+Number(r[k])*n;a._counts[k]=(a._counts[k]||0)+n;}
+        }
+        return [...groups.values()].map(a=>{for(const k of ['rank','damage','kills','rp'])a[k]=a._counts[k]?a._sums[k]/a._counts[k]:null;delete a._sums;delete a._counts;return a;});
+    };
+    return {...data,rows:merge(buckets.rows,['character','mode','season']),builds:merge(buckets.builds,['character','mode','season','kind','value']),items:merge(buckets.items,['code','mode','season']),filterLabel:filters.days==='all'?'시즌 전체 · 보유 데이터':filters.days==='1'?'오늘 (한국 시간)':'최근 '+filters.days+'일'};
+}
+function erStatisticsControls(data) {
+    const seasons=[...new Set((data.buckets?.rows||[]).map(r=>r.season))].sort((a,b)=>b-a);
+    const options=entries=>entries.map(([v,n])=>'<option value="'+erText(v)+'">'+erText(n)+'</option>').join('');
+    return '<div class="catalog-toolbar stats-filters">'+[
+        ['season','시즌',seasons.length?seasons.map(s=>[s,'시즌 '+s]):[['','수집된 시즌 없음']]],
+        ['mode','모드',[['3','랭크'],['2','일반'],['6','코발트'],['9','론울프']]],
+        ['tier','티어',[['all','전체 티어'],['5+','다이아몬드 이상'],['7','미스릴 이상'],['6','메테오라이트'],['5','다이아몬드'],['4','플래티넘'],['3','골드'],['2','실버'],['1','브론즈'],['0','아이언'],['-1','티어 미확인']]],
+        ['days','기간',[['7','최근 7일'],['1','오늘'],['14','최근 14일'],['30','최근 30일'],['all','시즌 전체']]]
+    ].map(([key,label,values])=>'<label>'+label+'<select data-stat-filter="'+key+'">'+options(values)+'</select></label>').join('')+'</div><p class="data-note">보유 경기 표본 기준 · 랭크 티어는 경기 시작 RP 구간 기준입니다. 미스릴·데미갓·이터니티는 당시 랭킹 정보가 없어 미스릴 이상으로 합산합니다. 시즌 전체도 저장된 기간만 포함합니다.</p>';
+}
+function erReadStatisticsControls(root) {
+    const f=Object.fromEntries([...root.querySelectorAll('[data-stat-filter]')].map(e=>[e.dataset.statFilter,e.value]));
+    const tier=root.querySelector('[data-stat-filter="tier"]');tier.disabled=f.mode!=='3';if(tier.disabled)f.tier='all';return f;
+}
+
 'use strict';
 const erEquipmentTypes={"Glove": "글러브", "Tonfa": "톤파", "Bat": "방망이", "Whip": "채찍", "HighAngleFire": "투척", "DirectFire": "암기", "Bow": "활", "CrossBow": "석궁", "Pistol": "권총", "AssaultRifle": "돌격 소총", "SniperRifle": "저격 소총", "Hammer": "망치", "Axe": "도끼", "OneHandSword": "단검", "TwoHandSword": "양손검", "Polearm": "폴암", "DualSword": "쌍검", "Spear": "창", "Nunchaku": "쌍절곤", "Rapier": "레이피어", "Guitar": "기타", "Camera": "카메라", "Arcana": "아르카나", "VFArm": "VF 의수", "Chest": "옷", "Head": "머리", "Arm": "팔", "Leg": "다리"};
 const erBaseStats = {maxHp:'체력',maxSp:'스태미나',attackPower:'공격력',defense:'방어력',moveSpeed:'이동 속도',attackSpeed:'공격 속도',hpRegen:'체력 재생',spRegen:'스태미나 재생',criticalStrikeChance:'치명타 확률',skillAmp:'스킬 증폭',cooldownReduction:'쿨다운 감소'};
@@ -33,7 +67,7 @@ async function erCharacterPage() {
         erStatic('/er/skillInfo').then(data=>{if(current!==generation)return;content.querySelector('#character-skill-icons').innerHTML=(data.data||[]).filter(s=>String(s.characterCode)===String(selected.code)).slice(0,8).map(s=>'<span title="'+erText(s.name)+'">'+erSkillImage(s.group,s.name)+'</span>').join('');}).catch(()=>{});
         if(tab==='overview') {
             target.innerHTML='<div class="analysis-toolbar"><label>경기 모드 <select id="analysis-mode"><option value="3">랭크</option><option value="6">코발트</option><option value="2">일반</option></select></label></div><div id="character-analysis"><p class="empty-state">통계 불러오는 중…</p></div><section class="surface"><h3 class="panel-title">기본 능력치</h3><div class="data-stats">'+erStatCells(selected)+'</div></section><section class="surface"><h3 class="panel-title">추천 루트</h3><div id="character-routes"><p class="empty-state">루트를 불러오는 중입니다.</p></div></section>';
-            Promise.all([erStatic('/er/statistics/data'),erStatic('/er/tacticalSkill')]).then(([data,tactical])=>{if(current!==generation)return;const draw=()=>{target.querySelector('#character-analysis').innerHTML=erAnalysisMarkup(data,selected.code,names,target.querySelector('#analysis-mode').value,tactical.data||[]);};target.querySelector('#analysis-mode').onchange=draw;draw();}).catch(()=>{if(current===generation)target.querySelector('#character-analysis').innerHTML='<p class="empty-state">통계를 불러오지 못했습니다.</p>';});
+            Promise.all([erStatic('/er/statistics/data'),erStatic('/er/tacticalSkill')]).then(([data,tactical])=>{if(current!==generation)return;target.querySelector('.analysis-toolbar').innerHTML=erStatisticsControls(data);const draw=()=>{const filters=erReadStatisticsControls(target);target.querySelector('#character-analysis').innerHTML=erAnalysisMarkup(erFilterStatistics(data,filters),selected.code,names,filters.mode,tactical.data||[]);};target.querySelectorAll('[data-stat-filter]').forEach(e=>e.onchange=draw);draw();}).catch(()=>{if(current===generation)target.querySelector('#character-analysis').innerHTML='<p class="empty-state">통계를 불러오지 못했습니다.</p>';});
         }else target.innerHTML='<p class="empty-state">정보를 불러오는 중입니다.</p>';
         try {
             if(tab==='traits' || tab==='tactical') {
@@ -94,8 +128,9 @@ async function erItemsPage() {
 
     const assets=loadAssetConfig();const [weapons,armor,names,materials,samples]=await Promise.all([erStatic('/er/weapon'),erStatic('/er/armor'),erDictionary(),erStatic('/er/materials').catch(()=>({data:[]})),erStatic('/er/statistics/data').catch(()=>({items:[]}))]);await assets;
     const rows=[...(weapons.data||[]).map(r=>({...r,category:'weapon'})),...(armor.data||[]).map(r=>({...r,category:'armor'}))];const catalog=new Map([...rows,...(materials.data||[])].map(r=>[String(r.code),r]));let selected=location.pathname.split('/')[3];let limit=40;
-    const itemSeason=Math.max(0,...(samples.items||[]).filter(r=>r.mode===3).map(r=>r.season));
-    const itemSamples=new Map((samples.items||[]).filter(r=>r.mode===3&&r.season===itemSeason).map(r=>[String(r.code),r]));
+    root.querySelector('.item-filters').insertAdjacentHTML('beforeend',erStatisticsControls(samples));
+    let filteredSamples=erFilterStatistics(samples,erReadStatisticsControls(root));
+    let itemSamples=new Map(filteredSamples.items.map(r=>[String(r.code),r]));
     let selectedType='';
     const typeButtons=root.querySelector('#item-type-groups');
     const ranged=new Set(['Pistol','Guitar','AssaultRifle','CrossBow','Arcana','DirectFire','SniperRifle','Camera','HighAngleFire','Bow']);
@@ -105,7 +140,8 @@ async function erItemsPage() {
     typeButtons.innerHTML=groups.map(([name,entries])=>'<section class="item-filter-group"><h3>'+name+'</h3><div class="item-type-buttons">'+entries.map(t=>'<button type="button" data-type="'+erText(t)+'" aria-pressed="false">'+erText(erEquipmentTypes[t]||t)+'</button>').join('')+'</div></section>').join('');
     const syncFilters=()=>{root.querySelector('#item-all').setAttribute('aria-pressed',String(!selectedType));typeButtons.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.type===selectedType)));};
     const label=r=>names.get('Item/Name/'+r.code)||r.name||String(r.code);
-    function detail(code,push=false) {const row=catalog.get(String(code));if(!row)return;selected=String(code);if(push)history.pushState(null,'','/er/items/'+encodeURIComponent(code));root.querySelector('#item-detail').innerHTML='<h2>아이템 정보</h2>'+erItemHtml(row.code)+'<h3>'+erText(label(row))+'</h3><p>'+erText(erGradeNames[row.itemGrade]||'등급 미확인')+' · '+erText(erEquipmentTypes[row.weaponType||row.armorType]||row.weaponType||row.armorType||'')+'</p><div class="item-stat-chips">'+erItemStats(row).map(s=>'<span>'+erText(s.label)+' +'+erText(s.value)+'</span>').join('')+'</div>'+((names.get('Item/Desc/'+code))?'<p class="item-description">'+erText(names.get('Item/Desc/'+code).replace(/<[^>]*>/g,'').replace(/\\n/g,'\n'))+'</p>':'')+'<div id="item-sample-stats"></div><h3 class="panel-title">제작 트리</h3><div class="craft-viewport" tabindex="0" role="region" aria-label="아이템 제작 트리"><ul class="craft-tree">'+erCraftTree(row.code,catalog,names)+'</ul></div>';erApplyItemGrades(root.querySelector('#item-detail'),catalog);erFitCraftTree(root.querySelector('.craft-viewport'));erStatic('/er/statistics/data').then(data=>{if(selected!==String(code))return;const r=(data.items||[]).filter(r=>String(r.code)===String(code)&&r.mode===3).sort((a,b)=>b.season-a.season)[0];root.querySelector('#item-sample-stats').innerHTML=r?'<p class="data-note">최근 7일 수집 랭크 '+erNumber(r.games)+'개 장비 기록</p><div class="analysis-summary"><div><small>승률</small><strong>'+erNumber(r.wins/r.games*100,1)+'%</strong></div><div><small>TOP 3</small><strong>'+erNumber(r.top3/r.games*100,1)+'%</strong></div><div><small>평균 순위</small><strong>#'+erNumber(r.rank,2)+'</strong></div></div>':'<p class="data-note">수집된 랭크 장비 통계가 없습니다.</p>';}).catch(()=>{});}
+    function detail(code,push=false) {const row=catalog.get(String(code));if(!row)return;selected=String(code);if(push)history.pushState(null,'','/er/items/'+encodeURIComponent(code));root.querySelector('#item-detail').innerHTML='<h2>아이템 정보</h2>'+erItemHtml(row.code)+'<h3>'+erText(label(row))+'</h3><p>'+erText(erGradeNames[row.itemGrade]||'등급 미확인')+' · '+erText(erEquipmentTypes[row.weaponType||row.armorType]||row.weaponType||row.armorType||'')+'</p><div class="item-stat-chips">'+erItemStats(row).map(s=>'<span>'+erText(s.label)+' +'+erText(s.value)+'</span>').join('')+'</div>'+((names.get('Item/Desc/'+code))?'<p class="item-description">'+erText(names.get('Item/Desc/'+code).replace(/<[^>]*>/g,'').replace(/\\n/g,'\n'))+'</p>':'')+'<div id="item-sample-stats"></div><h3 class="panel-title">제작 트리</h3><div class="craft-viewport" tabindex="0" role="region" aria-label="아이템 제작 트리"><ul class="craft-tree">'+erCraftTree(row.code,catalog,names)+'</ul></div>';erApplyItemGrades(root.querySelector('#item-detail'),catalog);erFitCraftTree(root.querySelector('.craft-viewport'));const r=itemSamples.get(String(code));root.querySelector('#item-sample-stats').innerHTML=r?'<p class="data-note">'+erText(filteredSamples.filterLabel)+' · '+erNumber(r.games)+'개 장비 기록</p><div class="analysis-summary"><div><small>승률</small><strong>'+erNumber(r.wins/r.games*100,1)+'%</strong></div><div><small>TOP 3</small><strong>'+erNumber(r.top3/r.games*100,1)+'%</strong></div><div><small>평균 순위</small><strong>#'+erNumber(r.rank,2)+'</strong></div></div>':'<p class="data-note">선택한 조건의 장비 통계가 없습니다.</p>';}
+    root.querySelectorAll('[data-stat-filter]').forEach(el=>el.addEventListener('change',()=>{filteredSamples=erFilterStatistics(samples,erReadStatisticsControls(root));itemSamples=new Map(filteredSamples.items.map(r=>[String(r.code),r]));detail(selected);render();}));
     const render=()=>{const q=root.querySelector('input').value.trim().toLowerCase();const grade=root.querySelector('#item-grade').value;const filtered=rows.filter(r=>(!selectedType||(r.weaponType||r.armorType)===selectedType)&&(!grade||r.itemGrade===grade)&&(label(r)+' '+r.code).toLowerCase().includes(q));root.querySelector('#item-list').innerHTML='<table class="data-table"><thead><tr><th>아이템</th><th>분류</th><th>등급</th><th>수집 표본</th><th>승률</th></tr></thead><tbody>'+filtered.slice(0,limit).map(r=>'<tr class="'+(String(r.code)===selected?'selected':'')+'"><td><a href="/er/items/'+r.code+'" data-select-item="'+r.code+'">'+erItemHtml(r.code)+'<span>'+erText(label(r))+'</span></a></td><td>'+erText(erEquipmentTypes[r.weaponType||r.armorType]||(r.category==='weapon'?'무기':'방어구'))+'</td><td>'+erText(erGradeNames[r.itemGrade]||'—')+'</td><td>'+erNumber(itemSamples.get(String(r.code))?.games)+'</td><td>'+(itemSamples.has(String(r.code))?erNumber(itemSamples.get(String(r.code)).wins/itemSamples.get(String(r.code)).games*100,1)+'%':'—')+'</td></tr>').join('')+'</tbody></table>';root.querySelector('#more-items').hidden=limit>=filtered.length;document.querySelector('#explorer-status').textContent=filtered.length+'개 아이템';erApplyItemGrades(root.querySelector('#item-list'),catalog);};
     typeButtons.onclick=e=>{const button=e.target.closest('[data-type]');if(!button)return;selectedType=button.dataset.type;syncFilters();limit=40;render();};
     root.querySelector('#item-all').onclick=()=>{selectedType='';syncFilters();limit=40;render();};
@@ -166,17 +202,17 @@ async function erRankingPage() {
 document.addEventListener('click',async e=>{const button=e.target.closest('.copy-route');if(!button)return;try{await navigator.clipboard.writeText(button.dataset.routeId);button.textContent='복사됨';}catch(_){button.textContent=button.dataset.routeId;}});
 
 async function erStatisticsPage() {
-    const root=erPageShell('실험체 통계','최근 7일 · 수집된 전체 경기 상세 응답 기준');root.className='statistics-page surface';
+    const root=erPageShell('실험체 통계','티어 · 시즌 · 모드 · 기간별 수집 경기 통계');root.className='statistics-page surface';
     const [data,chars,names]=await Promise.all([erRequest('/er/statistics/data'),erStatic('/er/character'),erDictionary(),loadAssetConfig()]);
     const characters=new Map((chars.data||[]).map(c=>[Number(c.code),c]));
-    root.innerHTML='<div class="catalog-toolbar"><label>모드 <select id="stats-mode"><option value="3">랭크</option><option value="2">일반</option><option value="6">코발트</option><option value="9">론울프</option></select></label><label>정렬 <select id="stats-sort"><option value="games">플레이 수</option><option value="winrate">승률</option><option value="toprate">TOP 3</option><option value="damage">평균 딜량</option><option value="rank">평균 순위</option></select></label></div><p class="data-note">검색 후 상세 조회된 경기 표본입니다. 전체 서버 통계가 아니며, 적은 표본의 승률은 크게 달라질 수 있습니다.</p><div id="stats-table"></div>';
+    root.innerHTML=erStatisticsControls(data)+'<div class="catalog-toolbar"><label>정렬 <select id="stats-sort"><option value="games">플레이 수</option><option value="winrate">승률</option><option value="toprate">TOP 3</option><option value="damage">평균 딜량</option><option value="rank">평균 순위</option></select></label></div><div id="stats-table"></div>';
     const render=()=>{
-        const mode=Number(root.querySelector('#stats-mode').value),sort=root.querySelector('#stats-sort').value;
-        const all=(data.rows||[]).filter(r=>r.mode===mode);const season=Math.max(0,...all.map(r=>r.season));
+        const filters=erReadStatisticsControls(root),filtered=erFilterStatistics(data,filters),sort=root.querySelector('#stats-sort').value;
+        const all=filtered.rows,season=Number(filters.season);
         const rows=all.filter(r=>r.season===season).map(r=>({...r,winrate:r.wins/r.games*100,toprate:r.top3/r.games*100})).sort((a,b)=>sort==='rank'?a.rank-b.rank:b[sort]-a[sort]);
         const total=rows.reduce((n,r)=>n+r.games,0);
-        document.querySelector('#explorer-status').textContent='최근 7일 전체 수집 '+erNumber(data.matches)+'경기 · 선택 모드 '+erNumber(total)+'개 플레이 기록 · 5분 캐시';
-        root.querySelector('#stats-table').innerHTML=rows.length?'<table class="data-table"><thead><tr><th>실험체</th><th>플레이 수</th><th>선택 비중</th><th>승률</th><th>TOP 3</th><th>평균 순위</th><th>평균 딜량</th></tr></thead><tbody>'+rows.map(r=>{const c=characters.get(r.character),name=names.get('Character/Name/'+r.character)||c?.name||r.character;return '<tr><td><a href="/er/characters/'+encodeURIComponent(c?.name||r.character)+'"><img width="40" height="40" loading="lazy" src="'+erText(erCharacterImage(c?.name))+'" alt=""> '+erText(name)+'</a></td><td>'+erNumber(r.games)+'</td><td>'+erNumber(r.games/total*100,1)+'%</td><td>'+erNumber(r.winrate,1)+'%</td><td>'+erNumber(r.toprate,1)+'%</td><td>#'+erNumber(r.rank,2)+'</td><td>'+erNumber(r.damage)+'</td></tr>';}).join('')+'</tbody></table>':'<p class="empty-state">이 모드에 수집된 최근 7일 경기 표본이 없습니다.</p>';
+        document.querySelector('#explorer-status').textContent=filtered.filterLabel+' · '+erNumber(total)+'개 플레이 기록 · '+(total<100?'표본 부족 · ':'')+'5분마다 갱신';
+        root.querySelector('#stats-table').innerHTML=rows.length?'<table class="data-table"><thead><tr><th>실험체</th><th>플레이 수</th><th>선택 비중</th><th>승률</th><th>TOP 3</th><th>평균 순위</th><th>평균 딜량</th></tr></thead><tbody>'+rows.map(r=>{const c=characters.get(r.character),name=names.get('Character/Name/'+r.character)||c?.name||r.character;return '<tr><td><a href="/er/characters/'+encodeURIComponent(c?.name||r.character)+'"><img width="40" height="40" loading="lazy" src="'+erText(erCharacterImage(c?.name))+'" alt=""> '+erText(name)+'</a></td><td>'+erNumber(r.games)+'</td><td>'+erNumber(r.games/total*100,1)+'%</td><td>'+erNumber(r.winrate,1)+'%</td><td>'+erNumber(r.toprate,1)+'%</td><td>#'+erNumber(r.rank,2)+'</td><td>'+erNumber(r.damage)+'</td></tr>';}).join('')+'</tbody></table>':'<p class="empty-state">선택한 조건에 수집된 경기 표본이 없습니다.</p>';
     };root.querySelectorAll('select').forEach(s=>s.onchange=render);render();
 }
 function erCraftTree(code,catalog,names,visited=new Set(),depth=0) {
@@ -189,7 +225,7 @@ function erCraftTree(code,catalog,names,visited=new Set(),depth=0) {
 function erAnalysisMarkup(data,code,names,mode='3',tactical=[]) {
     const available=(data.rows||[]).filter(r=>String(r.character)===String(code)&&String(r.mode)===mode);
     const season=Math.max(0,...available.map(r=>r.season));const row=available.find(r=>r.season===season);
-    if(!row)return '<p class="empty-state">이 실험체의 최근 7일 수집 경기 표본이 없습니다.</p>';
+    if(!row)return '<p class="empty-state">선택한 조건에 이 실험체의 수집 경기 표본이 없습니다.</p>';
     const total=(data.rows||[]).filter(r=>r.season===season&&String(r.mode)===mode).reduce((n,r)=>n+r.games,0);
     const summary=[['승률',erNumber(row.wins/row.games*100,1)+'%'],['TOP 3',erNumber(row.top3/row.games*100,1)+'%'],['평균 RP',erNumber(row.rp,1)],['선택 비중',erNumber(row.games/total*100,1)+'%'],['평균 순위','#'+erNumber(row.rank,2)],['평균 킬',erNumber(row.kills,2)]];
     const builds=(data.builds||[]).filter(r=>String(r.character)===String(code)&&r.season===season&&String(r.mode)===mode).sort((a,b)=>b.games-a.games);
@@ -204,5 +240,5 @@ function erAnalysisMarkup(data,code,names,mode='3',tactical=[]) {
             return '<div class="analysis-build"><div>'+body+'</div><p>사용 '+erNumber(r.games/row.games*100,1)+'%<br>승률 '+erNumber(r.wins/r.games*100,1)+'%<small>'+erNumber(r.games)+'개 기록</small></p></div>';
         }).join('')+(choices.length?'':'<p class="empty-state">수집된 기록이 없습니다.</p>')+'</section>';
     }).join('');
-    return '<p class="data-note">최근 7일 · '+erNumber(row.games)+'개 플레이 기록 표본 · 전체 서버 통계가 아닙니다.</p><div class="analysis-summary">'+summary.map(([label,value])=>'<div class="surface"><small>'+label+'</small><strong>'+value+'</strong></div>').join('')+'</div><div class="analysis-sections">'+sections+'</div>';
+    return '<p class="data-note">'+erText(data.filterLabel||'최근 7일')+' · '+erNumber(row.games)+'개 플레이 기록 표본 · 전체 서버 통계가 아닙니다.</p><div class="analysis-summary">'+summary.map(([label,value])=>'<div class="surface"><small>'+label+'</small><strong>'+value+'</strong></div>').join('')+'</div><div class="analysis-sections">'+sections+'</div>';
 }
