@@ -225,7 +225,6 @@ async function startPlayer() {
         const img=document.querySelector('#detailImage');
         img.dataset.character=String(code);img.dataset.skin=String(heroSkin?.code===code?heroSkin.skin:0);
         img.title=heroStats.length?'이번 시즌 가장 많이 플레이한 실험체':'최근 경기에서 가장 많이 플레이한 실험체';
-        document.querySelector('#hero-caption').textContent=heroStats.length?'시즌 주력 실험체':'최근 주력 실험체';
         if(heroSkin?.code===code && !heroSkin.unavailable)img.title+=' · 시즌 최다 사용 스킨 ('+heroSkin.uses+'경기)';
         erEnhancePlayer(document.querySelector('.player-hero'));
         if(img.complete && img.naturalWidth>0){img.classList.remove('hero-pending');document.querySelector('#hero-loading').hidden=true;}

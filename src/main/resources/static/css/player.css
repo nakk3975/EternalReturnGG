@@ -119,7 +119,7 @@
 .player-hero #detailImage{width:208px;height:198px;flex-shrink:0;align-self:flex-end;object-fit:contain;object-position:center bottom;background:transparent;border:0;border-radius:0;}
 .player-hero .eyebrow{color:#347d90;font-size:12px;font-weight:700;letter-spacing:1px;}
 .player-hero #nickname{color:#173850;overflow-wrap:anywhere;}
-.player-hero #userLevel{color:#52758a;}
+.player-hero #userLevel{color:#52758a;font-size:16px;font-weight:600;line-height:1.5;}
 .player-hero #refresh{background:#087f96;border-radius:7px;border:1px solid #087f96;}
 .player-hero #refresh:hover{background:#06687c;}
 @media(max-width:760px){.player-hero{min-height:164px;padding:0 16px;gap:12px;}.player-hero #detailImage{width:120px;height:150px;}.player-hero>div{padding:22px 0;}.player-hero #nickname{font-size:24px;}.player-hero #refresh{margin:8px 0 0;display:block;}.player-hero .eyebrow{font-size:11px;}}
