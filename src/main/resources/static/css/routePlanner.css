@@ -44,3 +44,12 @@
 
 #planner-slots .planner-remove-equipment{margin-left:auto;background:transparent;color:var(--muted);border:1px solid var(--line);font-size:12px;padding:6px 10px;}#planner-slots .planner-remove-equipment:disabled{opacity:.45;cursor:default;}
 @media(max-width:480px){#planner-slots{gap:4px;flex-wrap:nowrap;}#planner-slots>button{padding:6px;font-size:12px;white-space:nowrap;}#planner-slots .planner-remove-equipment{font-size:11px;padding:6px;}}
+
+/* Loot must not shift the geographic center of region buttons. */
+.planner-region-loot{position:absolute;top:100%;left:50%;transform:translateX(-50%);width:max-content;}
+
+#planner-picker button:hover,#planner-picker button:focus-visible{background:var(--panel-alt);color:var(--ink);border-color:var(--route-blue);}
+#planner-picker button[aria-pressed=true]{background:#137d98;color:#fff;}
+#planner-picker button[aria-pressed=true]:hover,#planner-picker button[aria-pressed=true]:focus-visible{background:#10657d;color:#fff;}
+html[data-theme=dark] #planner-picker button:not([aria-pressed=true]){background:var(--panel-alt);color:var(--ink);border-color:var(--line);}
+html[data-theme=dark] #planner-picker button:not([aria-pressed=true]):hover,html[data-theme=dark] #planner-picker button:not([aria-pressed=true]):focus-visible{background:#394553;color:#fff;border-color:var(--route-blue);}
