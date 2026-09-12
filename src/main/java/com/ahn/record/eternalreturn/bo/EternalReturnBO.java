@@ -161,14 +161,17 @@ public class EternalReturnBO {
     }
 
     public String userRank(String userId) throws URISyntaxException {
-        // 랭크 요청과 동시에 최근 전적/게임 상세를 미리 조회한다.
-        // The browser loads recent games independently, including in multi-search.
-
-        int currentSeasonId = getCurrentSeasonId();
-        String path = "/v2/user/stats/uid/" + encodePathSegment(userId)
-                + "/" + currentSeasonId + "/" + RANKED_MODE;
-
-        return requestCached(path, false, USER_CACHE_MS);
+        return userRank(userId,getCurrentSeasonId());
+    }
+    public String seasons() throws URISyntaxException {return requestCached("/v2/data/Season",false,SEASON_CACHE_MS);}
+    public String userRank(String userId,int season) throws URISyntaxException {
+        try {
+            boolean valid=false;
+            for(JsonNode row:objectMapper.readTree(seasons()).path("data"))if(readSeasonId(row)==season)valid=true;
+            if(!valid)throw new IllegalArgumentException("Unknown season");
+        }catch(IOException e){throw new IllegalStateException("Invalid season data",e);}
+        return requestCached("/v2/user/stats/uid/"+encodePathSegment(userId)+"/"+season+"/"+RANKED_MODE,false,
+            season==getCurrentSeasonId()?USER_CACHE_MS:Duration.ofHours(6).toMillis());
     }
 
     public String leaderboard() throws URISyntaxException {

@@ -1,0 +1,11 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const ctx=vm.createContext({document:{addEventListener(){}},erText:s=>String(s).replaceAll('<','&lt;'),erNumber:n=>n==null?'—':String(n),erTier:()=>({name:'골드',image:4})});
+vm.runInContext(fs.readFileSync('src/main/resources/static/js/seasonHistory.js','utf8'),ctx);
+const options=ctx.erSeasonOptions([{seasonID:41,seasonName:'Season12',isCurrent:1},{seasonId:39,seasonName:'Season11'},{id:0}]);
+assert.equal(options.length,2);assert.equal(options[0].id,41);assert.equal(options[0].current,true);
+assert.equal(ctx.erSeasonLabel({id:41,name:'SEASON_12'}),'시즌 12');
+const data={userStats:[{seasonId:39,mmr:3000,totalGames:10,totalWins:2,characterStats:[]}]};
+assert.match(ctx.erSeasonReport(data,{id:39,name:'Season11'},new Map(),new Map()),/골드/);
+assert.match(ctx.erSeasonReport(data,{id:39,name:'Season8'},new Map(),new Map()),/과거 시즌 티어 기준 미확인/);
+assert.match(ctx.erSeasonReport({userStats:[]},{id:39,name:'Season11'},new Map(),new Map()),/기록이 없습니다/);
+console.log('PASS season ID variants, ordering, prior-season stats, no invented historic tiers and empty records');

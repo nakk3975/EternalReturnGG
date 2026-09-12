@@ -12,6 +12,14 @@ public class StatisticsController {
         var snapshot=cache.read("/v2/user/rp-summary/"+userNum);
         return snapshot==null?"{\"userGames\":[]}":snapshot.body();
     }
+    @GetMapping("/er/statistics/collection")
+    public java.util.Map<String,Object> collection() throws java.io.IOException {
+        var saved=cache.read("/v2/data/collector-state");
+        if(saved==null)return java.util.Map.of("status","starting");
+        var row=new com.fasterxml.jackson.databind.ObjectMapper().readTree(saved.body());
+        return java.util.Map.of("status",row.path("status").asText(),"collectedToday",row.path("collectedToday").asInt(),
+            "lastSuccess",row.path("lastSuccess").asText(),"players",row.path("players").size(),"pending",row.path("pending").size());
+    }
     @GetMapping("/er/statistics/data")
     public JsonNode statistics(){return cache.statistics();}
 }

@@ -101,9 +101,11 @@ public class EternalReturnRestController {
 		return erBo.traitSkill();
 	}
 	
+    @GetMapping("/seasons")
+    public String seasons() throws URISyntaxException {return erBo.seasons();}
 	@GetMapping("/userRank")
-	public String userRank(@RequestParam("userNum") String userId) throws URISyntaxException {
-		return erBo.userRank(userId);
+	public String userRank(@RequestParam("userNum") String userId, @RequestParam(value="season",required=false) Integer season) throws URISyntaxException {
+		return season==null?erBo.userRank(userId):erBo.userRank(userId,season);
 	}
 	
 	@GetMapping("/game")

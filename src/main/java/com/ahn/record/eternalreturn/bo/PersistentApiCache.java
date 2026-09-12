@@ -44,6 +44,10 @@ public class PersistentApiCache {
             return new Snapshot(row.get("body").toString(),Instant.parse(row.path("expires_at").asText()).toEpochMilli());
         } catch(Exception ignored) { return null; } // DB failure must not break API lookups.
     }
+    public void writeChecked(String key, JsonNode body, long ttl) {
+        JsonNode result=call(Map.of("action","put","key",key,"body",body,"ttl",ttl));
+        if(result==null || !result.path("ok").asBoolean())throw new IllegalStateException("Cache write not confirmed");
+    }
     public void write(String key, JsonNode body, long ttl) {
         try { call(Map.of("action","put","key",key,"body",body,"ttl",ttl)); }
         catch(Exception ignored) { /* Keep the in-memory response available. */ }

@@ -1,10 +1,29 @@
+-- Durable, minimized per-match statistics; player identities and combat logs are not archived.
+create table if not exists public.er_match_archive (
+ game_id bigint primary key,
+ body jsonb not null,
+ archived_at timestamptz not null default now()
+);
+alter table public.er_match_archive enable row level security;
+revoke all on public.er_match_archive from public, anon, authenticated;
+grant select,insert on public.er_match_archive to service_role;
+create or replace function public.er_archive_cached_matches()
+returns void language sql security invoker set search_path='' as $$
+insert into public.er_match_archive(game_id,body)
+select substring(c.cache_key from '/v1/games/([0-9]+)$')::bigint,
+ jsonb_build_object('userGames', (select jsonb_agg((select jsonb_object_agg(k,v) from jsonb_each(g) kv(k,v) where k in ('gameId','startDtm','gameRank','characterNum','matchingMode','seasonId','versionSeason','damageToPlayer','playerKill','mmrGain','mmrBefore','tacticalSkillGroup','traitFirstCore','traitFirstSub','traitSecondSub','skillOrderInfo','equipment'))) from jsonb_array_elements(c.body->'userGames') g))
+from public.er_api_cache c
+where c.cache_key ~ '^/v1/games/[0-9]+$' and jsonb_typeof(c.body->'userGames')='array' and jsonb_array_length(c.body->'userGames')>0
+on conflict(game_id) do nothing;
+$$;
+revoke all on function public.er_archive_cached_matches() from public,anon,authenticated;
+grant execute on function public.er_archive_cached_matches() to service_role;
+select public.er_archive_cached_matches();
 -- Aggregates only full match responses; personal history pages would bias the sample.
 create or replace function public.er_character_statistics()
 returns jsonb language sql stable security invoker set search_path = '' as $$
 with entries as (
- select g from public.er_api_cache c
- cross join lateral jsonb_array_elements(case when jsonb_typeof(c.body->'userGames')='array' then c.body->'userGames' else '[]'::jsonb end) g
- where c.cache_key like '/v1/games/%' and c.retain_until > now()
+ select g from public.er_match_archive c cross join lateral jsonb_array_elements(c.body->'userGames') g
 ), recent as (
  select g from entries where (g->>'startDtm')::timestamptz >= (date_trunc('day',now() at time zone 'Asia/Seoul') - interval '6 days') at time zone 'Asia/Seoul'
  and (g->>'startDtm')::timestamptz <= now() and (g->>'gameRank')::int > 0
@@ -49,9 +68,7 @@ grant execute on function public.er_character_statistics() to service_role;
 create or replace function public.er_statistics_buckets()
 returns jsonb language sql stable security invoker set search_path = '' as $$
 with entries as (
- select g from public.er_api_cache c
- cross join lateral jsonb_array_elements(case when jsonb_typeof(c.body->'userGames')='array' then c.body->'userGames' else '[]'::jsonb end) g
- where c.cache_key like '/v1/games/%' and c.retain_until > now()
+ select g from public.er_match_archive c cross join lateral jsonb_array_elements(c.body->'userGames') g
 ), recent as (
  select g, ((g->>'startDtm')::timestamptz at time zone 'Asia/Seoul')::date as day, coalesce((g->>'versionSeason')::int,(g->>'seasonId')::int) as display_season, case when g->>'matchingMode'<>'3' or g->>'mmrBefore' is null then -1 when (g->>'mmrBefore')::numeric>=7600 then 7 when (g->>'mmrBefore')::numeric>=6400 then 6 when (g->>'mmrBefore')::numeric>=5000 then 5 when (g->>'mmrBefore')::numeric>=3600 then 4 when (g->>'mmrBefore')::numeric>=2400 then 3 when (g->>'mmrBefore')::numeric>=1400 then 2 when (g->>'mmrBefore')::numeric>=600 then 1 else 0 end as tier from entries where (g->>'startDtm')::timestamptz <= now() and (g->>'gameRank')::int > 0
 ), grouped as (
@@ -93,10 +110,16 @@ grant execute on function public.er_statistics_buckets() to service_role;
 -- Reuse the existing authenticated cache transport. No new public endpoint or credentials.
 create extension if not exists pg_cron;
 select cron.schedule('ergg-character-statistics', '*/5 * * * *', $job$
+ select public.er_archive_cached_matches();
  insert into public.er_api_cache(cache_key,body,fetched_at,expires_at,retain_until)
  values('/v2/data/statistics',public.er_character_statistics() || jsonb_build_object('buckets',public.er_statistics_buckets()),now(),now()+interval '5 minutes',now()+interval '1 day')
  on conflict(cache_key) do update set body=excluded.body,fetched_at=excluded.fetched_at,expires_at=excluded.expires_at,retain_until=excluded.retain_until;
 $job$);
 insert into public.er_api_cache(cache_key,body,fetched_at,expires_at,retain_until)
 values('/v2/data/statistics',public.er_character_statistics() || jsonb_build_object('buckets',public.er_statistics_buckets()),now(),now()+interval '5 minutes',now()+interval '1 day')
+on conflict(cache_key) do update set body=excluded.body,fetched_at=excluded.fetched_at,expires_at=excluded.expires_at,retain_until=excluded.retain_until;
+
+insert into public.er_api_cache(cache_key,body,fetched_at,expires_at,retain_until)
+select '/v2/data/collector-seeds',jsonb_build_object('nicknames',coalesce(jsonb_agg(nickname),'[]'::jsonb)),now(),now()+interval '1 day',now()+interval '7 days'
+from (select distinct g->>'nickname' nickname from public.er_api_cache c cross join lateral jsonb_array_elements(case when jsonb_typeof(c.body->'userGames')='array' then c.body->'userGames' else '[]'::jsonb end) g where (c.cache_key like '/v1/games/%' or c.cache_key like '/v1/user/games/%') and length(g->>'nickname') between 1 and 64 limit 200) seeds
 on conflict(cache_key) do update set body=excluded.body,fetched_at=excluded.fetched_at,expires_at=excluded.expires_at,retain_until=excluded.retain_until;
