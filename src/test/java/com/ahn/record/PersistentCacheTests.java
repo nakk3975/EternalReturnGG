@@ -13,6 +13,27 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 class PersistentCacheTests {
+    @Test void projectionsAreCachedSeparatelyAndRejectUnknownScopes() throws Exception {
+        var cache=new PersistentApiCache();
+        try {
+            ReflectionTestUtils.setField(cache,"url","https://cache.test");
+            ReflectionTestUtils.setField(cache,"token","test");
+            var server=MockRestServiceServer.bindTo((RestTemplate)ReflectionTestUtils.getField(cache,"client")).build();
+            server.expect(requestTo("https://cache.test"))
+                .andExpect(org.springframework.test.web.client.match.MockRestRequestMatchers.content().json("{\"scope\":\"items\",\"character\":0}"))
+                .andRespond(withSuccess("{\"body\":{\"rows\":[],\"items\":[1]}}",MediaType.APPLICATION_JSON));
+            server.expect(requestTo("https://cache.test"))
+                .andExpect(org.springframework.test.web.client.match.MockRestRequestMatchers.content().json("{\"scope\":\"character\",\"character\":35}"))
+                .andRespond(withSuccess("{\"body\":{\"rows\":[],\"builds\":[35]}}",MediaType.APPLICATION_JSON));
+            var items=cache.statistics("items",0);
+            assertSame(items,cache.statistics("items",0));
+            var character=cache.statistics("character",35);
+            assertEquals(35,character.path("builds").get(0).asInt());
+            assertSame(character,cache.statistics("character",35));
+            assertThrows(IllegalArgumentException.class,()->cache.statistics("unknown",0));
+            server.verify();
+        } finally {cache.stopStatisticsWarmup();}
+    }
     @Test void expiredStatisticsDoNotWaitForADatabaseRefresh() throws Exception {
         var cache=new PersistentApiCache();
         var entered=new java.util.concurrent.CountDownLatch(1);

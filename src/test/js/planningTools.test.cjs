@@ -22,3 +22,5 @@ assert.equal(decoded.early.size,2);assert.equal(decoded.early.get('Weapon'),'100
 assert.deepEqual([...context.erAllowedWeapons(1,[{code:1,weapon1:'Axe',weapon2:'None'}])],['Axe']);
 assert.equal(context.erDecodeRoute({weaponCodes:'broken'},equip,areas).early.size,0);
 const observed=context.erWildlifeCamps();assert(observed.length>120);assert.equal(new Set(observed.map(c=>c.id)).size,observed.length);assert(observed.every(c=>Number.isFinite(c.x)&&Number.isFinite(c.y)&&c.x>=0&&c.x<=100&&c.y>=0&&c.y<=100));
+assert.deepEqual([...context.erRecommendRegions(new Map([['1',1],['2',2]]),areas,'c')],['c'],'a complete forced start must not add an unnecessary stop');
+const purchase=context.erRoutePurchaseCosts([{code:1,quantity:3,available:1},{code:2,quantity:1,available:0}],[{itemCode:1,mode:'2,3,6',consumeVFCredit:'30',purchaseCount:2}]);assert.equal(purchase[0].cost,30);assert.equal(purchase[1].cost,null);

@@ -1,0 +1,278 @@
+{
+  "asOf": "2026-09-11",
+  "source": "https://github.com/pypy-vrc/er-gamedata/tree/94ea4d1c35d141907ae9d1b8502c0e3974f4b8d1",
+  "data": [
+    {
+      "itemCode": 401208,
+      "mode": "2,3,6",
+      "consumeVFCredit": "200",
+      "purchaseCount": 1,
+      "creditShopType": "Kiosk",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 401209,
+      "mode": "2,3,6",
+      "consumeVFCredit": "200",
+      "purchaseCount": 1,
+      "creditShopType": "Kiosk",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 401304,
+      "mode": "2,3,6",
+      "consumeVFCredit": "250",
+      "purchaseCount": 1,
+      "creditShopType": "Kiosk",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 401403,
+      "mode": "2,3,6",
+      "consumeVFCredit": "350",
+      "purchaseCount": 1,
+      "creditShopType": "Kiosk",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 401401,
+      "mode": "2,3,6",
+      "consumeVFCredit": "500",
+      "purchaseCount": 1,
+      "creditShopType": "Kiosk",
+      "availablePhaseForPurchase": 6
+    },
+    {
+      "itemCode": 999999,
+      "mode": "2,3,6",
+      "consumeVFCredit": "200",
+      "purchaseCount": 1,
+      "creditShopType": "Kiosk",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 503107,
+      "mode": "2,3,6",
+      "consumeVFCredit": "100",
+      "purchaseCount": 1,
+      "creditShopType": "Kiosk",
+      "availablePhaseForPurchase": 4
+    },
+    {
+      "itemCode": 409404,
+      "mode": "2,3,6",
+      "consumeVFCredit": "200",
+      "purchaseCount": 1,
+      "creditShopType": "Kiosk",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 401208,
+      "mode": "2,3,6",
+      "consumeVFCredit": "200",
+      "purchaseCount": 1,
+      "creditShopType": "MobileKiosk",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 401209,
+      "mode": "2,3,6",
+      "consumeVFCredit": "200",
+      "purchaseCount": 1,
+      "creditShopType": "MobileKiosk",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 401304,
+      "mode": "2,3,6",
+      "consumeVFCredit": "250",
+      "purchaseCount": 1,
+      "creditShopType": "MobileKiosk",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 401403,
+      "mode": "2,3,6",
+      "consumeVFCredit": "350",
+      "purchaseCount": 1,
+      "creditShopType": "MobileKiosk",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 401401,
+      "mode": "2,3,6",
+      "consumeVFCredit": "500",
+      "purchaseCount": 1,
+      "creditShopType": "MobileKiosk",
+      "availablePhaseForPurchase": 6
+    },
+    {
+      "itemCode": 999999,
+      "mode": "2,3,6",
+      "consumeVFCredit": "200",
+      "purchaseCount": 1,
+      "creditShopType": "MobileKiosk",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 503107,
+      "mode": "2,3,6",
+      "consumeVFCredit": "100",
+      "purchaseCount": 1,
+      "creditShopType": "MobileKiosk",
+      "availablePhaseForPurchase": 4
+    },
+    {
+      "itemCode": 409404,
+      "mode": "2,3,6",
+      "consumeVFCredit": "200",
+      "purchaseCount": 1,
+      "creditShopType": "MobileKiosk",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 502207,
+      "mode": "2,3,6",
+      "consumeVFCredit": "5",
+      "purchaseCount": 2,
+      "creditShopType": "GuideRobot",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 502208,
+      "mode": "2,3,6",
+      "consumeVFCredit": "5",
+      "purchaseCount": 2,
+      "creditShopType": "GuideRobot",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 301251,
+      "mode": "2,3,6",
+      "consumeVFCredit": "0",
+      "purchaseCount": 6,
+      "creditShopType": "GuideRobot",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 306001,
+      "mode": "2,3,6",
+      "consumeVFCredit": "20",
+      "purchaseCount": 1,
+      "creditShopType": "GuideRobot",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 401208,
+      "mode": "2,3,6",
+      "consumeVFCredit": "160",
+      "purchaseCount": 1,
+      "creditShopType": "GuideRobot",
+      "availablePhaseForPurchase": 2
+    },
+    {
+      "itemCode": 401209,
+      "mode": "2,3,6",
+      "consumeVFCredit": "160",
+      "purchaseCount": 1,
+      "creditShopType": "GuideRobot",
+      "availablePhaseForPurchase": 2
+    },
+    {
+      "itemCode": 401304,
+      "mode": "2,3,6",
+      "consumeVFCredit": "210",
+      "purchaseCount": 1,
+      "creditShopType": "GuideRobot",
+      "availablePhaseForPurchase": 2
+    },
+    {
+      "itemCode": 401403,
+      "mode": "2,3,6",
+      "consumeVFCredit": "310",
+      "purchaseCount": 1,
+      "creditShopType": "GuideRobot",
+      "availablePhaseForPurchase": 2
+    },
+    {
+      "itemCode": 409404,
+      "mode": "2,3,6",
+      "consumeVFCredit": "200",
+      "purchaseCount": 1,
+      "creditShopType": "GuideRobot",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 999998,
+      "mode": "2,3,5,6",
+      "consumeVFCredit": "40",
+      "purchaseCount": 1,
+      "creditShopType": "GuideRobot",
+      "availablePhaseForPurchase": 4
+    },
+    {
+      "itemCode": 301316,
+      "mode": "2,3,6",
+      "consumeVFCredit": "20",
+      "purchaseCount": 3,
+      "creditShopType": "QuickSlot",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 502207,
+      "mode": "2,3,6",
+      "consumeVFCredit": "25",
+      "purchaseCount": 1,
+      "creditShopType": "QuickSlot",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 502208,
+      "mode": "2,3,6",
+      "consumeVFCredit": "25",
+      "purchaseCount": 1,
+      "creditShopType": "QuickSlot",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 502308,
+      "mode": "2,3,6",
+      "consumeVFCredit": "35",
+      "purchaseCount": 1,
+      "creditShopType": "QuickSlot",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 302102,
+      "mode": "2,3,6",
+      "consumeVFCredit": "10",
+      "purchaseCount": 2,
+      "creditShopType": "QuickSlot",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 307001,
+      "mode": "2,3,6",
+      "consumeVFCredit": "100",
+      "purchaseCount": 1,
+      "creditShopType": "QuickSlot",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 307002,
+      "mode": "2,3,6",
+      "consumeVFCredit": "100",
+      "purchaseCount": 1,
+      "creditShopType": "QuickSlot",
+      "availablePhaseForPurchase": 0
+    },
+    {
+      "itemCode": 307003,
+      "mode": "2,3,6",
+      "consumeVFCredit": "100",
+      "purchaseCount": 1,
+      "creditShopType": "QuickSlot",
+      "availablePhaseForPurchase": 0
+    }
+  ]
+}

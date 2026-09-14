@@ -82,7 +82,7 @@ public class EternalReturnBO {
         prefetchStatic("/v2/data/TacticalSkillSetGroup", STATIC_CACHE_MS);
         prefetchStatic("/v2/data/Trait", STATIC_CACHE_MS);
         prefetchStatic("/v1/l10n/Korean", STATIC_CACHE_MS);
-        for(String table : List.of("WeaponTypeInfo", "ItemMisc", "Area", "ItemSpawn", "NaviCollectAndHunt", "Collectible", "ItemConsumable", "ItemSpecial"))
+        for(String table : List.of("CharacterMastery", "CharacterLevelUpStat", "WeaponTypeInfo", "ItemMisc", "Area", "ItemSpawn", "NaviCollectAndHunt", "Collectible", "ItemConsumable", "ItemSpecial"))
             prefetchStatic("/v2/data/" + table, STATIC_CACHE_MS);
         prefetchStatic("/v1/weaponRoutes/recommend", STATIC_CACHE_MS);
         // Fetch the actual dictionary and derived skill catalog, not just their download URL.
@@ -128,7 +128,7 @@ public class EternalReturnBO {
     }
 
     public String routeData(String table) throws URISyntaxException {
-        if (!java.util.Set.of("Area", "ItemSpawn", "DropGroup", "Collectible", "ItemConsumable", "ItemSpecial", "NearByArea", "NaviCollectAndHunt", "CharacterMastery", "CharacterLevelUpStat", "CreditShop").contains(table))
+        if (!java.util.Set.of("Area", "ItemSpawn", "DropGroup", "Collectible", "ItemConsumable", "ItemSpecial", "NearByArea", "NaviCollectAndHunt", "CharacterMastery", "CharacterLevelUpStat").contains(table))
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Unsupported route table");
         return requestCached("/v2/data/" + table, false, STATIC_CACHE_MS);
     }
