@@ -175,7 +175,18 @@ function erFitCraftTree(viewport){
     if(erCraftResize)erCraftResize.disconnect();
     if(!viewport)return;
     const tree=viewport.querySelector('.craft-tree');
-    const fit=()=>{const width=viewport.clientWidth;if(!width)return;const scale=Math.min(1,Math.max(0,width-16)/tree.scrollWidth);tree.style.transform='translateX(-50%) scale('+scale+')';const height=Math.ceil(tree.offsetHeight*scale)+40;if(viewport.style.height!==height+'px')viewport.style.height=height+'px';};
+    const canvas=document.createElement('div');canvas.className='craft-canvas';tree.before(canvas);canvas.append(tree);
+    let previousLayout='';
+    const fit=()=>{
+        const width=viewport.clientWidth;if(!width)return;
+        // Keep labels readable even when a deep recipe needs horizontal scrolling.
+        const scale=Math.max(.9,Math.min(1,Math.max(0,width-16)/tree.scrollWidth));
+        const canvasWidth=Math.max(width,Math.ceil(tree.scrollWidth*scale)+16);
+        tree.style.transform='translateX(-50%) scale('+scale+')';
+        canvas.style.width=canvasWidth+'px';canvas.style.height=Math.ceil(tree.offsetHeight*scale)+40+'px';
+        const layout=width+':'+canvasWidth;
+        if(layout!==previousLayout){viewport.scrollLeft=(canvasWidth-width)/2;previousLayout=layout;}
+    };
     fit();erCraftResize=new ResizeObserver(fit);erCraftResize.observe(viewport);erCraftResize.observe(tree);
 }
 function erRankingCharacters(stats){
