@@ -57,10 +57,16 @@ public class EternalReturnRestController {
 	
 	@GetMapping("/user/detail")
 	public String userDetail(@RequestParam("userNum") String userId,
-            @RequestParam(value = "next", required = false) Long next) throws URISyntaxException {
-		return erBo.userInfo(userId, next);
+            @RequestParam(value = "next", required = false) Long next) throws Exception {
+		return erBo.playerSnapshot(userId, next, false);
 	}
 	
+    @GetMapping("/user/refresh")
+    public ResponseEntity<String> refreshPlayer(@RequestParam("userNum") String userId) throws Exception {
+        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore())
+            .body(erBo.playerSnapshot(userId,null,true));
+    }
+
     @Autowired private com.ahn.record.eternalreturn.bo.SeasonSkinService seasonSkins;
 
     @GetMapping("/user/season-skin")

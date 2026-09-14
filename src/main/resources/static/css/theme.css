@@ -214,3 +214,12 @@ html[data-theme=dark] .guide-card:hover{background:var(--panel-alt);}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto;}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;}}
 .header-search-container{position:relative;}
 #header-search-status{position:absolute;right:8px;top:100%;z-index:30;max-width:min(340px,calc(100vw - 24px));padding:10px 14px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:5px;box-shadow:0 4px 16px #0003;font-size:13px;line-height:1.5;}
+
+/* Search fields intentionally have no inner focus ring or glow. */
+body input:not([type=checkbox]):not([type=radio]):focus,
+body input:not([type=checkbox]):not([type=radio]):focus-visible,
+body textarea:focus,body textarea:focus-visible,
+body .search-form:focus-within,body .search-button:focus,body .search-button:focus-visible{
+ outline:none!important;box-shadow:none!important;
+}
+body .search-form:focus-within{border-color:inherit;}

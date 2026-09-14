@@ -140,6 +140,31 @@ public class EternalReturnBO {
         return requestCached(path, false, next != null && next > 0 ? GAME_CACHE_MS : USER_CACHE_MS);
     }
 
+    /** Timestamp comes from the server snapshot, not the browser page-open time. */
+    public String playerSnapshot(String userId, Long next, boolean refresh) throws Exception {
+        String path="/v1/user/games/uid/"+encodePathSegment(userId);
+        if(next!=null && next>0)path+="?next="+next;
+        long ttl=next!=null && next>0?GAME_CACHE_MS:USER_CACHE_MS;
+        String body;
+        if(refresh){
+            Object lock=cacheLocks[(path.hashCode() & Integer.MAX_VALUE)%cacheLocks.length];
+            synchronized(lock){
+                CacheEntry old=responseCache.get(path);
+                if(old!=null && old.expiresAt-ttl>System.currentTimeMillis()-5000)body=old.body;
+                else {
+                    body=request(path,false);validateCacheBody(body);
+                    responseCache.put(path,new CacheEntry(body,System.currentTimeMillis()+ttl));
+                    final String key=path,value=body;
+                    if(persistentCache!=null)try{persistenceExecutor.execute(()->writeStored(key,value,ttl));}catch(java.util.concurrent.RejectedExecutionException ignored){}
+                }
+            }
+        } else body=userInfo(userId,next);
+        var result=(com.fasterxml.jackson.databind.node.ObjectNode)objectMapper.readTree(body);
+        CacheEntry entry=responseCache.get(path);
+        if(entry!=null)result.put("_fetchedAt",java.time.Instant.ofEpochMilli(entry.expiresAt-ttl).toString());
+        return result.toString();
+    }
+
     public String tacticalSkill() throws URISyntaxException {
         return requestCached("/v2/data/TacticalSkillSetGroup", false, STATIC_CACHE_MS);
     }
@@ -321,7 +346,7 @@ public class EternalReturnBO {
         return path.startsWith("/v2/data/") || path.equals("/v1/weaponRoutes/recommend");
     }
     private boolean persistentEligible(String path) {
-        return path.startsWith("/v1/user/games/") || path.startsWith("/v2/user/stats/") || path.startsWith("/v1/games/") || path.startsWith("/v1/rank/top/");
+        return isCatalog(path) || path.startsWith("/v1/user/games/") || path.startsWith("/v2/user/stats/") || path.startsWith("/v1/games/") || path.startsWith("/v1/rank/top/");
     }
     private void validateCacheBody(String body) {
         try {

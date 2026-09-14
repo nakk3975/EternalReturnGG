@@ -198,16 +198,24 @@ async function startPlayer() {
         }catch(error){
             records.textContent=error.message;
             document.querySelector('#hero-loading').hidden=true;
-            document.querySelector('#refresh').onclick=()=>location.reload();
+            document.querySelector('#refresh').onclick=async()=>{
+        const button=document.querySelector('#refresh');button.disabled=true;
+        profile.message('최신 전적을 확인하고 있습니다…');
+        try {const data=await erRequest('/er/user/refresh?userNum='+encoded);if(!Array.isArray(data.userGames))throw new Error('전적 응답 오류');rows=data.userGames;next=data.next||null;placementRows=rows.slice(0,20);render();updateHero();profile.update({rows,snapshot:data});const rank=await erRequest('/er/userRank?userNum='+encoded);await renderRank(rank);}
+        catch(error){profile.message('갱신 실패 · '+error.message);}
+        finally{button.disabled=false;}
+    };
             return;
         }
     }
     if(!userId){records.textContent='플레이어를 먼저 검색해 주세요.';return;}
     const encoded=encodeURIComponent(userId);
+    const profile=erProfileTabs(userId);
     let rows=[];let graphRows=[];let placementRows=[];let selectedMode='';let rankSeason=null;let next=null;let loading=false;
     let heroStats=[],characterMetrics={},characterCollection='collecting';
     function renderCharacters(){
         document.querySelector('#player-characters').innerHTML=erCharacterStatsTable(heroStats,characterMetrics,characterCollection);
+        profile.update({stats:heroStats,metrics:characterMetrics,status:characterCollection});
     }
     let heroSkin=null, skinLookup='', rankReady=false;
     const heroImage=document.querySelector('#detailImage');
@@ -221,6 +229,7 @@ async function startPlayer() {
                 const result=await erRequest('/er/user/season-skin?userNum='+encoded+'&season='+encodeURIComponent(season)+'&character='+encodeURIComponent(code));
                 if(skinLookup!==lookup)return;
                 characterMetrics=result.characterMetrics||{};characterCollection=result.status;renderCharacters();
+                profile.update({skinCounts:result.skinCounts||{},skinGames:result.games});
                 if(result.status==='incomplete'){heroSkin={code,skin:0,unavailable:true};updateHero();return;}
                 if(result.status==='complete'){
                     heroSkin={code,skin:result.skinCode,uses:result.uses};updateHero();return;
@@ -231,12 +240,12 @@ async function startPlayer() {
         if(skinLookup===lookup){heroSkin={code,skin:0,unavailable:true};updateHero();}
     };
     const updateHero=()=>{
-        if(!rankReady)return;
+        if(!rankReady && !rows.length)return;
         const code=erMostPlayed(heroStats,rows);
         if(code==null){document.querySelector('#hero-loading').textContent='실험체 기록 없음';return;}
-        if(rankSeason && heroStats.length && heroSkin?.code!==code){heroImage.classList.add('hero-pending');document.querySelector('#hero-loading').hidden=false;loadSeasonSkin(code,rankSeason);return;}
+        if(rankSeason && heroStats.length && heroSkin?.code!==code)loadSeasonSkin(code,rankSeason);
         const img=document.querySelector('#detailImage');
-        img.dataset.character=String(code);img.dataset.skin=String(heroSkin?.code===code?heroSkin.skin:0);
+        img.dataset.character=String(code);img.dataset.skin=String(heroSkin?.code===code?heroSkin.skin:(rows.find(r=>Number(r.characterNum)===Number(code))?.skinCode||0));
         img.title=heroStats.length?'이번 시즌 가장 많이 플레이한 실험체':'최근 경기에서 가장 많이 플레이한 실험체';
         if(heroSkin?.code===code && !heroSkin.unavailable)img.title+=' · 시즌 최다 사용 스킨 ('+heroSkin.uses+'경기)';
         erEnhancePlayer(document.querySelector('.player-hero'));
@@ -268,14 +277,20 @@ async function startPlayer() {
 
     };
     document.querySelectorAll('[data-match-mode]').forEach(button=>button.onclick=()=>{selectedMode=button.dataset.matchMode;document.querySelectorAll('[data-match-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));render();});
-    document.querySelector('#refresh').onclick=()=>location.reload();
+    document.querySelector('#refresh').onclick=async()=>{
+        const button=document.querySelector('#refresh');button.disabled=true;
+        profile.message('최신 전적을 확인하고 있습니다…');
+        try {const data=await erRequest('/er/user/refresh?userNum='+encoded);if(!Array.isArray(data.userGames))throw new Error('전적 응답 오류');rows=data.userGames;next=data.next||null;placementRows=rows.slice(0,20);render();updateHero();profile.update({rows,snapshot:data});const rank=await erRequest('/er/userRank?userNum='+encoded);await renderRank(rank);}
+        catch(error){profile.message('갱신 실패 · '+error.message);}
+        finally{button.disabled=false;}
+    };
     const rankPanel=document.querySelector('#rank-panel');
     const renderRank=async data=>{
         const row=data.userStats?.[0];
         rankReady=true;
         if(!row)updateHero();
         if(!row){rankPanel.innerHTML='<p class="empty-state">이번 시즌 랭크 기록이 없습니다.</p>';return;}
-        rankSeason=row.seasonId;
+        rankSeason=row.seasonId;profile.update({rank:row});
         heroStats=Array.isArray(row.characterStats)?row.characterStats:[];
         const metric=(label,value)=>'<div><span>'+label+'</span><strong>'+value+'</strong></div>';
         const tier=erTier(row);
@@ -294,7 +309,7 @@ async function startPlayer() {
             const data=await getPage(next);
             if(!Array.isArray(data.userGames))throw new Error('전적 응답 오류');
             const ids=new Set(rows.map(r=>String(r.gameId))), added=data.userGames.filter(r=>!ids.has(String(r.gameId)));
-            rows.push(...added);next=added.length && String(data.next)!==String(next) ? data.next||null : null;render();prefetchNext();
+            rows.push(...added);profile.update({rows});next=added.length && String(data.next)!==String(next) ? data.next||null : null;render();prefetchNext();
             button.textContent='전적 더 보기';
         }catch(error){button.textContent='조회 실패 · 다시 시도';}
         finally{loading=false;button.disabled=false;}
@@ -302,7 +317,7 @@ async function startPlayer() {
     try {
         const data=await getPage(null);
         if(!Array.isArray(data.userGames))throw new Error('최근 전적 응답을 확인할 수 없습니다.');
-        rows=data.userGames;placementRows=rows.slice(0,20);next=data.next || null;
+        rows=data.userGames;profile.update({rows,snapshot:data});placementRows=rows.slice(0,20);next=data.next || null;
         if(rows[0]){
             document.querySelector('#nickname').textContent=rows[0].nickname || '플레이어';
             document.querySelector('#userLevel').textContent='레벨 '+erNumber(rows[0].accountLevel);
@@ -314,7 +329,7 @@ async function startPlayer() {
         erRefreshSnapshot('/er/user/detail?userNum='+encoded,data,fresh=>{
             // Do not reset a list the user has paged or expanded while refreshing.
             if(rows.length>10 || document.querySelector('.match-card[aria-expanded=true]'))return;
-            rows=fresh.userGames;next=fresh.next||null;placementRows=rows.slice(0,20);render();updateHero();
+            rows=fresh.userGames;profile.update({rows,snapshot:fresh});next=fresh.next||null;placementRows=rows.slice(0,20);render();updateHero();
             if(next)getPage(next).then(page=>{
                 const ids=new Set(placementRows.map(r=>String(r.gameId)));
                 placementRows=placementRows.concat(page.userGames.filter(r=>!ids.has(String(r.gameId)))).slice(0,20);
