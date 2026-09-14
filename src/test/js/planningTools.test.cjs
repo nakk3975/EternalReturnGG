@@ -24,3 +24,8 @@ assert.equal(context.erDecodeRoute({weaponCodes:'broken'},equip,areas).early.siz
 const observed=context.erWildlifeCamps();assert(observed.length>120);assert.equal(new Set(observed.map(c=>c.id)).size,observed.length);assert(observed.every(c=>Number.isFinite(c.x)&&Number.isFinite(c.y)&&c.x>=0&&c.x<=100&&c.y>=0&&c.y<=100));
 assert.deepEqual([...context.erRecommendRegions(new Map([['1',1],['2',2]]),areas,'c')],['c'],'a complete forced start must not add an unnecessary stop');
 const purchase=context.erRoutePurchaseCosts([{code:1,quantity:3,available:1},{code:2,quantity:1,available:0}],[{itemCode:1,mode:'2,3,6',consumeVFCredit:'30',purchaseCount:2}]);assert.equal(purchase[0].cost,30);assert.equal(purchase[1].cost,null);
+
+assert.equal(context.erSimulatorStatValue('cooldownReduction',30).value,30);
+assert.equal(context.erSimulatorStatValue('attackSpeedRatio',0.8).value,80);
+assert.equal(context.erSimulatorStatValue('lifeSteal',0.1).value,10);
+assert.equal(context.erSimulatorStatValue('attackPower',127).unit,'');
