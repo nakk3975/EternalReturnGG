@@ -21,7 +21,7 @@ public class SeasonSkinService {
     public Map<String,Object> get(String user,int season,int character) {
         if(user==null || !user.matches("[A-Za-z0-9_-]{1,160}") || season<=0 || character<=0)
             throw new IllegalArgumentException("Invalid skin lookup");
-        String key="/v2/user/skin-summary/"+user+"/"+season;
+        String key="/v2/user/skin-summary-v3/"+user+"/"+season;
         State state=states.get(key);
         if(state==null){
             if(states.size()>=100)return Map.of("status","busy");
@@ -35,7 +35,8 @@ public class SeasonSkinService {
             }
             int skin=bestSkin(current,character);
             return Map.of("status",current.complete?"complete":current.incomplete?"incomplete":"collecting","skinCode",skin,
-                    "games",current.seen.size(),"uses",current.counts.getOrDefault(character+":"+skin,0));
+                    "games",current.seen.size(),"uses",current.counts.getOrDefault(character+":"+skin,0),
+                    "characterMetrics",json.valueToTree(current.characterMetrics),"rankGames",current.rankGames,"expectedRankGames",current.expectedRankGames);
         }
     }
     private void loadAndScan(String key,String user,int season,State state){
@@ -47,6 +48,7 @@ public class SeasonSkinService {
                         State old=json.readValue(saved.body(),State.class);
                         state.seen=old.seen;state.counts=old.counts;state.cursor=old.cursor;
                         state.complete=old.complete;state.retryAt=old.retryAt;
+                        state.characterMetrics=old.characterMetrics;
                         state.rankGames=old.rankGames;state.expectedRankGames=old.expectedRankGames;
                         state.missingSkin=old.missingSkin;state.incomplete=old.incomplete;
                     }
@@ -54,7 +56,7 @@ public class SeasonSkinService {
                     if(state.complete && state.retryAt>System.currentTimeMillis()){running.remove(key);return;}
                 }
             }
-            JsonNode stats=json.readTree(api.userRank(user)).path("userStats");
+            JsonNode stats=json.readTree(api.userRank(user,season)).path("userStats");
             if(stats.isArray())for(JsonNode row:stats)if(row.path("seasonId").asInt()==season)
                 state.expectedRankGames=Math.max(state.expectedRankGames,row.path("totalGames").asInt());
             scan(key,user,season,state,0);
@@ -84,7 +86,16 @@ public class SeasonSkinService {
             if(state.seen.contains(id)){if(state.complete)known=true;continue;}
             if(!row.hasNonNull("characterNum") || !row.hasNonNull("skinCode")){state.missingSkin=true;continue;}
             state.seen.add(id);
-            if(row.path("matchingMode").asInt()==3)state.rankGames++;
+            if(row.path("matchingMode").asInt()==3){
+                state.rankGames++;
+                CharacterMetrics m=state.characterMetrics.computeIfAbsent(String.valueOf(row.path("characterNum").asInt()),unused->new CharacterMetrics());
+                m.games++;
+                if(row.path("playerKill").isNumber()){m.kills+=row.path("playerKill").asDouble();m.killGames++;}
+                if(row.path("teamKill").isNumber()){m.teamKills+=row.path("teamKill").asDouble();m.teamKillGames++;}
+                if(row.path("damageToPlayer").isNumber()){m.damage+=row.path("damageToPlayer").asDouble();m.damageGames++;}
+                if(row.path("mmrGain").isNumber()){m.rp+=row.path("mmrGain").asDouble();m.rpGames++;}
+                else if(row.path("mmrBefore").isNumber()&&row.path("mmrAfter").isNumber()){m.rp+=row.path("mmrAfter").asDouble()-row.path("mmrBefore").asDouble();m.rpGames++;}
+            }
             String key=row.path("characterNum").asInt()+":"+row.path("skinCode").asInt();
             state.counts.merge(key,1,Integer::sum);
         }
@@ -105,7 +116,12 @@ public class SeasonSkinService {
         JsonNode body;synchronized(state){body=json.valueToTree(state);}store.write(key,body,300_000);
     }
     private void fail(String key,State state){synchronized(state){state.retryAt=System.currentTimeMillis()+10_000;}running.remove(key);}
+    public static class CharacterMetrics {
+        public int games,killGames,teamKillGames,damageGames,rpGames;
+        public double kills,teamKills,damage,rp;
+    }
     public static class State {
+        public Map<String,CharacterMetrics> characterMetrics=new HashMap<>();
         public Set<Long> seen=new HashSet<>();
         public Map<String,Integer> counts=new HashMap<>();
         public Long cursor;

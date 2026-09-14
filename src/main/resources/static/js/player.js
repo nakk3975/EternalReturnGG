@@ -118,14 +118,14 @@ function erTeamScoreboard(teams,ownRow) {
     const damageMax=Math.max(1,...teams.flat().map(r=>Number(r.damageToPlayer)||0));
     const animalMax=Math.max(1,...teams.flat().map(r=>Number(r.damageToMonster)||0));
     const damage=(value,max,type)=>'<td class="score-damage"><span class="damage-meter '+type+'" aria-hidden="true"><i style="width:'+Math.min(100,Math.max(0,(Number(value)||0)/max*100))+'%"></i></span>'+erNumber(value)+'</td>';
-    return '<div class="team-scoreboard-scroll" tabindex="0" aria-label="팀별 경기 결과"><table class="team-scoreboard"><thead><tr><th scope="col">#</th><th scope="col">플레이어</th><th scope="col">TK / K / D / A</th><th scope="col">딜량</th><th scope="col">동물 딜량</th><th scope="col">크레딧</th><th scope="col">아이템 빌드</th></tr></thead>'+teams.slice().sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(rows=>{
+    return '<p class="combat-legend">♟ 사전 구성 파티 · ☠ 내가 처치 · ⚔ 나를 처치 <small>동일 실험체가 여러 명이면 상대를 특정하지 않습니다.</small></p><div class="team-scoreboard-scroll" tabindex="0" aria-label="팀별 경기 결과"><table class="team-scoreboard"><thead><tr><th scope="col">#</th><th scope="col">플레이어</th><th scope="col">TK / K / D / A</th><th scope="col">딜량</th><th scope="col">동물 딜량</th><th scope="col">획득 크레딧</th><th scope="col">아이템 빌드</th></tr></thead>'+teams.slice().sort((a,b)=>(a[0].gameRank??999)-(b[0].gameRank??999)).map(rows=>{
         const own=erOwnTeam(rows[0],ownRow);
         const rank=Number(rows[0].gameRank);
         return '<tbody class="score-team '+(own?'score-own-team':'')+'">'+rows.map((row,index)=>{
             const c=erPlayerCharacters.get(String(row.characterNum));
             const name=erPlayerNames.get('Character/Name/'+row.characterNum)||c?.name||'실험체';
             const portrait='<div class="score-portrait"><img data-character="'+erText(row.characterNum)+'" data-skin="'+erText(row.skinCode||0)+'" src="'+erText(erCharacterImage(c?.name,row.skinCode))+'" alt="'+erText(name)+'"><small>'+erNumber(row.characterLevel)+'</small></div>';
-            return '<tr class="'+(erOwnPlayer(row,ownRow)?'score-own-player':'')+'">'+(index===0?erTeamPlacement(rows,ownRow):'')+'<td><div class="score-player">'+portrait+erLoadout(row)+'<div class="score-nickname">'+erScorePlayerLink(row)+(erOwnPlayer(row,ownRow)?'<b class="own-player-badge">나</b>':'')+'<div class="boss-badges">'+erBossBadges(row)+'</div></div></div></td><td class="score-kda">'+erNumber(row.teamKill??row.totalFieldKill)+' / '+erNumber(row.playerKill)+' / '+erNumber(row.playerDeaths)+' / '+erNumber(row.playerAssistant)+'</td>'+damage(row.damageToPlayer,damageMax,'player-damage')+damage(row.damageToMonster,animalMax,'animal-damage')+'<td class="score-credit">'+erNumber(row.totalGainVFCredit)+'</td><td class="score-items">'+erEquipmentHtml(row.equipment)+'</td></tr>';
+            return '<tr class="'+(erOwnPlayer(row,ownRow)?'score-own-player':'')+'">'+(index===0?erTeamPlacement(rows,ownRow):'')+'<td><div class="score-player">'+portrait+erLoadout(row)+'<div class="score-nickname">'+erScorePlayerLink(row)+(erOwnPlayer(row,ownRow)?'<b class="own-player-badge">나</b>':'')+erParticipantBadges(row,rows,teams.flat(),ownRow)+'<div class="boss-badges">'+erBossBadges(row)+'</div></div></div></td><td class="score-kda">'+erNumber(row.teamKill??row.totalFieldKill)+' / '+erNumber(row.playerKill)+' / '+erNumber(row.playerDeaths)+' / '+erNumber(row.playerAssistant)+'</td>'+damage(row.damageToPlayer,damageMax,'player-damage')+damage(row.damageToMonster,animalMax,'animal-damage')+'<td class="score-credit" title="경기 중 획득한 총 크레딧">'+erNumber(row.totalGainVFCredit)+'<small>사용 '+erNumber(row.totalUseVFCredit??row.sumUsedVFCredits)+'</small></td><td class="score-items">'+erEquipmentHtml(row.equipment)+'</td></tr>';
         }).join('')+'</tbody>';
     }).join('')+'</table></div>';
 }
@@ -196,7 +196,10 @@ async function startPlayer() {
     if(!userId){records.textContent='플레이어를 먼저 검색해 주세요.';return;}
     const encoded=encodeURIComponent(userId);
     let rows=[];let graphRows=[];let placementRows=[];let selectedMode='';let rankSeason=null;let next=null;let loading=false;
-    let heroStats=[];
+    let heroStats=[],characterMetrics={},characterCollection='collecting';
+    function renderCharacters(){
+        document.querySelector('#player-characters').innerHTML=erCharacterStatsTable(heroStats,characterMetrics,characterCollection);
+    }
     let heroSkin=null, skinLookup='', rankReady=false;
     const heroImage=document.querySelector('#detailImage');
     heroImage.addEventListener('load',()=>{if(heroImage.dataset.character){heroImage.classList.remove('hero-pending');document.querySelector('#hero-loading').hidden=true;}});
@@ -208,6 +211,7 @@ async function startPlayer() {
             try {
                 const result=await erRequest('/er/user/season-skin?userNum='+encoded+'&season='+encodeURIComponent(season)+'&character='+encodeURIComponent(code));
                 if(skinLookup!==lookup)return;
+                characterMetrics=result.characterMetrics||{};characterCollection=result.status;renderCharacters();
                 if(result.status==='incomplete'){heroSkin={code,skin:0,unavailable:true};updateHero();return;}
                 if(result.status==='complete'){
                     heroSkin={code,skin:result.skinCode,uses:result.uses};updateHero();return;
@@ -271,10 +275,7 @@ async function startPlayer() {
         await metadata;
         const stats=Array.isArray(row.characterStats)?row.characterStats:[];
         heroStats=stats;updateHero();
-        document.querySelector('#player-characters').innerHTML=stats.slice().sort((a,b)=>b.usages-a.usages).slice(0,5).map(s=>{
-            const c=erPlayerCharacters.get(String(s.characterCode));
-            return '<a class="played-character" href="/er/characters/'+encodeURIComponent(c?.name||s.characterCode)+'"><img alt="" src="'+erText(erCharacterImage(c?.name))+'"><span>' +erText(erPlayerNames.get('Character/Name/'+s.characterCode)||c?.name||'실험체')+'<small>'+erNumber(s.usages)+'게임</small></span><strong>'+(s.usages?erNumber(s.wins/s.usages*100,1)+'%':'—')+'</strong></a>';
-        }).join('')||'<p class="empty-state">실험체 기록이 없습니다.</p>';
+        renderCharacters();
     };
     erRequest('/er/userRank?userNum='+encoded).then(data=>{renderRank(data).catch(()=>{});erRefreshSnapshot('/er/userRank?userNum='+encoded,data,renderRank);}).catch(()=>{rankReady=true;updateHero();rankPanel.innerHTML='<p class="empty-state">랭크 정보를 불러오지 못했습니다.</p>';});
     document.querySelector('#more-matches').onclick=async()=>{
@@ -321,3 +322,33 @@ async function startPlayer() {
     }catch(error){records.innerHTML='<p class="empty-state">'+erText(error.message)+'</p>';}
 }
 document.addEventListener('DOMContentLoaded',startPlayer);
+
+function erCharacterStatsTable(stats,metrics={},status='collecting') {
+    if(!stats.length)return '<p class="empty-state">실험체 기록이 없습니다.</p>';
+    const average=(m,sum,count)=>m&&m[count]>0&&m[count]===m.games?erNumber(m[sum]/m[count],sum==='damage'?0:2):'—';
+    return '<div class="character-stats-scroll"><table class="character-stats-table"><thead><tr><th>실험체</th><th>승률</th><th>누적 RP</th><th>평균 킬</th><th>평균 딜량</th></tr></thead><tbody>'+stats.slice().sort((a,b)=>b.usages-a.usages).map(s=>{
+        const c=erPlayerCharacters.get(String(s.characterCode)),m=metrics[String(s.characterCode)];
+        const full=m&&m.games===Number(s.usages),scope=full?'시즌 전체':'집계 '+erNumber(m?.games||0)+' / '+erNumber(s.usages)+'게임';
+        const rp=m&&m.rpGames===m.games&&m.rpGames>0?(m.rp>0?'+':'')+erNumber(m.rp):'—';
+        return '<tr><td><a href="/er/characters/'+encodeURIComponent(c?.name||s.characterCode)+'"><img loading="lazy" alt="" src="'+erText(erCharacterImage(c?.name))+'"><span>'+erText(erPlayerNames.get('Character/Name/'+s.characterCode)||c?.name||'실험체')+'<small>'+erNumber(s.usages)+'게임</small></span></a></td><td>'+(s.usages?erNumber(s.wins/s.usages*100,1)+'%':'—')+'</td><td title="'+erText(scope)+'" class="'+(m?.rp>0?'rp-up':m?.rp<0?'rp-down':'')+'">'+rp+'<small>'+(full?'시즌':erNumber(m?.games||0)+'/'+erNumber(s.usages)+'전')+'</small></td><td title="'+erText(scope)+'"><small>TK '+average(m,'teamKills','teamKillGames')+'</small><strong>K '+average(m,'kills','killGames')+'</strong></td><td title="'+erText(scope)+'">'+average(m,'damage','damageGames')+'</td></tr>';
+    }).join('')+'</tbody></table></div><p class="character-stats-note">게임 수·승률은 시즌 기준입니다. RP·평균은 '+(status==='complete'?'수집된 시즌 경기':'현재까지 집계된 경기')+' 기준이며, 수집 중에는 집계분으로 표시됩니다.</p>';
+}
+// preMade is party SIZE, not an ID (official API model). Only unambiguous squad groups are linked.
+function erPremadeBadge(row,team){
+    const size=Number(row.preMade),members=team.filter(r=>Number(r.preMade)===size);
+    if(![2,3].includes(size)||team.length>3||members.length!==size)return '';
+    return '<span class="party-badge party-'+((Number(row.teamNumber)||0)%4)+'" title="'+size+'인 사전 구성 파티 · 같은 팀의 같은 표시끼리 파티">♟ '+size+'인</span>';
+}
+function erCombatBadges(row,all,own){
+    if(erOwnPlayer(row,own)||erOwnTeam(row,own))return '';
+    const object=value=>{try{const o=typeof value==='string'?JSON.parse(value):value;return o&&typeof o==='object'&&!Array.isArray(o)?o:{};}catch(_){return {};}};
+    const unique=all.filter(r=>Number(r.characterNum)===Number(row.characterNum)).length===1;
+    let killed=false,killer=false;
+    for(const suffix of ['','2','3']){
+        if(row['killer'+suffix]==='player'&&row['killDetail'+suffix]===own.nickname&&own.nickname)killed=true;
+        if(own['killer'+suffix]==='player'&&own['killDetail'+suffix]===row.nickname&&row.nickname)killer=true;
+    }
+    if(unique){killed ||= Number(object(own.killDetails)[row.characterNum])>0;killer ||= Number(object(own.deathDetails)[row.characterNum])>0;}
+    return (killed?'<span class="combat-badge combat-kill" title="내가 처치한 플레이어" aria-label="내가 처치한 플레이어">☠</span>':'')+(killer?'<span class="combat-badge combat-death" title="나를 처치한 플레이어" aria-label="나를 처치한 플레이어">⚔</span>':'');
+}
+function erParticipantBadges(row,team,all,own){return '<span class="participant-badges">'+erPremadeBadge(row,team)+erCombatBadges(row,all,own)+'</span>';}

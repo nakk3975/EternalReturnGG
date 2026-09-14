@@ -28,4 +28,28 @@ class SeasonSkinTests {
         assertThrows(IllegalStateException.class,()->SeasonSkinService.apply(state,json.readTree("{\"userGames\":[{\"gameId\":12,\"seasonId\":41,\"characterNum\":1,\"skinCode\":1000}],\"next\":10}"),41));
         assertFalse(state.complete);
     }
+    @Test void characterMetricsDeduplicateAndExcludeOtherModesAndSeasons() throws Exception {
+        var state=new SeasonSkinService.State();
+        var page=json.readTree("""
+            {"userGames":[
+              {"gameId":11,"seasonId":41,"matchingMode":3,"characterNum":1,"skinCode":1000,"playerKill":4,"teamKill":10,"damageToPlayer":15000,"mmrGain":25},
+              {"gameId":10,"seasonId":41,"matchingMode":3,"characterNum":1,"skinCode":1000,"playerKill":0,"teamKill":2,"damageToPlayer":5000,"mmrBefore":100,"mmrAfter":90},
+              {"gameId":9,"seasonId":41,"matchingMode":2,"characterNum":1,"skinCode":1000,"playerKill":100,"mmrGain":999}
+            ],"next":8}
+            """);
+        SeasonSkinService.apply(state,page,41);
+        state=json.readValue(json.writeValueAsString(state),SeasonSkinService.State.class);
+        SeasonSkinService.apply(state,json.readTree("""
+            {"userGames":[{"gameId":11,"seasonId":41,"matchingMode":3,"characterNum":1,"skinCode":1000,"mmrGain":25}],"next":7}
+            """),41);
+        var m=state.characterMetrics.get("1");
+        assertEquals(2,m.games);assertEquals(4,m.kills);assertEquals(12,m.teamKills);
+        assertEquals(20000,m.damage);assertEquals(15,m.rp);assertEquals(2,m.rpGames);
+        SeasonSkinService.apply(state,json.readTree("""
+            {"userGames":[{"gameId":7,"seasonId":41,"matchingMode":3,"characterNum":2,"skinCode":2000},{"gameId":6,"seasonId":40,"matchingMode":3,"characterNum":2,"skinCode":2000}],"next":0}
+            """),41);
+        assertEquals(1,state.characterMetrics.get("2").games);
+        assertEquals(0,state.characterMetrics.get("2").killGames);
+        assertEquals(0,state.characterMetrics.get("2").rpGames);
+    }
 }
