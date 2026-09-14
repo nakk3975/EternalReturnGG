@@ -15,8 +15,14 @@ public class AssetController {
     private static final String CDN = "https://cdn.dak.gg/assets/er/game-assets/";
     private static final Pattern VERSION = Pattern.compile("game-assets/(\\d+\\.\\d+\\.\\d+)/");
     // Last observed working version; used only if discovery is unavailable.
-    private String version = "12.3.0";
-    private long refreshAt;
+    private volatile String version = "12.3.0";
+    private volatile long refreshAt;
+    private final java.util.concurrent.ExecutorService worker=java.util.concurrent.Executors.newSingleThreadExecutor();
+    private final java.util.concurrent.atomic.AtomicBoolean refreshing=new java.util.concurrent.atomic.AtomicBoolean();
+    @jakarta.annotation.PostConstruct
+    public void warm(){config();}
+    @jakarta.annotation.PreDestroy
+    public void stop(){worker.shutdownNow();}
     @Value("${eternal-return.asset-version:}")
     private String override;
     private final RestTemplate client;
@@ -29,12 +35,13 @@ public class AssetController {
     }
 
     @GetMapping("/er/assets/config")
-    public synchronized Map<String, String> config() {
+    public Map<String, String> config() {
         if (override != null && override.matches("\\d+\\.\\d+\\.\\d+")) {
             return Map.of("baseUrl", CDN + override + "/");
         }
         long now = System.currentTimeMillis();
-        if (now >= refreshAt) {
+        if (now >= refreshAt && refreshing.compareAndSet(false,true)) {
+            worker.execute(() -> {
             refreshAt = now + Duration.ofMinutes(5).toMillis();
             try {
                 String html = client.getForObject("https://dak.gg/er/characters/Tazia", String.class);
@@ -44,8 +51,9 @@ public class AssetController {
                     refreshAt = now + Duration.ofHours(6).toMillis();
                 }
             } catch (RuntimeException ignored) {
-                // Keep the last known version and retry later; never block page rendering indefinitely.
-            }
+                // Keep the last known version while discovery runs outside the HTTP request.
+            } finally {refreshing.set(false);}
+            });
         }
         return Map.of("baseUrl", CDN + version + "/");
     }
