@@ -58,9 +58,10 @@ html[data-theme=dark] .craft-viewport{--branch:#606875;}
 .craft-viewport .craft-tree .item-slot{flex:0 0 42px;width:58px;height:42px;border-radius:4px;}
 .craft-viewport .craft-name{display:block;flex-shrink:0;width:100%;font-size:12px;font-weight:500;line-height:16px;text-align:center;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;}
 @media(max-width:640px){.craft-viewport{padding:20px 0 14px;}.craft-viewport .craft-tree li{padding-left:7px;padding-right:7px;}}
-/* Fit the entire recipe into its panel and keep its center invariant. */
-.craft-viewport{position:relative;overflow:hidden;padding:0;min-height:128px;}
-.craft-viewport>.craft-tree{position:absolute;top:20px;left:50%;width:max-content;min-width:0;transform-origin:top center;}
+/* Start at the recipe center; wide trees can scroll without shrinking the text. */
+.craft-viewport{position:relative;overflow-x:auto;overflow-y:hidden;padding:0;min-height:128px;}
+.craft-canvas{position:relative;min-width:100%;}
+.craft-viewport .craft-canvas>.craft-tree{position:absolute;top:20px;left:50%;width:max-content;min-width:0;transform-origin:top center;}
 .craft-viewport .craft-tree ul{min-width:0;}
 .rank-user{display:flex;align-items:center;gap:10px;min-width:150px;}.rank-avatar{display:flex;align-items:center;justify-content:center;flex:none;width:42px;height:42px;border-radius:50%;background:var(--panel-alt);}.rank-avatar img{width:42px;height:42px;object-fit:cover;border-radius:50%;}.rank-character-top{display:flex;gap:14px;min-width:270px;}.rank-character{display:flex;align-items:center;gap:6px;min-width:80px;color:var(--ink)!important;}.rank-character img{width:36px;height:36px;object-fit:cover;border-radius:50%;}.rank-character>span{font-size:12px;max-width:90px;line-height:1.4;}.rank-character small{display:block;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums;}.ranking-table th small{display:block;color:var(--muted);font-weight:400;}.ranking-main{min-width:0;}#rank-table{overflow-x:auto;}.ranking-table{min-width:700px;}.ranking-table td:last-child{white-space:nowrap;}
 html[data-theme=dark]{--ink:#f0f2f6;--muted:#b5bfce;--link:#a6ceff;}
