@@ -198,13 +198,7 @@ async function startPlayer() {
         }catch(error){
             records.textContent=error.message;
             document.querySelector('#hero-loading').hidden=true;
-            document.querySelector('#refresh').onclick=async()=>{
-        const button=document.querySelector('#refresh');button.disabled=true;
-        profile.message('최신 전적을 확인하고 있습니다…');
-        try {const data=await erRequest('/er/user/refresh?userNum='+encoded);if(!Array.isArray(data.userGames))throw new Error('전적 응답 오류');rows=data.userGames;next=data.next||null;placementRows=rows.slice(0,20);render();updateHero();profile.update({rows,snapshot:data});const rank=await erRequest('/er/userRank?userNum='+encoded);await renderRank(rank);}
-        catch(error){profile.message('갱신 실패 · '+error.message);}
-        finally{button.disabled=false;}
-    };
+            document.querySelector('#refresh').onclick=()=>location.reload();
             return;
         }
     }
@@ -255,15 +249,16 @@ async function startPlayer() {
     const getPage=erMatchPages(userId);
     const prefetchNext=()=>{if(next)getPage(next).catch(()=>{});};
     const assets=loadAssetConfig();
-    const metadata=Promise.allSettled([assets,erStatic('/er/character'),erDictionary(),erLoadEquipment(),erStatic('/er/tacticalSkill'),erStatic('/er/trait'),erLoadWeaponMetadata()]).then(result=>{
-        if(result[1].status==='fulfilled')for(const c of result[1].value.data||[])erPlayerCharacters.set(String(c.code),c);
-        if(result[2].status==='fulfilled')erPlayerNames=result[2].value;
-        if(result[3].status==='fulfilled')erPlayerEquipment=result[3].value;
-        if(result[4].status==='fulfilled')erTactical=new Map((result[4].value.data||[]).map(s=>[String(s.group),s]));
-        if(result[5].status==='fulfilled')erTraits=new Map((result[5].value.data||[]).map(s=>[String(s.code),s]));
-        erEnhancePlayer(document);
-        updateHero();
-    });
+    // Paint ready metadata independently: a slow trait/equipment response must not hide the hero.
+    const repaint=()=>{erEnhancePlayer(document);updateHero();};
+    const characterData=erStatic('/er/character').then(body=>{for(const c of body.data||[])erPlayerCharacters.set(String(c.code),c);repaint();});
+    const namesData=erDictionary().then(names=>{erPlayerNames=names;repaint();renderCharacters();});
+    assets.then(repaint).catch(()=>{});
+    erLoadEquipment().then(value=>{erPlayerEquipment=value;repaint();}).catch(()=>{});
+    erStatic('/er/tacticalSkill').then(body=>{erTactical=new Map((body.data||[]).map(s=>[String(s.group),s]));repaint();}).catch(()=>{});
+    erStatic('/er/trait').then(body=>{erTraits=new Map((body.data||[]).map(s=>[String(s.code),s]));repaint();}).catch(()=>{});
+    erLoadWeaponMetadata().then(repaint).catch(()=>{});
+    const metadata=Promise.allSettled([assets,characterData,namesData]);
     const render=()=>{
         const filtered=rows.filter(r=>!selectedMode || String(r.matchingMode)===selectedMode);
         records.innerHTML=filtered.length ? filtered.map(r=>erPlayerCard(r)).join('') : '<p class="empty-state">이 모드의 최근 전적이 없습니다.</p>';

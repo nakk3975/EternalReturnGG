@@ -223,3 +223,4 @@ body .search-form:focus-within,body .search-button:focus,body .search-button:foc
  outline:none!important;box-shadow:none!important;
 }
 body .search-form:focus-within{border-color:inherit;}
+body header .search-form:focus-within{border-color:#a6e2ee55}body #searchForm:focus-within{border-color:var(--line)}

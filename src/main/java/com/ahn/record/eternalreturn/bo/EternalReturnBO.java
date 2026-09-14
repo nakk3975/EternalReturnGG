@@ -101,7 +101,12 @@ public class EternalReturnBO {
 
     public String searchNickname(String nickName) throws IOException, URISyntaxException {
         String queryParam = "query=" + URLEncoder.encode(nickName, StandardCharsets.UTF_8.toString());
-        return request("/v1/user/nickname?" + queryParam, true);
+        String body=requestCached("/v1/user/nickname?" + queryParam, true, USER_CACHE_MS);
+        try {
+            String user=objectMapper.readTree(body).path("user").path("userId").asText();
+            if(!user.isBlank())prefetchUserInfo(user);
+        } catch(IOException ignored) { }
+        return body;
     }
 
     public String searchAllRoute() throws URISyntaxException {

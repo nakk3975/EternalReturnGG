@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 
-        <link rel="stylesheet" href="/static/css/theme.css?v=20260912-ux">
+        <link rel="stylesheet" href="/static/css/theme.css?v=20260914-tools2">
         <script>try{document.documentElement.dataset.theme=localStorage.getItem('ergg.theme')||'light';}catch(_){document.documentElement.dataset.theme='light';}</script>
         <style>
             header{padding-left:max(24px,calc((100% - 1232px)/2));padding-right:max(24px,calc((100% - 1232px)/2));background:radial-gradient(ellipse at 85% 0%,#39bed16b,transparent 60%),linear-gradient(110deg,#173f63,#147489 70%,#268ea5);border-bottom:1px solid #ffffff26;}
@@ -34,7 +34,8 @@
                 <li class="nav-item"><a href="/er/statistics" class="nav-link font-weight-bold text-white">통계</a></li>
                 <li class="nav-item"><a href="/er/items" class="nav-link font-weight-bold text-white">아이템</a></li>
                 <li class="nav-item"><a href="/er/routes" class="nav-link font-weight-bold text-white">루트추천</a></li>
-                <li class="nav-item"><a href="/er/route-planner" class="nav-link font-weight-bold text-white">루트 만들기</a></li>
+                <li class="nav-item"><a href="/er/route-planner" class="nav-link font-weight-bold text-white">루트 시뮬레이터</a></li>
+                <li class="nav-item"><a href="/er/animal-map" class="nav-link font-weight-bold text-white">야생동물 지도</a></li>
                 <li class="nav-item"><a href="/er/guide" class="nav-link font-weight-bold text-white">가이드</a></li>
                 <li class="nav-item"><a href="/er/multi" class="nav-link font-weight-bold text-white">멀티서치</a></li>
                 <li class="nav-item"><a href="/er/favorites" class="nav-link font-weight-bold text-white">즐겨찾기</a></li>

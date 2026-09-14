@@ -1,0 +1,18 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const context=vm.createContext({});
+for(const f of ['routePlanner','animalMap'])vm.runInContext(fs.readFileSync('src/main/resources/static/js/'+f+'.js','utf8'),context);
+const areas=[{id:'a',name:'학교',items:[{code:'1',quantity:1}]},{id:'b',name:'숲',items:[{code:'2',quantity:2}]},{id:'c',name:'항구',items:[{code:'1',quantity:1},{code:'2',quantity:2}]}];
+let route=context.erRecommendRegions(new Map([['1',1],['2',2]]),areas);
+assert.deepEqual([...route],['c'],'choose single complete region over two stops');
+route=context.erRecommendRegions(new Map([['1',1],['2',2]]),areas,'a');assert.equal(route[0],'a');assert(context.erRouteCoverage(new Map([['1',1],['2',2]]),route,areas).every(r=>r.covered));
+route=context.erRecommendRegions(new Map([['9',1]]),areas);assert.equal(route.length,0,'unobtainable items do not produce fake completion');
+const camps=[{id:'near',type:'Bear',count:1,x:1,y:1,region:'a'},{id:'far',type:'Bear',count:1,x:90,y:90,region:'b'},{id:'dead',type:'Bear',count:10,x:0,y:0,cleared:true,region:'a'}];
+let hunt=context.erRecommendHunt({x:0,y:0},camps,{steps:1});assert.equal(hunt.route[0].id,'near');assert.equal(hunt.credits,5);
+hunt=context.erRecommendHunt({x:0,y:0},camps,{steps:8,blocked:['b']});assert.equal(hunt.route.length,1);assert.equal(hunt.route[0].id,'near');
+hunt=context.erRecommendHunt({x:0,y:0},[],{steps:5});assert.equal(hunt.route.length,0);assert.equal(hunt.credits,0);
+assert.equal(context.erHuntValue({type:'Wolf',count:2,variant:1}),12);
+assert.equal(context.erHuntValue({type:'Bat',count:2,variant:2}),0);
+const full=context.erRecommendHunt({x:0,y:0},camps,{steps:5});assert.equal(new Set(full.route.map(c=>c.id)).size,full.route.length);
+vm.runInContext(fs.readFileSync('src/main/resources/static/js/siteData.js','utf8'),context);vm.runInContext(fs.readFileSync('src/main/resources/static/js/profileTabs.js','utf8'),context);
+const skins=context.erSkinUsage([{characterNum:1,skinCode:0},{characterNum:1,skinCode:0},{characterNum:1,skinCode:1001},{characterNum:1,skinCode:null}]);assert.equal(skins.length,2);assert.equal(skins[0].games,2);assert.equal(skins[0].skin,0);
+console.log('PASS: required-material routes, fixed starts, missing supply, hunt exclusions, no duplicate rewards, skin aggregation');

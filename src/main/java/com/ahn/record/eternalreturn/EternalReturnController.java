@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/er")
 public class EternalReturnController {
 
-	@GetMapping({"/characters", "/characters/{name}", "/items", "/items/{code}", "/routes", "/leaderboard", "/guide", "/favorites", "/multi", "/statistics", "/route-planner"})
+	@GetMapping({"/characters", "/characters/{name}", "/items", "/items/{code}", "/routes", "/leaderboard", "/guide", "/favorites", "/multi", "/statistics", "/route-planner", "/animal-map"})
 	public String explorerView() {
 		return "main/explorer";
 	}
