@@ -13,8 +13,8 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
  await ctx.erDictionary();assert.equal(namesCalls,2);
  assert.equal((await ctx.erLoadEquipment()).size,1);
  const recovered=await Promise.all([ctx.erLoadEquipment(),ctx.erLoadEquipment()]);
- assert.equal(recovered[0].size,2);assert.equal(gearCalls,4);
- await ctx.erLoadEquipment();assert.equal(gearCalls,4);
+ assert.equal(recovered[0].size,2);assert.equal(gearCalls,3);
+ await ctx.erLoadEquipment();assert.equal(gearCalls,3);
  assert.equal(ctx.erIsPlainClick({button:0}),true);
  for(const key of ['ctrlKey','metaKey','shiftKey','altKey'])assert.equal(ctx.erIsPlainClick({button:0,[key]:true}),false);
  assert.equal(ctx.erIsPlainClick({button:1}),false);

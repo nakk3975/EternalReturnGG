@@ -3,6 +3,7 @@ const erGradeNames = {Common: '일반', Uncommon: '고급', Rare: '희귀', Epic
 let erEquipmentPromise;
 function erLoadEquipment() {
     if (!erEquipmentPromise) erEquipmentPromise = Promise.allSettled(['/er/weapon', '/er/armor'].map(async url => {
+        if(typeof erStatic==='function'){const body=await erStatic(url);if(!Array.isArray(body.data))throw new Error('장비 응답 형식 오류');return body.data;}
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 10000);
         try {

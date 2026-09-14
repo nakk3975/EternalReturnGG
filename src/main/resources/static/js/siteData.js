@@ -9,15 +9,37 @@ async function erRequest(url) {
     if (!response.ok || (data.code != null && ![0,200].includes(Number(data.code)))) throw new Error(data.message || '데이터를 불러오지 못했습니다. 다시 시도해 주세요.');
     return data;
 }
+// Only public metadata is persisted across full-page menu navigation.
+const erMetadataUrls=new Set(['/er/character','/er/weapon','/er/armor','/er/materials','/er/trait','/er/tacticalSkill','/er/skin/info','/er/seasons','/er/skillInfo']);
+function erReadMetadata(key){
+    try{const entry=JSON.parse(sessionStorage.getItem('ergg.meta.v1.'+key)||'null');if(entry&&entry.expires>Date.now())return entry.value;}catch(_){}
+    return null;
+}
+function erSaveMetadata(key,value){
+    try{sessionStorage.setItem('ergg.meta.v1.'+key,JSON.stringify({expires:Date.now()+900000,value}));}catch(_){}
+}
 function erStatic(url) {
-    if (!erStaticRequests.has(url)) erStaticRequests.set(url, erRequest(url).catch(e => {erStaticRequests.delete(url);throw e;}));
+    if (!erStaticRequests.has(url)) {
+        const cached=erMetadataUrls.has(url)?erReadMetadata(url):null;
+        if(cached && Array.isArray(cached.data))erStaticRequests.set(url,Promise.resolve(cached));
+        else erStaticRequests.set(url, erRequest(url).then(body=>{
+            if(erMetadataUrls.has(url)&&Array.isArray(body.data))erSaveMetadata(url,body);
+            return body;
+        }).catch(e => {erStaticRequests.delete(url);throw e;}));
+    }
     return erStaticRequests.get(url);
 }
+function erParseDictionary(text){return new Map(text.split('\n').map(line=>{const i=line.indexOf('┃');return i<0?['','']:[line.slice(0,i).trim(),line.slice(i+1).trim()];}));}
 let erDictionaryRequest;
 function erDictionary() {
+    if(erDictionaryRequest)return erDictionaryRequest;
+    const cached=erReadMetadata('dictionary');
+    if(!erDictionaryRequest&&typeof cached==='string')erDictionaryRequest=Promise.resolve(erParseDictionary(cached));
     if (!erDictionaryRequest) erDictionaryRequest = fetch('/er/loadTextFile?schema=5', {signal:AbortSignal.timeout(15000)}).then(async r => {
         if (!r.ok) throw new Error('이름 정보 조회 실패');
-        return new Map((await r.text()).split('\n').map(line => {const i=line.indexOf('┃');return i<0 ? ['', ''] : [line.slice(0,i).trim(),line.slice(i+1).trim()];}));
+        const text=await r.text();
+        if(!text.includes('┃'))throw new Error('Invalid localization');
+        erSaveMetadata('dictionary',text);return erParseDictionary(text);
     }).catch(() => {erDictionaryRequest=null;return new Map();});
     return erDictionaryRequest;
 }
