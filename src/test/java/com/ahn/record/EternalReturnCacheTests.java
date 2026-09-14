@@ -13,6 +13,26 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 class EternalReturnCacheTests {
     @Test
+    void refreshReplacesOldSnapshotAndSharesRapidRepeat() throws Exception {
+        EternalReturnBO bo=new EternalReturnBO();
+        try {
+            ReflectionTestUtils.setField(bo,"apiValue","test-key");
+            MockRestServiceServer mock=MockRestServiceServer.bindTo((RestTemplate)ReflectionTestUtils.getField(bo,"restTemplate")).build();
+            String path="/v1/user/games/uid/player";
+            mock.expect(requestTo("https://open-api.bser.io"+path)).andRespond(withSuccess("{\"userGames\":[{\"gameId\":1}]}",MediaType.APPLICATION_JSON));
+            mock.expect(requestTo("https://open-api.bser.io"+path)).andRespond(withSuccess("{\"userGames\":[{\"gameId\":2}]}",MediaType.APPLICATION_JSON));
+            String first=bo.playerSnapshot("player",null,false);
+            assertTrue(first.contains("_fetchedAt"));
+            var cache=(java.util.Map<?,?>)ReflectionTestUtils.getField(bo,"responseCache");
+            ReflectionTestUtils.setField(cache.get(path),"expiresAt",System.currentTimeMillis()+24000);
+            String refreshed=bo.playerSnapshot("player",null,true);
+            assertTrue(refreshed.contains("\"gameId\":2"));
+            assertEquals(refreshed,bo.playerSnapshot("player",null,true));
+            assertEquals(refreshed,bo.playerSnapshot("player",null,false));
+            mock.verify();
+        } finally {bo.shutdownPrefetchExecutor();}
+    }
+    @Test
     void derivedSkillsReuseTheSameCatalogUntilLocalizationChanges() throws Exception {
         EternalReturnBO bo=new EternalReturnBO();
         try {

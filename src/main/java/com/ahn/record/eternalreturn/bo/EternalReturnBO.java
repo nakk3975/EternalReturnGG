@@ -101,11 +101,22 @@ public class EternalReturnBO {
 
     public String searchNickname(String nickName) throws IOException, URISyntaxException {
         String queryParam = "query=" + URLEncoder.encode(nickName, StandardCharsets.UTF_8.toString());
-        return request("/v1/user/nickname?" + queryParam, true);
+        String body=requestCached("/v1/user/nickname?" + queryParam, true, USER_CACHE_MS);
+        try {
+            String user=objectMapper.readTree(body).path("user").path("userId").asText();
+            if(!user.isBlank())prefetchUserInfo(user);
+        } catch(IOException ignored) { }
+        return body;
     }
 
     public String searchAllRoute() throws URISyntaxException {
         return requestCached("/v1/weaponRoutes/recommend", false, STATIC_CACHE_MS);
+    }
+
+    public String searchRoute(long routeId) throws URISyntaxException {
+        if (routeId <= 0 || routeId > Integer.MAX_VALUE)
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Invalid route ID");
+        return requestCached("/v1/weaponRoutes/recommend?routeId=" + routeId, false, STATIC_CACHE_MS);
     }
 
     public String searchCharacter() throws URISyntaxException {
@@ -117,7 +128,7 @@ public class EternalReturnBO {
     }
 
     public String routeData(String table) throws URISyntaxException {
-        if (!java.util.Set.of("Area", "ItemSpawn", "DropGroup", "Collectible", "ItemConsumable", "ItemSpecial", "NearByArea", "NaviCollectAndHunt").contains(table))
+        if (!java.util.Set.of("Area", "ItemSpawn", "DropGroup", "Collectible", "ItemConsumable", "ItemSpecial", "NearByArea", "NaviCollectAndHunt", "CharacterMastery", "CharacterLevelUpStat", "CreditShop").contains(table))
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Unsupported route table");
         return requestCached("/v2/data/" + table, false, STATIC_CACHE_MS);
     }
@@ -138,6 +149,37 @@ public class EternalReturnBO {
         String path = "/v1/user/games/uid/" + encodePathSegment(userId);
         if (next != null && next > 0) path += "?next=" + next;
         return requestCached(path, false, next != null && next > 0 ? GAME_CACHE_MS : USER_CACHE_MS);
+    }
+
+    /** Timestamp comes from the server snapshot, not the browser page-open time. */
+    public String playerSnapshot(String userId, Long next, boolean refresh) throws Exception {
+        String path="/v1/user/games/uid/"+encodePathSegment(userId);
+        if(next!=null && next>0)path+="?next="+next;
+        long ttl=next!=null && next>0?GAME_CACHE_MS:USER_CACHE_MS;
+        Object lock=cacheLocks[(path.hashCode() & Integer.MAX_VALUE)%cacheLocks.length];
+        synchronized(lock) {
+            String body=refresh?refreshNow(path,ttl):userInfo(userId,next);
+            var result=(com.fasterxml.jackson.databind.node.ObjectNode)objectMapper.readTree(body);
+            CacheEntry entry=responseCache.get(path);
+            if(entry!=null)result.put("_fetchedAt",java.time.Instant.ofEpochMilli(entry.expiresAt-ttl).toString());
+            return result.toString();
+        }
+    }
+
+    private String refreshNow(String path,long ttl) throws URISyntaxException {
+        Object lock=cacheLocks[(path.hashCode() & Integer.MAX_VALUE)%cacheLocks.length];
+        synchronized(lock) {
+            CacheEntry old=responseCache.get(path);
+            if(old!=null && old.expiresAt-ttl>System.currentTimeMillis()-5000)return old.body;
+            String body=request(path,false);validateCacheBody(body);
+            responseCache.put(path,new CacheEntry(body,System.currentTimeMillis()+ttl));
+            if(persistentCache!=null)try{persistenceExecutor.execute(()->writeStored(path,body,ttl));}catch(java.util.concurrent.RejectedExecutionException ignored){}
+            return body;
+        }
+    }
+
+    public String refreshUserRank(String userId) throws URISyntaxException {
+        return refreshNow("/v2/user/stats/uid/"+encodePathSegment(userId)+"/"+getCurrentSeasonId()+"/"+RANKED_MODE,USER_CACHE_MS);
     }
 
     public String tacticalSkill() throws URISyntaxException {
@@ -321,7 +363,7 @@ public class EternalReturnBO {
         return path.startsWith("/v2/data/") || path.equals("/v1/weaponRoutes/recommend");
     }
     private boolean persistentEligible(String path) {
-        return path.startsWith("/v1/user/games/") || path.startsWith("/v2/user/stats/") || path.startsWith("/v1/games/") || path.startsWith("/v1/rank/top/");
+        return isCatalog(path) || path.startsWith("/v1/user/games/") || path.startsWith("/v2/user/stats/") || path.startsWith("/v1/games/") || path.startsWith("/v1/rank/top/");
     }
     private void validateCacheBody(String body) {
         try {
@@ -346,10 +388,15 @@ public class EternalReturnBO {
         try {
             persistenceExecutor.execute(() -> {
                 try {
-                    String body=request(path,meta);
-                    validateCacheBody(body);
-                    responseCache.put(path,new CacheEntry(body,System.currentTimeMillis()+ttl));
-                    if(persistentCache != null && persistentEligible(path))writeStored(path,body,ttl);
+                    Object lock=cacheLocks[(path.hashCode() & Integer.MAX_VALUE)%cacheLocks.length];
+                    synchronized(lock) {
+                        CacheEntry latest=responseCache.get(path);
+                        if(latest!=null && latest.expiresAt>System.currentTimeMillis())return;
+                        String body=request(path,meta);
+                        validateCacheBody(body);
+                        responseCache.put(path,new CacheEntry(body,System.currentTimeMillis()+ttl));
+                        if(persistentCache != null && persistentEligible(path))writeStored(path,body,ttl);
+                    }
                 } catch(Exception ignored) { /* Preserve the last successful snapshot. */ }
                 finally { refreshing.remove(path); }
             });

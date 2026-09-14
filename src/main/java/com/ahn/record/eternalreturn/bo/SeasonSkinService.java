@@ -36,6 +36,7 @@ public class SeasonSkinService {
             int skin=bestSkin(current,character);
             return Map.of("status",current.complete?"complete":current.incomplete?"incomplete":"collecting","skinCode",skin,
                     "games",current.seen.size(),"uses",current.counts.getOrDefault(character+":"+skin,0),
+                    "skinCounts",new HashMap<>(current.counts),
                     "characterMetrics",json.valueToTree(current.characterMetrics),"rankGames",current.rankGames,"expectedRankGames",current.expectedRankGames);
         }
     }
