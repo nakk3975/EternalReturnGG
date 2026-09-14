@@ -1,5 +1,18 @@
 # 프로필·조회·계획 도구 변경 검증
 
+## 최종 상태 — 2026-09-14 17:35 KST
+
+- 기능 배포: main `95cf3d3b5264b79527a6b85d3b03b745ce440dc3`, PR #3/#4/#5 병합 완료.
+- Render: NAKK / eternalreturngg, `dep-dajr1hdg1s2s73cn9th0`, **17:34:43 KST(08:34:43 UTC) live**.
+- 운영 최종 확인: 루트35176 5부위/블링크 복원, 쿨다운30%/공속80%, 전술14개. 배포 이후 조회한 ERROR 로그 없음.
+- Supabase: 통계 projection SQL 적용, er-cache version2 배포. service_role만 함수 실행 가능하며 원본 통계는 보존.
+- Java 테스트/bootWar CI 및 JS17개 파일 성공. 11개 메뉴 주요 흐름과 프로필4탭·갱신·검색 focus·지도 공유·즐겨찾기 확인.
+- 연결 재사용 조건 API 응답: overview0.388초, items0.555초, character=1 0.361초. 최초 접속·전체 화면 완료·p95 아님.
+- 미완료: 첫 조회1초 미만, 모바일 전 조합, 정확한 세계 좌표·벽·생성 단계 길찾기, 숙련도/고유효과 포함 최종 능력치. 스킨은 사용 기록이며 전술120 명칭·일부 구매 가격은 미제공.
+- 후속 이슈: [#1 API](https://github.com/nakk3975/EternalReturnGG/issues/1), [#6 성능](https://github.com/nakk3975/EternalReturnGG/issues/6), [#7 지도](https://github.com/nakk3975/EternalReturnGG/issues/7), [#8 시뮬레이터](https://github.com/nakk3975/EternalReturnGG/issues/8), [#9 UI](https://github.com/nakk3975/EternalReturnGG/issues/9).
+
+> 아래는 시간 순서의 작업 기록입니다. 초기의 ‘미확인/미완료’는 당시 상태이며, 현재 완료 여부는 위 최종 상태와 연결된 이슈를 기준으로 판단합니다.
+
 ## 구현한 범위
 
 - 프로필: 레벨 → 닉네임 → 새로고침/즐겨찾기 → 서버 캐시 생성 시각 순서. 기본 프로필/실험체/매치 히스토리/스킨 통계 탭.
