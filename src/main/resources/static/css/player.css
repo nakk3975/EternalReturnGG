@@ -150,7 +150,7 @@
 .party-badge{font-size:11px;line-height:18px;padding:0 4px;border:1px solid currentColor;border-radius:4px;white-space:nowrap;}
 .party-0{color:#a86800}.party-1{color:#3879bc}.party-2{color:#9a48ad}.party-3{color:#098477}
 .combat-badge{font-size:15px;line-height:20px;}.combat-kill{color:#e43e62}.combat-death{color:#687b96}
-[data-theme=dark] .character-stats-table th{background:#30343e;}
+[data-theme=dark] .character-stats-table th{background:#30343e;color:#e5ebf3;}
 [data-theme=dark] .character-stats-table td{border-color:#424754;}
 [data-theme=dark] .character-stats-table small,[data-theme=dark] .character-stats-note,[data-theme=dark] .combat-legend,[data-theme=dark] .score-credit small{color:#b6c2d3;}
 [data-theme=dark] .party-0{color:#f5c267}[data-theme=dark] .party-1{color:#89baff}[data-theme=dark] .party-2{color:#dd9eee}[data-theme=dark] .party-3{color:#7ad9c8}
