@@ -32,7 +32,7 @@
 <script src="/static/js/assetImages.js?v=20260914-fast-tier"></script>
 <script src="/static/js/itemSlots.js?v=20260914-speed"></script>
 <script src="/static/js/siteData.js?v=20260914-performance4"></script>
-<script src="/static/js/catalogPages.js?v=20260914-route-copy"></script>
+<script src="/static/js/catalogPages.js?v=20260914-craft-layout"></script>
 <script src="/static/js/multi.js?v=1"></script>
 <script src="/static/js/routePlanner.js?v=20260914-simulator5"></script>
 <script src="/static/js/animalMap.js?v=20260914-release3"></script>

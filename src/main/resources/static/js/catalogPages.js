@@ -176,7 +176,7 @@ function erFitCraftTree(viewport){
     if(!viewport)return;
     const tree=viewport.querySelector('.craft-tree');
     const fit=()=>{const width=viewport.clientWidth;if(!width)return;const scale=Math.min(1,Math.max(0,width-16)/tree.scrollWidth);tree.style.transform='translateX(-50%) scale('+scale+')';const height=Math.ceil(tree.offsetHeight*scale)+40;if(viewport.style.height!==height+'px')viewport.style.height=height+'px';};
-    fit();erCraftResize=new ResizeObserver(fit);erCraftResize.observe(viewport);
+    fit();erCraftResize=new ResizeObserver(fit);erCraftResize.observe(viewport);erCraftResize.observe(tree);
 }
 function erRankingCharacters(stats){
     const totals=new Map();
