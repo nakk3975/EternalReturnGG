@@ -10,7 +10,7 @@ async function erRequest(url) {
     return data;
 }
 // Only public metadata is persisted across full-page menu navigation.
-const erMetadataUrls=new Set(['/er/character','/er/weapon','/er/armor','/er/materials','/er/trait','/er/tacticalSkill','/er/skin/info','/er/seasons','/er/skillInfo']);
+const erMetadataUrls=new Set(['/er/character','/er/weapon','/er/armor','/er/materials','/er/trait','/er/tacticalSkill','/er/skin/info','/er/seasons','/er/skillInfo','/er/weapon-types','/er/route-data/Area','/er/route-data/ItemSpawn','/er/route-data/NaviCollectAndHunt','/er/route-data/Collectible','/er/route-data/ItemConsumable','/er/route-data/ItemSpecial']);
 function erReadMetadata(key){
     try{const entry=JSON.parse(sessionStorage.getItem('ergg.meta.v1.'+key)||'null');if(entry&&entry.expires>Date.now())return entry.value;}catch(_){}
     return null;
@@ -23,7 +23,7 @@ function erStatic(url) {
         const cached=erMetadataUrls.has(url)?erReadMetadata(url):null;
         if(cached && Array.isArray(cached.data))erStaticRequests.set(url,Promise.resolve(cached));
         else erStaticRequests.set(url, erRequest(url).then(body=>{
-            if(erMetadataUrls.has(url)&&Array.isArray(body.data))erSaveMetadata(url,body);
+            if(erMetadataUrls.has(url)&&Array.isArray(body.data)&&!body._cacheStale)erSaveMetadata(url,body);
             return body;
         }).catch(e => {erStaticRequests.delete(url);throw e;}));
     }

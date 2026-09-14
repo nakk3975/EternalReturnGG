@@ -1,5 +1,10 @@
 let erAssetBase = '';
-async function loadAssetConfig() {
+let erAssetRequest;
+function loadAssetConfig() {
+    if(!erAssetRequest)erAssetRequest=erFetchAssetConfig();
+    return erAssetRequest;
+}
+async function erFetchAssetConfig() {
     if (typeof erLoadWeaponMetadata === 'function') void erLoadWeaponMetadata();
     try {
         const cached = JSON.parse(sessionStorage.getItem('ergg.assets') || 'null');

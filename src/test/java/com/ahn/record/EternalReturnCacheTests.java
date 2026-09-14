@@ -13,6 +13,20 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 class EternalReturnCacheTests {
     @Test
+    void derivedSkillsReuseTheSameCatalogUntilLocalizationChanges() throws Exception {
+        EternalReturnBO bo=new EternalReturnBO();
+        try {
+            ReflectionTestUtils.setField(bo,"localizationBody","Skill/Group/Name/1001000┃첫 스킬".getBytes(StandardCharsets.UTF_8));
+            ReflectionTestUtils.setField(bo,"localizationExpiresAt",System.currentTimeMillis()+60000);
+            String first=bo.skillInfo();
+            assertSame(first,bo.skillInfo());
+            ReflectionTestUtils.setField(bo,"localizationBody","Skill/Group/Name/1001000┃변경된 스킬".getBytes(StandardCharsets.UTF_8));
+            assertNotEquals(first,bo.skillInfo());
+            assertTrue(bo.skillInfo().contains("변경된 스킬"));
+        } finally { bo.shutdownPrefetchExecutor(); }
+    }
+
+    @Test
     void localizationDownloadsOnceAndReturnsNamesAndSkillDescriptions() throws Exception {
         EternalReturnBO bo = new EternalReturnBO();
         try {

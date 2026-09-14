@@ -109,6 +109,15 @@ function erScorePlayerLink(row) {
     if(row.userId)return '<a class="score-player-link" href="/er/user/detail/view?userNum='+encodeURIComponent(row.userId)+'">'+erText(nickname)+'</a>';
     return '<a class="score-player-link" href="/er/user/detail/view?nickname='+encodeURIComponent(nickname)+'">'+erText(nickname)+'</a>';
 }
+// Use the match's starting RP: no per-participant profile requests or current-rank guesses.
+function erMatchRank(row) {
+    if(Number(row.matchingMode)!==3)return '';
+    const rp=erFinite(row.mmrBefore)?Number(row.mmrBefore):null;
+    if(rp==null||rp<0)return '';
+    const tier=erTier({mmr:rp,totalGames:1});
+    const label=rp>=7600?'미스릴 이상':tier.name;
+    return '<div class="score-match-rank" title="경기 시작 RP · 티어는 현재 RP 구간 기준'+(rp>=7600?' · 당시 상위 랭킹 미제공':'')+'"><img loading="lazy" src="https://cdn.dak.gg/er/images/tier/full/'+tier.image+'.png" alt=""><span>'+erText(label)+' · '+erNumber(rp)+' RP</span></div>';
+}
 function erTeamPlacement(rows,ownRow={}) {
     const rank=Number(rows[0].gameRank);
     const escaped=rows.filter(r=>Number(r.escapeState)===3).length;
@@ -125,7 +134,7 @@ function erTeamScoreboard(teams,ownRow) {
             const c=erPlayerCharacters.get(String(row.characterNum));
             const name=erPlayerNames.get('Character/Name/'+row.characterNum)||c?.name||'실험체';
             const portrait='<div class="score-portrait"><img data-character="'+erText(row.characterNum)+'" data-skin="'+erText(row.skinCode||0)+'" src="'+erText(erCharacterImage(c?.name,row.skinCode))+'" alt="'+erText(name)+'"><small>'+erNumber(row.characterLevel)+'</small></div>';
-            return '<tr class="'+(erOwnPlayer(row,ownRow)?'score-own-player':'')+'">'+(index===0?erTeamPlacement(rows,ownRow):'')+'<td><div class="score-player">'+portrait+erLoadout(row)+'<div class="score-nickname">'+erScorePlayerLink(row)+(erOwnPlayer(row,ownRow)?'<b class="own-player-badge">나</b>':'')+erParticipantBadges(row,rows,teams.flat(),ownRow)+'<div class="boss-badges">'+erBossBadges(row)+'</div></div></div></td><td class="score-kda">'+erNumber(row.teamKill??row.totalFieldKill)+' / '+erNumber(row.playerKill)+' / '+erNumber(row.playerDeaths)+' / '+erNumber(row.playerAssistant)+'</td>'+damage(row.damageToPlayer,damageMax,'player-damage')+damage(row.damageToMonster,animalMax,'animal-damage')+'<td class="score-credit" title="경기 중 획득한 총 크레딧">'+erNumber(row.totalGainVFCredit)+'<small>사용 '+erNumber(row.totalUseVFCredit??row.sumUsedVFCredits)+'</small></td><td class="score-items">'+erEquipmentHtml(row.equipment)+'</td></tr>';
+            return '<tr class="'+(erOwnPlayer(row,ownRow)?'score-own-player':'')+'">'+(index===0?erTeamPlacement(rows,ownRow):'')+'<td><div class="score-player">'+portrait+erLoadout(row)+'<div class="score-nickname">'+erScorePlayerLink(row)+(erOwnPlayer(row,ownRow)?'<b class="own-player-badge">나</b>':'')+erParticipantBadges(row,rows,teams.flat(),ownRow)+erMatchRank(row)+'<div class="boss-badges">'+erBossBadges(row)+'</div></div></div></td><td class="score-kda">'+erNumber(row.teamKill??row.totalFieldKill)+' / '+erNumber(row.playerKill)+' / '+erNumber(row.playerDeaths)+' / '+erNumber(row.playerAssistant)+'</td>'+damage(row.damageToPlayer,damageMax,'player-damage')+damage(row.damageToMonster,animalMax,'animal-damage')+'<td class="score-credit" title="경기 중 획득한 총 크레딧">'+erNumber(row.totalGainVFCredit)+'<small>사용 '+erNumber(row.totalUseVFCredit??row.sumUsedVFCredits)+'</small></td><td class="score-items">'+erEquipmentHtml(row.equipment)+'</td></tr>';
         }).join('')+'</tbody>';
     }).join('')+'</table></div>';
 }

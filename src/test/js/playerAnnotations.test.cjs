@@ -20,3 +20,9 @@ assert(c.erCharacterStatsTable([{...stats[0],usages:10}],metrics).includes('2/10
 assert(!/NaN|undefined/.test(c.erCharacterStatsTable(stats,{},'collecting')));
 metrics['1'].killGames=1;assert(c.erCharacterStatsTable(stats,metrics).includes('K —'));
 console.log('PASS: verified party sizes, ambiguous character suppression, two-way kill marks, seasonal/partial metrics and missing values');
+
+assert(c.erMatchRank({matchingMode:3,mmrBefore:3177,mmrAfter:3220}).includes('3,177 RP'));
+assert(c.erMatchRank({matchingMode:3,mmrBefore:3177}).includes('골드 II'));
+assert(c.erMatchRank({matchingMode:3,mmrBefore:9000,gameRank:1}).includes('미스릴 이상'));
+assert.equal(c.erMatchRank({matchingMode:2,mmrBefore:3177}), '');
+assert.equal(c.erMatchRank({matchingMode:3}), '');

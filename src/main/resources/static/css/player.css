@@ -155,3 +155,7 @@
 [data-theme=dark] .character-stats-table small,[data-theme=dark] .character-stats-note,[data-theme=dark] .combat-legend,[data-theme=dark] .score-credit small{color:#b6c2d3;}
 [data-theme=dark] .party-0{color:#f5c267}[data-theme=dark] .party-1{color:#89baff}[data-theme=dark] .party-2{color:#dd9eee}[data-theme=dark] .party-3{color:#7ad9c8}
 @media(max-width:760px){.player-sidebar>.surface:nth-child(2){display:block;}.character-stats-table{font-size:12px;}.character-stats-table td{padding:9px 3px;}}
+
+.score-match-rank{display:flex;align-items:center;gap:4px;margin-top:4px;font-size:12px;line-height:1.4;color:var(--muted,#69788e);white-space:nowrap;}
+.score-match-rank img{width:18px;height:22px;object-fit:contain;flex-shrink:0;}
+[data-theme=dark] .score-match-rank{color:#bac7d8;}

@@ -41,10 +41,10 @@
 	
 	<script src="/static/js/getName.js?v=20260914-contract"></script>
 	<script src="/static/js/weaponMetadata.js?v=20260914-contract2"></script>
-<script src="/static/js/assetImages.js?v=20260914-contract"></script>
+<script src="/static/js/assetImages.js?v=20260914-fast-tier"></script>
 	<script src="/static/js/fetchWeaponBgImg.js"></script>
 	<script src="/static/js/itemSlots.js?v=20260914-speed"></script>
-	<script src="/static/js/siteData.js?v=20260914-speed"></script>
+	<script src="/static/js/siteData.js?v=20260914-fast-tier"></script>
 	<script src="/static/js/home.js"></script>
 </body>
 </html>

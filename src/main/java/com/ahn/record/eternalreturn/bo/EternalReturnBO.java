@@ -68,6 +68,8 @@ public class EternalReturnBO {
             .mapToObj(i -> new Object()).toArray();
     private byte[] localizationBody;
     private long localizationExpiresAt;
+    private byte[] skillSource;
+    private String skillBody;
 
     @PostConstruct
     public void warmStaticCache() {
@@ -80,6 +82,11 @@ public class EternalReturnBO {
         prefetchStatic("/v2/data/TacticalSkillSetGroup", STATIC_CACHE_MS);
         prefetchStatic("/v2/data/Trait", STATIC_CACHE_MS);
         prefetchStatic("/v1/l10n/Korean", STATIC_CACHE_MS);
+        for(String table : List.of("WeaponTypeInfo", "ItemMisc", "Area", "ItemSpawn", "NaviCollectAndHunt", "Collectible", "ItemConsumable", "ItemSpecial"))
+            prefetchStatic("/v2/data/" + table, STATIC_CACHE_MS);
+        prefetchStatic("/v1/weaponRoutes/recommend", STATIC_CACHE_MS);
+        // Fetch the actual dictionary and derived skill catalog, not just their download URL.
+        prefetchExecutor.submit(() -> { try { skillInfo(); } catch(Exception ignored) {} });
     }
 
     @PreDestroy
@@ -141,9 +148,10 @@ public class EternalReturnBO {
         return requestCached("/v2/data/CharacterSkin", false, STATIC_CACHE_MS);
     }
 
-    public String skillInfo() throws IOException, URISyntaxException {
+    public synchronized String skillInfo() throws IOException, URISyntaxException {
         // SkillGroup is no longer a public data table. Names remain in official localization.
         byte[] body = loadTextFile().getBody();
+        if(body == skillSource && skillBody != null)return skillBody;
         var skills = new ArrayList<Map<String, Object>>();
         for (String line : new String(body, StandardCharsets.UTF_8).split("\\n")) {
             if (!line.startsWith("Skill/Group/Name/")) continue;
@@ -157,7 +165,9 @@ public class EternalReturnBO {
                         "name", line.substring(separator + 1).trim(), "icon", "SkillIcon_" + code));
             } catch (NumberFormatException ignored) { }
         }
-        return objectMapper.writeValueAsString(Map.of("code", 200, "data", skills));
+        skillBody = objectMapper.writeValueAsString(Map.of("code", 200, "data", skills));
+        skillSource = body;
+        return skillBody;
     }
 
     public String metaHash() throws URISyntaxException {
@@ -264,7 +274,7 @@ public class EternalReturnBO {
             return cached.body;
         }
 
-        if (cached != null && persistentEligible(path)) {
+        if (cached != null && (persistentEligible(path) || isCatalog(path) && now-cached.expiresAt < STATIC_CACHE_MS)) {
             refreshStored(path, useMetaHash, ttlMillis);
             return staleBody(cached.body);
         }
@@ -307,6 +317,9 @@ public class EternalReturnBO {
         }
     }
 
+    private boolean isCatalog(String path) {
+        return path.startsWith("/v2/data/") || path.equals("/v1/weaponRoutes/recommend");
+    }
     private boolean persistentEligible(String path) {
         return path.startsWith("/v1/user/games/") || path.startsWith("/v2/user/stats/") || path.startsWith("/v1/games/") || path.startsWith("/v1/rank/top/");
     }
@@ -336,7 +349,7 @@ public class EternalReturnBO {
                     String body=request(path,meta);
                     validateCacheBody(body);
                     responseCache.put(path,new CacheEntry(body,System.currentTimeMillis()+ttl));
-                    if(persistentCache != null)writeStored(path,body,ttl);
+                    if(persistentCache != null && persistentEligible(path))writeStored(path,body,ttl);
                 } catch(Exception ignored) { /* Preserve the last successful snapshot. */ }
                 finally { refreshing.remove(path); }
             });
