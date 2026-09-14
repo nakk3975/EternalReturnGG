@@ -24,14 +24,14 @@ function erMatchTabs(teams,ownRow){
 }
 function erDetailBuild(row){
     const mastery=erDetailObject(row.masteryLevel);
-    const weapons=Object.keys(mastery).filter(k=>erWeapons[k]).map(k=>[k,erWeapons[k][1]]);
+    const weapons=Object.keys(mastery).filter(k=>erWeaponInfo(k)).map(k=>[k,erWeaponInfo(k)[1]]);
     let out=erDetailSection('스킬 빌드',erSkillOrder(row)||'<p class="data-note">스킬 순서가 제공되지 않은 경기입니다.</p>');
     out+=erDetailSection('최종 아이템 빌드','<div class="detail-equipment">'+erEquipmentHtml(row.equipment)+'</div>');
     out+=erDetailSection('무기 숙련도',weapons.length?erDetailMetrics(mastery,weapons):'<p class="data-note">무기 숙련도 미제공</p>');
     out+=erDetailSection('숙련도',erDetailMetrics(mastery,[['201','방어'],['202','사냥'],['101','제작'],['102','탐색'],['103','이동']]));
     out+=erDetailSection('제작',erDetailMetrics(row,[['craftUncommon','고급'],['craftRare','희귀'],['craftEpic','영웅'],['craftLegend','전설'],['craftMythic','초월']]));
     out+=erDetailSection('피해량',erDetailMetrics(row,[['damageToPlayer','총 피해량 (생존자)'],['damageToPlayer_basic','기본 공격 피해량'],['damageToPlayer_skill','스킬 피해량'],['damageToPlayer_direct','고정 피해량'],['damageToPlayer_itemSkill','아이템 피해량'],['damageToMonster','야생동물 피해량'],['monsterKill','야생동물 처치'],['damageFromPlayer','받은 피해량'],['healAmount','회복량'],['protectAbsorb','보호막 흡수']]));
-    out+=erDetailSection('스탯',erDetailMetrics(row,[['maxHp','최대 체력'],['maxSp','최대 스태미나'],['attackPower','공격력'],['defense','방어력'],['hpRegen','체력 재생',2],['spRegen','스태미나 재생',2],['attackSpeed','공격 속도',2],['moveSpeed','이동 속도',2],['sightRange','시야 범위',2],['attackRange','기본 공격 사거리',2],['skillAmp','스킬 증폭'],['lifeSteal','피해 흡혈',2],['criticalStrikeChance','치명타 확률',2],['cooldownReduction','쿨다운 감소',2]]));
+    out+=erDetailSection('스탯',erDetailMetrics(row,[['maxHp','최대 체력'],['maxSp','최대 스태미나'],['attackPower','공격력'],['defense','방어력'],['hpRegen','체력 재생',2],['spRegen','스태미나 재생',2],['attackSpeed','공격 속도',2],['moveSpeed','이동 속도',2],['sightRange','시야 범위',2],['attackRange','기본 공격 사거리',2],['skillAmp','스킬 증폭'],['lifeSteal','피해 흡혈',2],['criticalStrikeChance','치명타 확률',2],['coolDownReduction','쿨다운 감소',2]]));
     out+=erDetailSection('플레이 기록',erDetailMetrics(row,[['addTelephotoCamera','망원 카메라 설치'],['removeTelephotoCamera','망원 카메라 제거'],['useHyperLoop','하이퍼루프'],['useSecurityConsole','보안 콘솔'],['fishingCount','낚시'],['tacticalSkillUseCount','전술 스킬 사용']]));
     return out+'<p class="detail-footnote">— 는 API 미제공 값입니다. 스탯은 경기 종료 시 기록 기준입니다.</p>';
 }

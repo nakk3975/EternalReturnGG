@@ -42,6 +42,9 @@ public class EternalReturnRestController {
 		return erBo.searchCharacter();
 	}
 	
+    @GetMapping("/weapon-types")
+    public String weaponTypes() throws URISyntaxException { return erBo.weaponTypes(); }
+
 	@GetMapping("/weapon")
 	public String weaponInfo() throws URISyntaxException {
 		return erBo.searchWeapon();

@@ -39,8 +39,9 @@
 		<c:import url="/WEB-INF/jsp/include/footer.jsp" />
 	</div>
 	
-	<script src="/static/js/getName.js"></script>
-	<script src="/static/js/assetImages.js?v=20260912-skills"></script>
+	<script src="/static/js/getName.js?v=20260914-contract"></script>
+	<script src="/static/js/weaponMetadata.js?v=20260914-contract"></script>
+<script src="/static/js/assetImages.js?v=20260914-contract"></script>
 	<script src="/static/js/fetchWeaponBgImg.js"></script>
 	<script src="/static/js/itemSlots.js?v=20260912-unit-fix"></script>
 	<script src="/static/js/siteData.js?v=20260912-audit"></script>

@@ -8,7 +8,7 @@ function erKda(row) {
     if (row.playerDeaths == null || row.playerKill == null || row.playerAssistant == null) return '—';
     return Number(row.playerDeaths) === 0 ? 'PERFECT' : erNumber((Number(row.playerKill)+Number(row.playerAssistant))/Number(row.playerDeaths),2);
 }
-const erWeapons = {1:['Glove','글러브'],2:['Tonfa','톤파'],3:['Bat','방망이'],4:['Whip','채찍'],5:['HighAngleFire','투척'],6:['DirectFire','암기'],7:['Bow','활'],8:['CrossBow','석궁'],9:['Pistol','권총'],10:['AssaultRifle','돌격 소총'],11:['SniperRifle','저격 소총'],13:['Hammer','망치'],14:['Axe','도끼'],15:['OneHandSword','단검'],16:['TwoHandSword','양손검'],17:['Polearm','폴암'],18:['DualSword','쌍검'],19:['Spear','창'],20:['Nunchaku','쌍절곤'],21:['Rapier','레이피어'],22:['Guitar','기타'],23:['Camera','카메라'],24:['Arcana','아르카나'],25:['VFArm','VF 의수']};
+
 const erMetric = (label,value) => '<div class="match-stat"><strong>'+value+'</strong><span>'+label+'</span></div>';
 function erRp(row) {
     if(Number(row.matchingMode)!==3) return '—';
@@ -38,13 +38,13 @@ function erPlayerCard(row, details = false, isOwn = false) {
     const duration = seconds == null ? '—' : Math.floor(seconds/60)+':'+String(Math.floor(seconds%60)).padStart(2,'0');
     const portrait = '<div class="match-character"><img data-character="'+erText(row.characterNum)+'" data-skin="'+erText(row.skinCode || 0)+'" src="'+erText(erCharacterImage(character?.name,row.skinCode))+'" alt="'+erText(name)+'"><span>'+erNumber(row.characterLevel)+'</span><small data-character-name="'+erText(row.characterNum)+'">'+erText(name)+'</small></div>';
     const stats = erMetric('TK / K / A',erNumber(row.teamKill ?? row.totalFieldKill)+' / '+erNumber(row.playerKill)+' / '+erNumber(row.playerAssistant)) + erMetric('딜량',erNumber(row.damageToPlayer)) + erMetric('RP',erRp(row)) + erMetric('루트 ID',erRoute(row));
-    if (details) return '<div class="participant-row '+(isOwn?'own-player':'')+'">'+portrait+'<div class="participant-name">'+(isOwn?'<b class="own-player-badge">나</b> ':'')+erText(row.nickname)+'<small>'+erText(erWeapons[row.bestWeapon]?.[1]||'무기군 미제공')+' · 숙련도 '+erNumber(row.bestWeaponLevel)+'</small></div>'+erLoadout(row)+erMetric('K / D / A',erNumber(row.playerKill)+' / '+erNumber(row.playerDeaths)+' / '+erNumber(row.playerAssistant))+erMetric('딜량',erNumber(row.damageToPlayer))+erMetric('RP',erRp(row))+erEquipmentHtml(row.equipment)+'</div>';
+    if (details) return '<div class="participant-row '+(isOwn?'own-player':'')+'">'+portrait+'<div class="participant-name">'+(isOwn?'<b class="own-player-badge">나</b> ':'')+erText(row.nickname)+'<small>'+erText(erWeaponInfo(row.bestWeapon)?.[1]||'무기군 미제공')+' · 숙련도 '+erNumber(row.bestWeaponLevel)+'</small></div>'+erLoadout(row)+erMetric('K / D / A',erNumber(row.playerKill)+' / '+erNumber(row.playerDeaths)+' / '+erNumber(row.playerAssistant))+erMetric('딜량',erNumber(row.damageToPlayer))+erMetric('RP',erRp(row))+erEquipmentHtml(row.equipment)+'</div>';
     return '<div class="one-record match-card '+(Number(row.gameRank)===1?'match-victory':Number(row.gameRank)<=3?'match-top':'')+'" role="button" tabindex="0" data-game-id="'+erText(row.gameId)+'" aria-expanded="false" aria-controls="game-'+erText(row.gameId)+'"><div class="match-result"><strong>#'+erNumber(row.gameRank)+'</strong><b>'+mode+'</b><small>'+duration+'</small><time title="'+erText(fullDate)+'" aria-label="'+erText(fullDate)+'">'+erText(played)+'</time></div>'+portrait+erLoadout(row)+'<div class="match-numbers">'+stats+'</div><div class="match-build">'+erEquipmentHtml(row.equipment)+'</div><span class="plus-btn" aria-hidden="true">⌄</span></div><div id="game-'+erText(row.gameId)+'" class="detail-box match-detail" hidden></div>';
 }
 function erPersonalDetails(row) {
     const metrics=[['KDA',erKda(row)],['무기 숙련도',erNumber(row.bestWeaponLevel)],['받은 피해',erNumber(row.damageFromPlayer)],['회복량',erNumber(row.healAmount)],['보호막 흡수',erNumber(row.protectAbsorb)],['야생동물 처치',erNumber(row.monsterKill)],['획득 크레딧',erNumber(row.totalGainVFCredit)],['사용 크레딧',erNumber(row.totalUseVFCredit)],['망원 카메라 설치',erNumber(row.addTelephotoCamera)],['망원 카메라 제거',erNumber(row.removeTelephotoCamera)],['기본 공격 피해',erNumber(row.damageToPlayer_basic)],['스킬 피해',erNumber(row.damageToPlayer_skill)],['최대 체력',erNumber(row.maxHp)],['공격력',erNumber(row.attackPower)],['방어력',erNumber(row.defense)],['공격 속도',erNumber(row.attackSpeed,2)],['이동 속도',erNumber(row.moveSpeed,2)],['최종 시야 범위',erNumber(row.sightRange,2)]];
     const traitCodes=[row.traitFirstCore,...(row.traitFirstSub||[]),...(row.traitSecondSub||[])].filter(erFinite);
-    return '<section class="personal-detail"><h3>내 경기 분석 <small>'+erText(row.serverName||'')+' · 경기 #'+erText(row.gameId)+'</small></h3><div class="detail-metrics">'+metrics.map(([k,v])=>erMetric(k,v)).join('')+'</div><div class="detail-traits"><strong>특성</strong>'+traitCodes.map(code=>'<span data-trait="'+code+'" title="특성 '+code+'"></span>').join('')+'<span>'+erText(erWeapons[row.bestWeapon]?.[1]||'무기군 미제공')+' · 루트 '+erRoute(row)+'</span></div>'+erSkillOrder(row)+'</section>';
+    return '<section class="personal-detail"><h3>내 경기 분석 <small>'+erText(row.serverName||'')+' · 경기 #'+erText(row.gameId)+'</small></h3><div class="detail-metrics">'+metrics.map(([k,v])=>erMetric(k,v)).join('')+'</div><div class="detail-traits"><strong>특성</strong>'+traitCodes.map(code=>'<span data-trait="'+code+'" title="특성 '+code+'"></span>').join('')+'<span>'+erText(erWeaponInfo(row.bestWeapon)?.[1]||'무기군 미제공')+' · 루트 '+erRoute(row)+'</span></div>'+erSkillOrder(row)+'</section>';
 }
 function erSkillOrder(row) {
     const entries=erLearnedSkills(row.skillOrderInfo,erPlayerNames);
@@ -76,7 +76,7 @@ function erEnhancePlayer(root) {
     root.querySelectorAll('[data-tactical],[data-trait],[data-trait-group],[data-weapon]').forEach(slot=>{
         if(!erAssetBase)return;
         let icon, name;
-        if(slot.dataset.weapon!=null){const w=erWeapons[slot.dataset.weapon];if(w){icon='Ico_Ability_'+w[0];name=w[1];}}
+        if(slot.dataset.weapon!=null){const w=erWeaponInfo(slot.dataset.weapon);if(w){icon='Ico_Ability_'+w[0];name=w[1];}}
         else if(slot.dataset.tactical!=null){icon=erTactical.get(slot.dataset.tactical)?.icon;name=erPlayerNames.get('Skill/Group/Name/'+icon?.match(/(\d+)$/)?.[1])||slot.title||'전술 스킬';}
         else if(slot.dataset.traitGroup!=null){const group=erTraits.get(slot.dataset.traitGroup)?.traitGroup; if(group){icon='TraitSkillIcon_'+group+'02';name=({Havoc:'파괴',Fortification:'저항',Support:'지원',Chaos:'혼돈'})[group]||group;}}
         else if(Number(slot.dataset.trait)>0){icon='TraitSkillIcon_'+(Number(slot.dataset.trait)-1);name=erPlayerNames.get('Skill/Group/Name/'+(Number(slot.dataset.trait)-1))||erPlayerNames.get('Trait/Name/'+slot.dataset.trait)||'특성 '+slot.dataset.trait;}
@@ -233,7 +233,7 @@ async function startPlayer() {
     const getPage=erMatchPages(userId);
     const prefetchNext=()=>{if(next)getPage(next).catch(()=>{});};
     const assets=loadAssetConfig();
-    const metadata=Promise.allSettled([assets,erStatic('/er/character'),erDictionary(),erLoadEquipment(),erStatic('/er/tacticalSkill'),erStatic('/er/trait')]).then(result=>{
+    const metadata=Promise.allSettled([assets,erStatic('/er/character'),erDictionary(),erLoadEquipment(),erStatic('/er/tacticalSkill'),erStatic('/er/trait'),erLoadWeaponMetadata()]).then(result=>{
         if(result[1].status==='fulfilled')for(const c of result[1].value.data||[])erPlayerCharacters.set(String(c.code),c);
         if(result[2].status==='fulfilled')erPlayerNames=result[2].value;
         if(result[3].status==='fulfilled')erPlayerEquipment=result[3].value;

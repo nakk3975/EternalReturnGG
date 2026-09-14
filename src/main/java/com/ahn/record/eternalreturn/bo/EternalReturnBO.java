@@ -115,6 +115,8 @@ public class EternalReturnBO {
         return requestCached("/v2/data/" + table, false, STATIC_CACHE_MS);
     }
 
+    public String weaponTypes() throws URISyntaxException { return requestCached("/v2/data/WeaponTypeInfo", false, STATIC_CACHE_MS); }
+
     public String materials() throws URISyntaxException { return requestCached("/v2/data/ItemMisc", false, STATIC_CACHE_MS); }
 
     public String searchWeapon() throws URISyntaxException {
