@@ -1,0 +1,119 @@
+{
+  "checkedAt": "2026-09-14T01:50:00Z",
+  "environment": "https://eternalreturngg.onrender.com",
+  "nickname": "hoyoung",
+  "mode": "deployed-proxy-may-use-cache",
+  "flow": {
+    "nicknameSearch": true,
+    "profile": true,
+    "recentCards": 10,
+    "expandedDetails": 10,
+    "participantRows": 234
+  },
+  "gameContracts": [
+    {
+      "code": 200,
+      "errors": [],
+      "missingOptional": [],
+      "rows": 24
+    },
+    {
+      "code": 200,
+      "errors": [],
+      "missingOptional": [],
+      "rows": 24
+    },
+    {
+      "code": 200,
+      "errors": [],
+      "missingOptional": [],
+      "rows": 24
+    },
+    {
+      "code": 200,
+      "errors": [],
+      "missingOptional": [],
+      "rows": 24
+    },
+    {
+      "code": 200,
+      "errors": [],
+      "missingOptional": [],
+      "rows": 24
+    },
+    {
+      "code": 200,
+      "errors": [],
+      "missingOptional": [],
+      "rows": 21
+    },
+    {
+      "code": 200,
+      "errors": [],
+      "missingOptional": [],
+      "rows": 21
+    },
+    {
+      "code": 200,
+      "errors": [],
+      "missingOptional": [],
+      "rows": 24
+    },
+    {
+      "code": 200,
+      "errors": [],
+      "missingOptional": [],
+      "rows": 24
+    },
+    {
+      "code": 200,
+      "errors": [],
+      "missingOptional": [],
+      "rows": 24
+    }
+  ],
+  "catalogs": {
+    "armor": {
+      "rows": 252,
+      "sampleCodes": [
+        202521,
+        202522,
+        201701
+      ]
+    },
+    "skins": {
+      "rows": 418,
+      "sampleCodes": [
+        1089001,
+        1090000,
+        1091000
+      ]
+    },
+    "traits": {
+      "rows": 148,
+      "sampleCodes": [
+        7923703,
+        7923803,
+        7923903
+      ]
+    },
+    "weapons": {
+      "rows": 418,
+      "sampleCodes": [
+        103702,
+        122701,
+        122702
+      ]
+    }
+  },
+  "weaponTypes": {
+    "rows": 23,
+    "hasNumericCode": false
+  },
+  "limitations": [
+    "Not a direct fresh-key upstream run; deployment cache may have answered requests.",
+    "Only one player and current ranked games; all seasons/modes not verified.",
+    "Contracts cover observed top-level types, not full nested log semantics or all UI endpoint families.",
+    "Catalog samples and selected images were checked; all latest released items/skins/traits not visually verified."
+  ]
+}

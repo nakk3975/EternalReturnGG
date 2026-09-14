@@ -1,0 +1,242 @@
+{
+  "types": [
+    "object"
+  ],
+  "required": true,
+  "fields": {
+    "adaptiveForce": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "attackPower": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "attackSpeed": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "attackSpeedLimit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "attackSpeedMin": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "attackSpeedRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "charArcheType1": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "charArcheType2": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "code": {
+      "types": [
+        "number"
+      ],
+      "required": true
+    },
+    "comboTime": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "defense": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "forcedComboAttack": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "hpRegen": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "increaseBasicAttackDamageRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "initExtraPoint": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "initStateDisplayIndex": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "isUIPlayerStatusBarStaminaFilled": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "isUIPlayerStatusBarVitalityFilled": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "lobbySubObject": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "localScaleInCutscene": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "localScaleInVictoryScene": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "maxExtraPoint": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "maxHp": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "maxVp": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "moveSpeed": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "name": {
+      "types": [
+        "string"
+      ],
+      "required": true
+    },
+    "pathingRadius": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "preventBasicAttackDamagedRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "preventSkillDamagedRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "radius": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "resource": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "sightRange": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "skillAmp": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "skillAmpRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "strLearnStartSkill": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "strUsePointLearnStartSkill": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "uiHeight": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "vpRegen": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "weaponRangeType": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    }
+  }
+}

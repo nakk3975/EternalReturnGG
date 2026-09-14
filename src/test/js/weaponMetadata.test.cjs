@@ -1,0 +1,17 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const ctx=vm.createContext({});vm.runInContext(fs.readFileSync('src/main/resources/static/js/weaponMetadata.js','utf8'),ctx);
+assert.equal(ctx.erWeaponInfo(1)[0],'Glove');
+ctx.erInstallWeaponMetadata([{code:1,type:'ChangedGlove'},{code:999,type:'FutureWeapon'}],new Map([['WeaponType/FutureWeapon','신규 무기']]));
+assert.equal(ctx.erWeaponInfo(1)[0],'ChangedGlove');assert.equal(ctx.erWeaponInfo(999)[1],'신규 무기');
+assert.throws(()=>ctx.erInstallWeaponMetadata([{code:1,type:'bad/path'}]));
+assert.equal(ctx.erWeaponInfo(999)[0],'FutureWeapon');
+assert.throws(()=>ctx.erInstallWeaponMetadata([{code:1,type:'A'},{code:1,type:'B'}]));
+assert.equal(ctx.erWeaponInfo(0),undefined);
+console.log('PASS: metadata overrides, new codes, safe icon tokens, atomic invalid response handling');
+const live=require('../fixtures/api-2026/weapon-types.json');
+assert.equal(ctx.erInstallWeaponMetadata(live.data),23);
+assert.equal(ctx.erWeaponInfo(1)[1],'글러브');
+assert.equal(ctx.erWeaponInfo('VFArm')[0],'VFArm');
+assert.equal(ctx.erInstallWeaponMetadata([{type:'FutureWeapon'}]),1);
+assert.equal(ctx.erWeaponInfo('FutureWeapon')[0],'FutureWeapon');
+console.log('PASS: actual API without numeric code, legacy ID bridge and unknown future type');

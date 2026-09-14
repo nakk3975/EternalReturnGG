@@ -1,0 +1,60 @@
+{
+  "code": 200,
+  "count": 418,
+  "data": [
+    {
+      "characterCode": 89,
+      "code": 1089001,
+      "effectsPath": "Effects/Craver/S001",
+      "eventFree": false,
+      "fxSoundPath": "Sound/FX/Craver/S001",
+      "grade": 3,
+      "index": 1,
+      "indicatorPath": "indicator/Craver/S000",
+      "name": "Craver",
+      "objectPath": "",
+      "projectilesPath": "Projectiles/Craver/S001",
+      "purchaseType": "SHOP",
+      "useBotSkin": false,
+      "voicePath": "Sound/VOICE/Craver/S000",
+      "weaponMountCommonPath": "Weapons/Common/C000",
+      "weaponMountPath": "Weapons/Craver/S001"
+    },
+    {
+      "characterCode": 90,
+      "code": 1090000,
+      "effectsPath": "Effects/Lucia/S000",
+      "eventFree": false,
+      "fxSoundPath": "Sound/FX/Lucia/S000",
+      "grade": 1,
+      "index": 0,
+      "indicatorPath": "Indicator/Lucia/S000",
+      "name": "Lucia",
+      "objectPath": "Object/Lucia/S000",
+      "projectilesPath": "Projectiles/Lucia/S000",
+      "purchaseType": "FREE",
+      "useBotSkin": false,
+      "voicePath": "Sound/VOICE/Lucia/S000",
+      "weaponMountCommonPath": "Weapons/Common/C000",
+      "weaponMountPath": "Weapons/Lucia/S000"
+    },
+    {
+      "characterCode": 91,
+      "code": 1091000,
+      "effectsPath": "Effects/Seres/S000",
+      "eventFree": false,
+      "fxSoundPath": "Sound/FX/Seres/S000",
+      "grade": 1,
+      "index": 0,
+      "indicatorPath": "",
+      "name": "Seres",
+      "objectPath": "Object/Seres/S000",
+      "projectilesPath": "Projectiles/Seres/S000",
+      "purchaseType": "FREE",
+      "useBotSkin": false,
+      "voicePath": "Sound/VOICE/Seres/S000",
+      "weaponMountCommonPath": "Weapons/Common/C000",
+      "weaponMountPath": "Weapons/Seres/S000"
+    }
+  ]
+}

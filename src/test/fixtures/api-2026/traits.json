@@ -1,0 +1,30 @@
+{
+  "code": 200,
+  "count": 148,
+  "data": [
+    {
+      "active": true,
+      "code": 7923703,
+      "openAccountLv": 9999,
+      "traitGroup": "Cobalt",
+      "traitSortOrder": 1,
+      "traitType": "Cobalt"
+    },
+    {
+      "active": true,
+      "code": 7923803,
+      "openAccountLv": 9999,
+      "traitGroup": "Cobalt",
+      "traitSortOrder": 1,
+      "traitType": "Cobalt"
+    },
+    {
+      "active": true,
+      "code": 7923903,
+      "openAccountLv": 9999,
+      "traitGroup": "Cobalt",
+      "traitSortOrder": 1,
+      "traitType": "Cobalt"
+    }
+  ]
+}

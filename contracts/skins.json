@@ -1,0 +1,104 @@
+{
+  "types": [
+    "object"
+  ],
+  "required": true,
+  "fields": {
+    "characterCode": {
+      "types": [
+        "number"
+      ],
+      "required": true
+    },
+    "code": {
+      "types": [
+        "number"
+      ],
+      "required": true
+    },
+    "effectsPath": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "eventFree": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "fxSoundPath": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "grade": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "index": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "indicatorPath": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "name": {
+      "types": [
+        "string"
+      ],
+      "required": true
+    },
+    "objectPath": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "projectilesPath": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "purchaseType": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "useBotSkin": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "voicePath": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "weaponMountCommonPath": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "weaponMountPath": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    }
+  }
+}

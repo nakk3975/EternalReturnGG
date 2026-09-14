@@ -3,7 +3,7 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const context={document:{addEventListener(){}},erAssetBase:'https://assets.example/'};
 vm.createContext(context);
-for(const file of ['siteData.js','player.js','matchTabs.js'])vm.runInContext(fs.readFileSync('src/main/resources/static/js/'+file,'utf8'),context);
+for(const file of ['siteData.js','weaponMetadata.js','player.js','matchTabs.js'])vm.runInContext(fs.readFileSync('src/main/resources/static/js/'+file,'utf8'),context);
 assert.deepEqual(JSON.parse(JSON.stringify(context.erDetailObject('{"12":2}'))),{'12':2});
 assert.deepEqual(JSON.parse(JSON.stringify(context.erDetailObject('broken'))),{});
 const own={gameId:50,nickname:'<test>',teamNumber:1,gameRank:1,totalTime:125,totalVFCredits:[10,20,30,0,0],usedVFCredits:[0,5,10,0,0],killDetails:'{}'};

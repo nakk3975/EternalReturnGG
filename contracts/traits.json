@@ -1,0 +1,44 @@
+{
+  "types": [
+    "object"
+  ],
+  "required": true,
+  "fields": {
+    "active": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "code": {
+      "types": [
+        "number"
+      ],
+      "required": true
+    },
+    "openAccountLv": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "traitGroup": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "traitSortOrder": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "traitType": {
+      "types": [
+        "string"
+      ],
+      "required": true
+    }
+  }
+}

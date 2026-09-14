@@ -3,7 +3,7 @@ const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const context = {document:{addEventListener(){}}, erAssetBase:'https://example.test/'};
 vm.createContext(context);
-for (const file of ['siteData.js','player.js']) vm.runInContext(fs.readFileSync('src/main/resources/static/js/'+file,'utf8'),context);
+for (const file of ['siteData.js','weaponMetadata.js','player.js']) vm.runInContext(fs.readFileSync('src/main/resources/static/js/'+file,'utf8'),context);
 assert.equal(context.erKda({}), '—');
 assert.equal(context.erKda({playerDeaths:0,playerKill:3,playerAssistant:2}), 'PERFECT');
 assert.equal(context.erKda({playerDeaths:2,playerKill:3,playerAssistant:2}), '2.5');

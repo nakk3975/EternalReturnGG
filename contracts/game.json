@@ -1,0 +1,1208 @@
+{
+  "types": [
+    "object"
+  ],
+  "required": true,
+  "fields": {
+    "accountLevel": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "activelyGainedCredits": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "addSurveillanceCamera": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "addTelephotoCamera": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "amplifierToMonster": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "attackPower": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "attackRange": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "attackSpeed": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "baseExp": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZone1AreaCode": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZone1BattleMark": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZone1BattleMarkCount": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZone1Winner": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZone2AreaCode": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZone2BattleMark": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZone2BattleMarkCount": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZone2Winner": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZone3AreaCode": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZone3BattleMark": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZone3BattleMarkCount": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZone3Winner": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZoneDeaths": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "battleZonePlayerKill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "bestWeapon": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "bestWeaponLevel": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "bonusCoin": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "bonusExp": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "botAdded": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "botRemain": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "boughtInfusion": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "ccTimeToPlayer": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "characterLevel": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "characterNum": {
+      "types": [
+        "number"
+      ],
+      "required": true
+    },
+    "collectItemForLog": {
+      "types": [
+        "array"
+      ],
+      "required": false
+    },
+    "coolDownReduction": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "craftEpic": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "craftLegend": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "craftMythic": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "craftRare": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "craftUncommon": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "creditSource": {
+      "types": [
+        "object"
+      ],
+      "required": false
+    },
+    "criticalStrikeChance": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "criticalStrikeDamage": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageFromMonster": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageFromPlayer": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageFromPlayer_basic": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageFromPlayer_direct": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageFromPlayer_itemSkill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageFromPlayer_skill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageFromPlayer_trap": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageFromPlayer_uniqueSkill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageOffsetedByShield_Monster": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageOffsetedByShield_Player": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToMonster": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToMonster_basic": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToMonster_direct": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToMonster_itemSkill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToMonster_skill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToMonster_trap": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToMonster_uniqueSkill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToPlayer": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToPlayer_Shield": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToPlayer_basic": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToPlayer_direct": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToPlayer_itemSkill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToPlayer_skill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToPlayer_trap": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "damageToPlayer_uniqueSkill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "deathDetails": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "deathsPhaseOne": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "deathsPhaseThree": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "deathsPhaseTwo": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "defense": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "duration": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "equipFirstItemForLog": {
+      "types": [
+        "object"
+      ],
+      "required": false
+    },
+    "equipment": {
+      "types": [
+        "object"
+      ],
+      "required": false
+    },
+    "equipmentGrade": {
+      "types": [
+        "object"
+      ],
+      "required": false
+    },
+    "escapeState": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "eventMissionResult": {
+      "types": [
+        "object"
+      ],
+      "required": false
+    },
+    "expireDtm": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "fishingCount": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "foodCraftCount": {
+      "types": [
+        "array"
+      ],
+      "required": false
+    },
+    "gainExp": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "gainedNormalMmrKFactor": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "gameId": {
+      "types": [
+        "number"
+      ],
+      "required": true
+    },
+    "gameRank": {
+      "types": [
+        "number"
+      ],
+      "required": true
+    },
+    "giveUp": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "healAmount": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "hpRegen": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "infusionReRollUseVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "infusionRelicUseVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "infusionStoreUseVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "infusionTraitUseVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "itemShredderGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "itemTransferredConsole": {
+      "types": [
+        "array"
+      ],
+      "required": false
+    },
+    "itemTransferredDrone": {
+      "types": [
+        "array"
+      ],
+      "required": false
+    },
+    "killAlphaGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killBatGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killBearGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killBoarGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killChickenGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killDetails": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "killDroneGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killGamma": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "killGammaGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killItemBountyGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killMonsters": {
+      "types": [
+        "object"
+      ],
+      "required": false
+    },
+    "killOmegaGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killPlayerGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killTurretGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killWicklineGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killWildDogGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killWolfGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killer": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "killsPhaseOne": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killsPhaseThree": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "killsPhaseTwo": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "kioskFromEscapeKeyUseVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "kioskFromMaterialUseVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "kioskFromRevivalUseVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "language": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "lifeSteal": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "masteryLevel": {
+      "types": [
+        "object"
+      ],
+      "required": false
+    },
+    "matchSize": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "matchingMode": {
+      "types": [
+        "number"
+      ],
+      "required": true
+    },
+    "matchingTeamMode": {
+      "types": [
+        "number"
+      ],
+      "required": true
+    },
+    "maxHp": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "maxSp": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "mmrAfter": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "mmrAvg": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "mmrBefore": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "mmrGain": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "monsterKill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "moveSpeed": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "nickname": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "normalLifeSteal": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "outOfCombatMoveSpeed": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "placeOfStart": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "playTime": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "playerAssistant": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "playerDeaths": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "playerKill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "preMade": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "protectAbsorb": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "rankPoint": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "remoteDroneUseVFCreditAlly": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "remoteDroneUseVFCreditMySelf": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "removeSurveillanceCamera": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "removeTelephotoCamera": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "restrictedAreaAccelerated": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "routeIdOfStart": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "routeSlotId": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "safeAreas": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "scoredPoint": {
+      "types": [
+        "array"
+      ],
+      "required": false
+    },
+    "seasonId": {
+      "types": [
+        "number"
+      ],
+      "required": true
+    },
+    "serverName": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "sightRange": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "skillLevelInfo": {
+      "types": [
+        "object"
+      ],
+      "required": false
+    },
+    "skillLifeSteal": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "skillOrderInfo": {
+      "types": [
+        "object"
+      ],
+      "required": false
+    },
+    "skinCode": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "spRegen": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "startDtm": {
+      "types": [
+        "string"
+      ],
+      "required": true
+    },
+    "sumUsedVFCredits": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "survivableTime": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "tacticalSkillGroup": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "tacticalSkillLevel": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "tacticalSkillUpgradeUseVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "teamElimination": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "teamKill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "teamNumber": {
+      "types": [
+        "number"
+      ],
+      "required": true
+    },
+    "teamRecover": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "teamSpectator": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "totalDoubleKill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "totalExtraKill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "totalFieldKill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "totalGainVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "totalQuadraKill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "totalTime": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "totalTripleKill": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "totalTurbineTakeOver": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "totalUseVFCredit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "totalVFCredits": {
+      "types": [
+        "array"
+      ],
+      "required": false
+    },
+    "traitFirstCore": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "traitFirstSub": {
+      "types": [
+        "array"
+      ],
+      "required": false
+    },
+    "traitSecondSub": {
+      "types": [
+        "array"
+      ],
+      "required": false
+    },
+    "trapDamage": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "useEmoticonCount": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "useHyperLoop": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "useSecurityConsole": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "usedNormalHealPack": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "usedNormalShieldPack": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "usedPairLoop": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "usedReinforceShieldPack": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "usedReinforcedHealPack": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "usedVFCredits": {
+      "types": [
+        "array"
+      ],
+      "required": false
+    },
+    "versionMajor": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "versionMinor": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "victory": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "watchTime": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    }
+  }
+}

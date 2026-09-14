@@ -1,0 +1,524 @@
+{
+  "types": [
+    "object"
+  ],
+  "required": true,
+  "fields": {
+    "adaptiveForce": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "adaptiveForceByLevel": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "alertInSpectator": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "armorType": {
+      "types": [
+        "string"
+      ],
+      "required": true
+    },
+    "attackPower": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "attackPowerByLv": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "attackRange": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "attackSpeedRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "attackSpeedRatioByLv": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "autoDisappear": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "code": {
+      "types": [
+        "number"
+      ],
+      "required": true
+    },
+    "cooldownLimit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "cooldownReduction": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "corpseAndWorldItemEffectEnable": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "craftAnimTrigger": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "creditValueWhenConvertedToBounty": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "criticalStrikeChance": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "criticalStrikeDamage": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "defense": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "defenseByLv": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "exchange": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "exclusiveProducer": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "gradeBgOverride": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "healerGiveHpHealRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "hpHealedIncreaseRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "hpRegen": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "hpRegenRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "increaseBasicAttackDamage": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "increaseBasicAttackDamageByLv": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "increaseBasicAttackDamageRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "increaseBasicAttackDamageRatioByLv": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "initialCount": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "isCanMonsterAreaItemDrop": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "isCompletedItem": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "isRemovedFromPlayerCorpseInventoryWhenPlayerKilled": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "itemGrade": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "itemType": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "itemUsableType": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "itemUsableValueList": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "lifeSteal": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "makeCustomAction": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "makeMaterial1": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "makeMaterial2": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "manufacturableType": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "markingType": {
+      "types": [
+        "string"
+      ],
+      "required": false
+    },
+    "maxHp": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "maxHpByLv": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "modeType": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "moveSpeed": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "moveSpeedOutOfCombat": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "moveSpeedRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "normalLifeSteal": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "notDisarm": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "penetrationDefense": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "penetrationDefenseRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "preventBasicAttackDamaged": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "preventBasicAttackDamagedByLv": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "preventBasicAttackDamagedRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "preventBasicAttackDamagedRatioByLv": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "preventCriticalStrikeDamaged": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "preventSkillDamaged": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "preventSkillDamagedByLv": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "preventSkillDamagedRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "preventSkillDamagedRatioByLv": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "restoreItemWhenResurrected": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "showInItemBook": {
+      "types": [
+        "boolean"
+      ],
+      "required": false
+    },
+    "sightRange": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "skillAmp": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "skillAmpByLevel": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "skillAmpRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "skillAmpRatioByLevel": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "skillLifeSteal": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "slowResistRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "stackable": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "tacticalCooldownReduction": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "ultCooldownReduction": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "uniqueAttackRange": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "uniqueCooldownLimit": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "uniqueHpHealedIncreaseRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "uniqueLifeSteal": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "uniqueMoveSpeed": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "uniquePenetrationDefense": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "uniquePenetrationDefenseRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "uniqueSkillAmpRatio": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "uniqueTenacity": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    },
+    "weaponCooldownReduction": {
+      "types": [
+        "number"
+      ],
+      "required": false
+    }
+  }
+}

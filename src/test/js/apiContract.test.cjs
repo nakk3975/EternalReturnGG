@@ -1,0 +1,11 @@
+const {validate}=require('../../../scripts/api-contract.cjs');
+const assert=require('node:assert/strict');
+const schema={types:['object'],required:true,fields:{id:{types:['number'],required:true},rp:{types:['number']}}};
+assert.equal(validate({},schema).errors.length,1);
+assert.deepEqual(validate({id:1},schema).missingOptional,['$.rp']);
+assert.equal(validate({id:1,rp:'bad'},schema).errors.length,1);
+assert.equal(validate({id:1,rp:0},schema).errors.length,0);
+assert.equal(validate({id:1,rp:null},schema).errors.length,0);
+assert.equal(validate({id:NaN},schema).errors.length,1);
+assert.equal(validate([{id:1},{id:'wrong'}],{types:['array'],items:schema}).errors.length,1);
+console.log('PASS: required/optional/null/zero/type/nested contracts');
