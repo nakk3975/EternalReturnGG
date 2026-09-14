@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="/static/css/dataPages.css?v=20260914-route-copy">
 <link rel="stylesheet" href="/static/css/multi.css?v=1">
 <link rel="stylesheet" href="/static/css/routePlanner.css?v=20260914-release3">
-<link rel="stylesheet" href="/static/css/animalMap.css?v=20260914-release3">
+<link rel="stylesheet" href="/static/css/animalMap.css?v=20260914-time1">
 </head>
 <body>
 <c:import url="/WEB-INF/jsp/include/header.jsp" />
@@ -35,7 +35,7 @@
 <script src="/static/js/catalogPages.js?v=20260914-craft-readable"></script>
 <script src="/static/js/multi.js?v=1"></script>
 <script src="/static/js/routePlanner.js?v=20260914-simulator5"></script>
-<script src="/static/js/animalMap.js?v=20260914-release3"></script>
+<script src="/static/js/animalMap.js?v=20260914-time1"></script>
 <script src="/static/js/explorer.js?v=20260914-tools2"></script>
 </body>
 </html>
