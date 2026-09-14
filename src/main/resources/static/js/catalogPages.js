@@ -109,7 +109,7 @@ async function erCharacterPage() {
     window.addEventListener('popstate',()=>select(decodeURIComponent(location.pathname.split('/')[3]||''),new URLSearchParams(location.search).get('tab')));
 }
 function erRoutesMarkup(routes,names) {
-    return routes.length ? '<div class="route-list">'+routes.map(r=>'<article class="route-list-row"><div><span class="route-number">#'+erText(r.id)+'</span><h3>'+erText(r.title)+'</h3><p>'+erText(r.userNickname)+'</p></div><div class="route-list-items"><span>아이템 빌드</span><div class="item-slots">'+(String(r.weaponCodes||'').match(/\d{6}/g)||[]).slice(0,5).map(erItemHtml).join('')+'</div></div><button class="copy-route" data-route-id="'+erText(r.id)+'">번호 복사</button></article>').join('')+'</div>':'<p class="empty-state">현재 제공되는 추천 루트가 없습니다.</p>';
+    return routes.length ? '<div class="route-list">'+routes.map(r=>'<article class="route-list-row"><div><span class="route-number">#'+erText(r.id)+'</span><h3>'+erText(r.title)+'</h3><p>'+erText(r.userNickname)+'</p></div><div class="route-list-items"><span>아이템 빌드</span><div class="item-slots">'+(String(r.weaponCodes||'').match(/\d{6}/g)||[]).slice(0,5).map(erItemHtml).join('')+'</div></div><a class="sim-route-link" href="/er/route-planner?routeId='+erText(r.id)+'">시뮬레이터에서 열기</a><button class="copy-route" data-route-id="'+erText(r.id)+'">번호 복사</button></article>').join('')+'</div>':'<p class="empty-state">현재 제공되는 추천 루트가 없습니다.</p>';
 }
 async function erRoutesPage() {
     const root=erPageShell('루트 검색','실험체와 루트 이름으로 추천 빌드를 찾아보세요.');root.className='route-browser';

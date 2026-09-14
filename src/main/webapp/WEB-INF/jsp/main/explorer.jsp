@@ -12,8 +12,8 @@
     <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
 <link rel="stylesheet" href="/static/css/dataPages.css?v=20260912-stat-filters">
 <link rel="stylesheet" href="/static/css/multi.css?v=1">
-<link rel="stylesheet" href="/static/css/routePlanner.css?v=20260914-tools2">
-<link rel="stylesheet" href="/static/css/animalMap.css?v=20260914-map">
+<link rel="stylesheet" href="/static/css/routePlanner.css?v=20260914-release3">
+<link rel="stylesheet" href="/static/css/animalMap.css?v=20260914-release3">
 </head>
 <body>
 <c:import url="/WEB-INF/jsp/include/header.jsp" />
@@ -32,10 +32,10 @@
 <script src="/static/js/assetImages.js?v=20260914-fast-tier"></script>
 <script src="/static/js/itemSlots.js?v=20260914-speed"></script>
 <script src="/static/js/siteData.js?v=20260914-fast-tier"></script>
-<script src="/static/js/catalogPages.js?v=20260914-fast-tier"></script>
+<script src="/static/js/catalogPages.js?v=20260914-release3"></script>
 <script src="/static/js/multi.js?v=1"></script>
-<script src="/static/js/routePlanner.js?v=20260914-tools2"></script>
-<script src="/static/js/animalMap.js?v=20260914-map"></script>
+<script src="/static/js/routePlanner.js?v=20260914-release3"></script>
+<script src="/static/js/animalMap.js?v=20260914-release3"></script>
 <script src="/static/js/explorer.js?v=20260914-tools2"></script>
 </body>
 </html>

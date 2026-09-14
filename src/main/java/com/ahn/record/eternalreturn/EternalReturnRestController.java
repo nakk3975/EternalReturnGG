@@ -97,6 +97,11 @@ public class EternalReturnRestController {
         return erBo.routeData(table);
     }
 
+    @GetMapping("/route/{id}")
+    public String route(@org.springframework.web.bind.annotation.PathVariable("id") long id) throws URISyntaxException {
+        return erBo.searchRoute(id);
+    }
+
     @GetMapping("/materials")
     public String materials() throws URISyntaxException {return erBo.materials();}
 
@@ -118,8 +123,8 @@ public class EternalReturnRestController {
     @GetMapping("/seasons")
     public String seasons() throws URISyntaxException {return erBo.seasons();}
 	@GetMapping("/userRank")
-	public String userRank(@RequestParam("userNum") String userId, @RequestParam(value="season",required=false) Integer season) throws URISyntaxException {
-		return season==null?erBo.userRank(userId):erBo.userRank(userId,season);
+	public String userRank(@RequestParam("userNum") String userId, @RequestParam(value="season",required=false) Integer season, @RequestParam(value="refresh",defaultValue="false") boolean refresh) throws URISyntaxException {
+		return refresh && season==null?erBo.refreshUserRank(userId):season==null?erBo.userRank(userId):erBo.userRank(userId,season);
 	}
 	
 	@GetMapping("/game")

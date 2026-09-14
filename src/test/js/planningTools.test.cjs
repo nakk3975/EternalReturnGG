@@ -16,3 +16,9 @@ const full=context.erRecommendHunt({x:0,y:0},camps,{steps:5});assert.equal(new S
 vm.runInContext(fs.readFileSync('src/main/resources/static/js/siteData.js','utf8'),context);vm.runInContext(fs.readFileSync('src/main/resources/static/js/profileTabs.js','utf8'),context);
 const skins=context.erSkinUsage([{characterNum:1,skinCode:0},{characterNum:1,skinCode:0},{characterNum:1,skinCode:1001},{characterNum:1,skinCode:null}]);assert.equal(skins.length,2);assert.equal(skins[0].games,2);assert.equal(skins[0].skin,0);
 console.log('PASS: required-material routes, fixed starts, missing supply, hunt exclusions, no duplicate rewards, skin aggregation');
+const equip=new Map([['100001',{weaponType:'Axe'}],['200001',{armorType:'Chest'}],['200002',{armorType:'Head'}]]);
+const decoded=context.erDecodeRoute({weaponCodes:'[100001,200001,999999]',lateGameItemCodes:'{"0":[200002]}',paths:'["a","a","unknown"]',traitCodes:'[7000201]'},equip,areas);
+assert.equal(decoded.early.size,2);assert.equal(decoded.early.get('Weapon'),'100001');assert.equal(decoded.late.get('Head'),'200002');assert.deepEqual([...decoded.route],['a']);
+assert.deepEqual([...context.erAllowedWeapons(1,[{code:1,weapon1:'Axe',weapon2:'None'}])],['Axe']);
+assert.equal(context.erDecodeRoute({weaponCodes:'broken'},equip,areas).early.size,0);
+const observed=context.erWildlifeCamps();assert(observed.length>120);assert.equal(new Set(observed.map(c=>c.id)).size,observed.length);assert(observed.every(c=>Number.isFinite(c.x)&&Number.isFinite(c.y)&&c.x>=0&&c.x<=100&&c.y>=0&&c.y<=100));

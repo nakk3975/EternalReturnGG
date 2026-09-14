@@ -275,7 +275,7 @@ async function startPlayer() {
     document.querySelector('#refresh').onclick=async()=>{
         const button=document.querySelector('#refresh');button.disabled=true;
         profile.message('최신 전적을 확인하고 있습니다…');
-        try {const data=await erRequest('/er/user/refresh?userNum='+encoded);if(!Array.isArray(data.userGames))throw new Error('전적 응답 오류');rows=data.userGames;next=data.next||null;placementRows=rows.slice(0,20);render();updateHero();profile.update({rows,snapshot:data});const rank=await erRequest('/er/userRank?userNum='+encoded);await renderRank(rank);}
+        try {const data=await erRequest('/er/user/refresh?userNum='+encoded);if(!Array.isArray(data.userGames))throw new Error('전적 응답 오류');rows=data.userGames;next=data.next||null;placementRows=rows.slice(0,20);render();updateHero();profile.update({rows,snapshot:data});const rank=await erRequest('/er/userRank?refresh=true&userNum='+encoded);await renderRank(rank);}
         catch(error){profile.message('갱신 실패 · '+error.message);}
         finally{button.disabled=false;}
     };

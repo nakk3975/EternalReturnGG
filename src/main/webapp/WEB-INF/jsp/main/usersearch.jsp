@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="/static/css/style.css?v=20260911-analysis-final" type="text/css">
 <link rel="stylesheet" href="/static/css/dataPages.css?v=20260911-analysis-final">
-<link rel="stylesheet" href="/static/css/player.css?v=20260914-tools2">
+<link rel="stylesheet" href="/static/css/player.css?v=20260914-release3">
 <link rel="stylesheet" href="/static/css/matchTabs.css?v=20260912-ux">
 <link rel="stylesheet" href="/static/css/seasonHistory.css?v=20260912-seasons">
 </head>
@@ -37,7 +37,7 @@
 <script src="/static/js/siteData.js?v=20260914-fast-tier"></script>
 <script src="/static/js/matchDetails.js"></script>
 <script src="/static/js/profileTabs.js?v=20260914-profile"></script>
-<script src="/static/js/player.js?v=20260914-tools2"></script>
+<script src="/static/js/player.js?v=20260914-release3"></script>
 <script src="/static/js/matchTabs.js?v=20260914-fast-tier"></script>
 <script src="/static/js/seasonHistory.js?v=20260912-season-names"></script>
 </body></html>
