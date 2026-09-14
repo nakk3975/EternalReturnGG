@@ -13,6 +13,28 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 class PersistentCacheTests {
+    @Test void expiredStatisticsDoNotWaitForADatabaseRefresh() throws Exception {
+        var cache=new PersistentApiCache();
+        var entered=new java.util.concurrent.CountDownLatch(1);
+        var release=new java.util.concurrent.CountDownLatch(1);
+        try {
+            ReflectionTestUtils.setField(cache,"url","https://cache.test");
+            ReflectionTestUtils.setField(cache,"token","test");
+            var old=new com.fasterxml.jackson.databind.ObjectMapper().readTree("{\"rows\":[{\"games\":1}]}");
+            ReflectionTestUtils.setField(cache,"statistics",old);
+            ReflectionTestUtils.setField(cache,"statisticsExpires",System.currentTimeMillis()-1000);
+            var server=MockRestServiceServer.bindTo((RestTemplate)ReflectionTestUtils.getField(cache,"client")).build();
+            server.expect(requestTo("https://cache.test")).andRespond(request->{
+                entered.countDown();
+                try { release.await(3,java.util.concurrent.TimeUnit.SECONDS); }catch(InterruptedException e){Thread.currentThread().interrupt();}
+                return withSuccess("{\"body\":{\"rows\":[{\"games\":2}]}}",MediaType.APPLICATION_JSON).createResponse(request);
+            });
+            assertTrue(cache.statistics().path("_cacheStale").asBoolean());
+            assertTrue(entered.await(1,java.util.concurrent.TimeUnit.SECONDS));
+            assertEquals(1,cache.statistics().path("rows").get(0).path("games").asInt());
+            assertFalse(old.has("_cacheStale"));
+        } finally {release.countDown();cache.stopStatisticsWarmup();}
+    }
     @Test void storedPageSurvivesEmptyMemoryCache() throws Exception {
         EternalReturnBO bo=new EternalReturnBO();
         try {

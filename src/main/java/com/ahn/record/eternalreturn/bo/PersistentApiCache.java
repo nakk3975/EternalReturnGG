@@ -27,14 +27,39 @@ public class PersistentApiCache {
         headers.set("x-cache-token", token);
         return client.postForObject(url, new HttpEntity<>(body,headers),JsonNode.class);
     }
-    private JsonNode statistics;
-    private long statisticsExpires;
-    public synchronized JsonNode statistics() {
-        if(statistics != null && statisticsExpires > System.currentTimeMillis())return statistics;
+    private volatile JsonNode statistics;
+    private volatile long statisticsExpires;
+    private final java.util.concurrent.ScheduledExecutorService statisticsWorker=java.util.concurrent.Executors.newSingleThreadScheduledExecutor();
+    private final java.util.concurrent.atomic.AtomicBoolean statisticsRefreshing=new java.util.concurrent.atomic.AtomicBoolean();
+    @jakarta.annotation.PostConstruct
+    public void startStatisticsWarmup() {
+        statisticsWorker.scheduleWithFixedDelay(() -> {
+            try { refreshStatistics(); } catch(Exception ignored) { }
+        },0,300,java.util.concurrent.TimeUnit.SECONDS);
+    }
+    @jakarta.annotation.PreDestroy
+    public void stopStatisticsWarmup(){statisticsWorker.shutdownNow();}
+    public JsonNode statistics() {
+        JsonNode current=statistics;
+        long now=System.currentTimeMillis();
+        if(current!=null && now-statisticsExpires<1_500_000) {
+            if(statisticsExpires<=now && statisticsRefreshing.compareAndSet(false,true)) {
+                statisticsWorker.execute(() -> {try {refreshStatistics();}catch(Exception ignored){}finally{statisticsRefreshing.set(false);}});
+            }
+            if(statisticsExpires>now)return current;
+            var stale=current.deepCopy();
+            ((com.fasterxml.jackson.databind.node.ObjectNode)stale).put("_cacheStale",true);
+            return stale;
+        }
+        return refreshStatistics();
+    }
+    private synchronized JsonNode refreshStatistics() {
+        if(statistics!=null && statisticsExpires>System.currentTimeMillis())return statistics;
         JsonNode result = call(Map.of("action","get","key","/v2/data/statistics"));
         if(result != null)result=result.path("body");
         if(result == null || !result.path("rows").isArray())throw new IllegalStateException("통계를 불러오지 못했습니다.");
-        statistics=result;statisticsExpires=System.currentTimeMillis()+300000;
+        statisticsExpires=System.currentTimeMillis()+300000;
+        statistics=result;
         return result;
     }
     public Snapshot read(String key) {
