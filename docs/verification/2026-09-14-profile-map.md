@@ -63,3 +63,15 @@
 - 프로필 새로고침 시 현재 랭크도 강제 갱신. 5초 중복 요청 공유와 배경 갱신 경합 보호, 스냅샷 생성 시간 일치 테스트 추가.
 - JS 17개 파일 통과. 추가 Java 테스트의 CI와 운영 배포 후 UI 확인은 아래에 기록 예정.
 - 여전히 남는 차이: 세계 좌표 기반 길찾기, 모든 생성 시점/변이체 자동 배치, CCTV/하이퍼루프, 숙련도와 고유효과를 포함한 최종 능력치 계산, 모든 메뉴 첫 조회 1초 미만 보장은 완료 범위가 아님.
+
+
+## 운영 배포 중 발견한 통계 병목 수정
+
+- PR #3 / 8c4a774, Render dep-dajqifp5efls739vg2d0 배포 성공 (08:03 UTC).
+- 지도 163개 캠프와 숲 출발 5개 사냥 목표·25크레딧 표시를 브라우저에서 확인. 루트 35176의 5부위 장비와 핵심/보조 특성 4개 복원 확인.
+- 프로필 hoyoung 레벨 357·4개 탭·실제 서버 갱신 시각, 시즌 433경기의 스킨 50개 표시 확인.
+- 통계 요청의 Cache unavailable → HTTP 500을 실제 발견. 저장 JSON 13,844,802 bytes 중 대부분이 모든 실험체의 빌드/bucket이었다.
+- 새 service-role 전용 SECURITY INVOKER RPC로 화면별 projection 추가. overview는 702,979 bytes로 약 95% 축소. 원본 통계·수집 로직·필터 차원은 보존.
+- Edge er-cache version 2에 scope/character 검증과 RPC 호출 추가. 기존 토큰 인증 및 JWT 설정 유지. anon/authenticated는 RPC 실행 불가, service_role만 가능함을 검증.
+- Supabase advisor: 기존 2개 서버 전용 테이블의 RLS enabled/no policy INFO만 존재(익명 접근 차단 의도). 새 함수 관련 경고 없음.
+- Render가 시작 중이던 시점의 HTTP 측정은 타임아웃/중간 페이지가 섞여 정상 상태 성능 수치로 사용하지 않는다.

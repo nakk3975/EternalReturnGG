@@ -10,7 +10,7 @@ async function erRequest(url) {
     return data;
 }
 // Only public metadata is persisted across full-page menu navigation.
-const erMetadataUrls=new Set(['/er/character','/er/weapon','/er/armor','/er/materials','/er/trait','/er/tacticalSkill','/er/skin/info','/er/seasons','/er/skillInfo','/er/weapon-types','/er/route-data/CharacterMastery','/er/route-data/CharacterLevelUpStat','/er/route-data/CreditShop','/er/route-data/Area','/er/route-data/ItemSpawn','/er/route-data/NaviCollectAndHunt','/er/route-data/Collectible','/er/route-data/ItemConsumable','/er/route-data/ItemSpecial']);
+const erMetadataUrls=new Set(['/er/character','/er/weapon','/er/armor','/er/materials','/er/trait','/er/tacticalSkill','/er/skin/info','/er/seasons','/er/skillInfo','/er/weapon-types','/er/route-data/CharacterMastery','/er/route-data/CharacterLevelUpStat','/static/data/credit-shop.json?v=20260911','/er/route-data/Area','/er/route-data/ItemSpawn','/er/route-data/NaviCollectAndHunt','/er/route-data/Collectible','/er/route-data/ItemConsumable','/er/route-data/ItemSpecial']);
 function erReadMetadata(key){
     try{const entry=JSON.parse(sessionStorage.getItem('ergg.meta.v1.'+key)||'null');if(entry&&entry.expires>Date.now())return entry.value;}catch(_){}
     return null;

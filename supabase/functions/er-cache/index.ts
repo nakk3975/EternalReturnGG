@@ -17,6 +17,14 @@ Deno.serve(async (req: Request) => {
     const headers: Record<string,string> = {'apikey':key,'Content-Type':'application/json'};
     if (!keys.default) headers.Authorization = 'Bearer '+key;
     const base = Deno.env.get('SUPABASE_URL')+'/rest/v1/er_api_cache';
+    if (input.action === 'get' && input.key === '/v2/data/statistics' && input.scope) {
+      if (!['overview','items','character'].includes(input.scope) || !Number.isInteger(input.character ?? 0) || (input.character ?? 0) < 0 || (input.character ?? 0) > 10000) return json({error:'Invalid scope'},400);
+      const response = await fetch(Deno.env.get('SUPABASE_URL')+'/rest/v1/rpc/er_statistics_snapshot', {
+        method:'POST',headers,body:JSON.stringify({p_scope:input.scope,p_character:input.character ?? 0}),signal:AbortSignal.timeout(2500)
+      });
+      if (!response.ok) return json({error:'Statistics unavailable'},503);
+      return json(await response.json());
+    }
     if (input.action === 'get') {
       const query = new URLSearchParams({cache_key:'eq.'+input.key,retain_until:'gt.'+new Date().toISOString(),select:'body,fetched_at,expires_at',limit:'1'});
       const response = await fetch(base+'?'+query,{headers,signal:AbortSignal.timeout(2500)});

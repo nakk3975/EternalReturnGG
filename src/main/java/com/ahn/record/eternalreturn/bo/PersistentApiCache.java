@@ -55,12 +55,39 @@ public class PersistentApiCache {
     }
     private synchronized JsonNode refreshStatistics() {
         if(statistics!=null && statisticsExpires>System.currentTimeMillis())return statistics;
-        JsonNode result = call(Map.of("action","get","key","/v2/data/statistics"));
+        JsonNode result = call(Map.of("action","get","key","/v2/data/statistics","scope","overview"));
         if(result != null)result=result.path("body");
         if(result == null || !result.path("rows").isArray())throw new IllegalStateException("통계를 불러오지 못했습니다.");
         statisticsExpires=System.currentTimeMillis()+300000;
         statistics=result;
         return result;
+    }
+    private final java.util.concurrent.ConcurrentHashMap<String,Projection> projections=new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Set<String> projectionRefreshing=java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final Object[] projectionLocks=java.util.stream.IntStream.range(0,32).mapToObj(i->new Object()).toArray();
+    private record Projection(JsonNode body,long expires) {}
+    public JsonNode statistics(String scope,int character) {
+        if(scope.equals("overview"))return statistics();
+        if(!java.util.Set.of("items","character").contains(scope) || character<0 || character>10000)
+            throw new IllegalArgumentException("Invalid statistics scope");
+        String key=scope+":"+character;
+        Projection cached=projections.get(key);
+        if(cached!=null) {
+            if(cached.expires()>System.currentTimeMillis())return cached.body();
+            if(projectionRefreshing.add(key))statisticsWorker.execute(()->{try{refreshProjection(scope,character,key);}catch(Exception ignored){}finally{projectionRefreshing.remove(key);}});
+            var stale=cached.body().deepCopy();((com.fasterxml.jackson.databind.node.ObjectNode)stale).put("_cacheStale",true);return stale;
+        }
+        return refreshProjection(scope,character,key);
+    }
+    private JsonNode refreshProjection(String scope,int character,String key) {
+        synchronized(projectionLocks[(key.hashCode() & Integer.MAX_VALUE)%projectionLocks.length]) {
+            Projection cached=projections.get(key);
+            if(cached!=null && cached.expires()>System.currentTimeMillis())return cached.body();
+            JsonNode result=call(Map.of("action","get","key","/v2/data/statistics","scope",scope,"character",character));
+            if(result==null || !result.path("body").path("rows").isArray())throw new IllegalStateException("통계 조회 실패");
+            if(projections.size()>=100)projections.keySet().stream().limit(20).forEach(projections::remove);
+            result=result.path("body");projections.put(key,new Projection(result,System.currentTimeMillis()+300000));return result;
+        }
     }
     public Snapshot read(String key) {
         try {

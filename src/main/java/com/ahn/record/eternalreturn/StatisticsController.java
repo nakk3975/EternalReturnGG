@@ -21,5 +21,10 @@ public class StatisticsController {
             "lastSuccess",row.path("lastSuccess").asText(),"players",row.path("players").size(),"pending",row.path("pending").size());
     }
     @GetMapping("/er/statistics/data")
-    public JsonNode statistics(){return cache.statistics();}
+    public JsonNode statistics(@RequestParam(defaultValue="overview") String scope,
+            @RequestParam(defaultValue="0") int character){
+        if(character<0 || character>10000 || !java.util.Set.of("overview","items","character").contains(scope))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,"Invalid statistics scope");
+        return cache.statistics(character>0?"character":scope,character);
+    }
 }

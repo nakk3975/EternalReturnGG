@@ -11,7 +11,7 @@ function erFilterStatistics(data, filters, now=Date.now()) {
             const key=JSON.stringify(keys.map(k=>r[k]));
             if(!groups.has(key))groups.set(key,{...r,games:0,wins:0,top3:0,_sums:{},_counts:{}});
             const a=groups.get(key);for(const k of ['games','wins','top3'])a[k]+=Number(r[k]||0);
-            for(const k of ['rank','damage','kills','rp'])if(r[k]!=null){const n=Number(r[k+'Count']??r.games);a._sums[k]=(a._sums[k]||0)+Number(r[k])*n;a._counts[k]=(a._counts[k]||0)+n;}
+            for(const k of ['rank','damage','kills','rp'])if(r[k]!=null){const n=Number(r[k+'Count']??r[k+'count']??r.games);a._sums[k]=(a._sums[k]||0)+Number(r[k])*n;a._counts[k]=(a._counts[k]||0)+n;}
         }
         return [...groups.values()].map(a=>{for(const k of ['rank','damage','kills','rp'])a[k]=a._counts[k]?a._sums[k]/a._counts[k]:null;delete a._sums;delete a._counts;return a;});
     };
@@ -67,7 +67,7 @@ async function erCharacterPage() {
         erStatic('/er/skillInfo').then(data=>{if(current!==generation)return;content.querySelector('#character-skill-icons').innerHTML=(data.data||[]).filter(s=>String(s.characterCode)===String(selected.code)) .map(s=>'<span title="'+erText(s.name)+'">'+erSkillImage(s.group,s.name)+'</span>').join('');}).catch(()=>{});
         if(tab==='overview') {
             target.innerHTML='<div class="analysis-toolbar"><label>경기 모드 <select id="analysis-mode"><option value="3">랭크</option><option value="6">코발트</option><option value="2">일반</option></select></label></div><div id="character-analysis"><p class="empty-state">통계 불러오는 중…</p></div><section class="surface"><h3 class="panel-title">기본 능력치</h3><div class="data-stats">'+erStatCells(selected)+'</div></section><section class="surface"><h3 class="panel-title">추천 루트</h3><div id="character-routes"><p class="empty-state">루트를 불러오는 중입니다.</p></div></section>';
-            Promise.all([erStatic('/er/statistics/data'),erStatic('/er/tacticalSkill')]).then(([data,tactical])=>{if(current!==generation)return;target.querySelector('.analysis-toolbar').innerHTML=erStatisticsControls(data);const draw=()=>{const filters=erReadStatisticsControls(target);target.querySelector('#character-analysis').innerHTML=erAnalysisMarkup(erFilterStatistics(data,filters),selected.code,names,filters.mode,tactical.data||[]);};target.querySelectorAll('[data-stat-filter]').forEach(e=>e.onchange=draw);draw();}).catch(()=>{if(current===generation)target.querySelector('#character-analysis').innerHTML='<p class="empty-state">통계를 불러오지 못했습니다.</p>';});
+            Promise.all([erStatic('/er/statistics/data?character='+selected.code),erStatic('/er/tacticalSkill')]).then(([data,tactical])=>{if(current!==generation)return;target.querySelector('.analysis-toolbar').innerHTML=erStatisticsControls(data);const draw=()=>{const filters=erReadStatisticsControls(target);target.querySelector('#character-analysis').innerHTML=erAnalysisMarkup(erFilterStatistics(data,filters),selected.code,names,filters.mode,tactical.data||[]);};target.querySelectorAll('[data-stat-filter]').forEach(e=>e.onchange=draw);draw();}).catch(()=>{if(current===generation)target.querySelector('#character-analysis').innerHTML='<p class="empty-state">통계를 불러오지 못했습니다.</p>';});
         }else target.innerHTML='<p class="empty-state">정보를 불러오는 중입니다.</p>';
         try {
             if(tab==='traits' || tab==='tactical') {
@@ -128,7 +128,7 @@ async function erItemsPage() {
 
     const filterToggle=root.querySelector('#item-filter-toggle');
     filterToggle.onclick=()=>{const open=filterToggle.getAttribute('aria-expanded')!=='true';filterToggle.setAttribute('aria-expanded',String(open));filterToggle.textContent=open?'필터 접기':'필터 펼치기';};
-    const statsRequest=erStatic('/er/statistics/data').then(data=>({data}),error=>({error}));
+    const statsRequest=erStatic('/er/statistics/data?scope=items').then(data=>({data}),error=>({error}));
     let samples={items:[]},statsState='loading';
     const assets=loadAssetConfig();const [weapons,armor,names,materials]=await Promise.all([erStatic('/er/weapon'),erStatic('/er/armor'),erDictionary(),erStatic('/er/materials').catch(()=>({data:[]}))]);await assets;
     const rows=[...(weapons.data||[]).map(r=>({...r,category:'weapon'})),...(armor.data||[]).map(r=>({...r,category:'armor'}))];const catalog=new Map([...rows,...(materials.data||[])].map(r=>[String(r.code),r]));let selected=location.pathname.split('/')[3];let limit=40;
