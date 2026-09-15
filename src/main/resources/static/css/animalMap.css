@@ -23,3 +23,6 @@
 .animal-reference{padding:20px;margin-top:22px}.animal-reference h2{font-size:20px}.animal-table-scroll{overflow:auto}.animal-reference table{width:100%}.animal-reference td,.animal-reference th{white-space:nowrap}
 @media(max-width:900px){.animal-layout{grid-template-columns:1fr}.hunt-clock-fields{grid-template-columns:1fr 1fr}.animal-settings #hunt-camps{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.animal-point{width:18px;height:18px}.animal-map-scroll{max-height:650px}.animal-point b{font-size:8px}.animal-toolbar{padding:10px}.hunt-clock{padding:14px}.hunt-clock-fields{gap:12px}.hunt-presets{gap:6px}.hunt-presets button{padding:7px 9px}.animal-settings #hunt-camps{grid-template-columns:1fr}.hunt-countdown label input{max-width:58px}}
+
+.hunt-clock-fields{grid-template-columns:100px 90px 160px minmax(180px,1fr) 120px}.hunt-camp-state{font-size:11px;line-height:1.6;color:var(--muted);margin:10px 0 0;overflow-wrap:anywhere}.hunt-camp-actions{flex-wrap:wrap}
+@media(max-width:1000px){.hunt-clock-fields{grid-template-columns:1fr 1fr}}

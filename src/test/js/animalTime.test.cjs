@@ -7,7 +7,7 @@ assert.equal(c.erHuntSpawned('AttackDrone',early),false);
 for(const type of ['Chicken','Bat','Boar','Dog'])assert(c.erHuntSpawned(type,early));
 assert.equal(c.erHuntSpawned('Wolf',{...wolf,remaining:61}),false);
 assert.equal(c.erHuntSpawned('Wolf',wolf),true,'countdown boundary is inclusive');
-assert.equal(c.erHuntSpawned('Bear',{...night,remaining:111}),false);
+assert.equal(c.erHuntTime({...night,remaining:111}).remaining,110,'out-of-range countdown clamps to phase duration');
 assert.equal(c.erHuntSpawned('Bear',night),true);
 assert.equal(c.erHuntSpawned('AttackDrone',night),true);
 assert.equal(c.erHuntSpawned('Wolf',night),false,'default assumes previous daytime wolf was killed');
