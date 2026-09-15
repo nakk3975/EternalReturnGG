@@ -122,9 +122,10 @@ function erWildlifeCamps(){return Object.entries(erWildlifePoints).flatMap(([typ
 function erHuntValue(camp){return Math.max(0,Number(camp.count)||0)*(erAnimals[camp.type]?.credits[camp.variant||0]||0);}
 // Compare credit per estimated effort. Coordinates are region centers, not walkable paths.
 function erRecommendHunt(start,camps,{steps=5,travelWeight=1,killCost=8,blocked=[],time=null}={}){
- const available=camps.filter(c=>erHuntAvailable(c,time,blocked)&&erHuntValue(time?{...c,variant:erHuntState(c,time).variant}:c)>0);let beam=[{route:[],point:start,credits:0,cost:0}];
+ const values=new Map(camps.map(c=>[c,erHuntValue(time?{...c,variant:erHuntState(c,time).variant}:c)]));
+ const available=camps.filter(c=>erHuntAvailable(c,time,blocked)&&values.get(c)>0);let beam=[{route:[],point:start,credits:0,cost:0}];
  for(let depth=0;depth<Math.min(10,Math.max(1,steps));depth++){
-  const next=[];for(const state of beam)for(const c of available){if(state.route.some(v=>v.id===c.id))continue;const distance=Math.hypot(c.x-state.point.x,c.y-state.point.y);next.push({route:[...state.route,c],point:c,credits:state.credits+erHuntValue(time?{...c,variant:erHuntState(c,time).variant}:c),cost:state.cost+distance*Math.max(.1,travelWeight)+Math.max(1,killCost)*c.count});}
+  const next=[];for(const state of beam)for(const c of available){if(state.route.some(v=>v.id===c.id))continue;const distance=Math.hypot(c.x-state.point.x,c.y-state.point.y);next.push({route:[...state.route,c],point:c,credits:state.credits+values.get(c),cost:state.cost+distance*Math.max(.1,travelWeight)+Math.max(1,killCost)*c.count});}
   if(!next.length)break;next.sort((a,b)=>b.credits/Math.max(1,b.cost)-a.credits/Math.max(1,a.cost)||b.credits-a.credits);beam=next.slice(0,80);
  }
  return beam[0]||{route:[],credits:0,cost:0};
@@ -219,7 +220,7 @@ async function startAnimalMap(){
   const t=e.target;
   if(['hunt-day','hunt-phase','hunt-minute','hunt-second','hunt-survivors','hunt-weather'].includes(t.id)){
    const clamp=(value,max)=>Math.max(0,Math.min(max,Number(value)||0));
-   const remaining=t.id==='hunt-phase'?(t.value==='night'?110:90):clamp(root.querySelector('#hunt-minute').value,9)*60+clamp(root.querySelector('#hunt-second').value,59);
+   const remaining=t.id==='hunt-phase'?erHuntPhases[(Number(root.querySelector('#hunt-day').value)-1)*2+(t.value==='night'?1:0)]:clamp(root.querySelector('#hunt-minute').value,9)*60+clamp(root.querySelector('#hunt-second').value,59);
    changeTime({day:root.querySelector('#hunt-day').value,phase:root.querySelector('#hunt-phase').value,remaining,survivors:root.querySelector('#hunt-survivors').value==='true',weather:root.querySelector('#hunt-weather').value});return;
   }
   if(t.dataset.animalFilter){t.checked?active.add(t.dataset.animalFilter):active.delete(t.dataset.animalFilter);draw();}

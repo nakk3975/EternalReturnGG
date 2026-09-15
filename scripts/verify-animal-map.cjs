@@ -49,7 +49,10 @@ const {chromium}=require('playwright'),fs=require('node:fs'),assert=require('nod
  const region=await page.evaluate(()=>erWildlifeCamps().find(c=>c.id==='Bear:0').region);
  await page.locator('#hunt-start').selectOption(region);await page.locator('[data-variant="Bear:0"]').selectOption('2');
  assert.equal(await page.locator('#animal-points [data-add-camp="Bear:0"]').count(),1);
- await page.locator('[data-kill="Bear:0"]').click();await clock(3,'night',90);
+ await page.locator('[data-kill="Bear:0"]').click();
+ console.log('nest after kill',await page.locator('[data-kill="Bear:0"]').locator('xpath=../..').innerText());
+ await page.locator('#hunt-share').click();console.log('nest saved',JSON.parse(decodeURIComponent(new URL(page.url()).hash.slice(6))).camps.find(c=>c.id==='Bear:0'));
+ await clock(3,'night',90);console.log('nest later',await page.locator('[data-kill="Bear:0"]').locator('xpath=../..').innerText());
  assert.equal(await page.locator('#animal-points [data-add-camp="Bear:0"]').count(),0);
  await page.locator('#hunt-recommend').click();
  const ids=await page.locator('#animal-points .is-selected').evaluateAll(els=>els.map(e=>e.dataset.addCamp));assert.equal(ids.length,new Set(ids).size);assert(!ids.includes('Bear:0'));
