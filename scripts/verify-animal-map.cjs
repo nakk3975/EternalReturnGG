@@ -39,26 +39,22 @@ const {chromium}=require('playwright'),fs=require('node:fs'),assert=require('nod
  await page.locator('[data-cleared="Chicken:0"]').check();
  await page.locator('#hunt-reset-camps').click();assert.equal(await page.locator('#animal-points [data-add-camp="Chicken:0"]').count(),0,'reset kills preserves explicit exclusion');
  await page.locator('[data-cleared="Chicken:0"]').uncheck();
- await clock(1,'day',90);await page.locator('#hunt-weather').selectOption('purple');
- await page.locator('[data-variant="Chicken:0"]').selectOption('1');
- assert(await page.locator('#animal-points [data-add-camp="Chicken:0"]').evaluate(el=>el.classList.contains('is-variant')));
- await page.locator('[data-kill="Chicken:0"]').click();await clock(1,'night',80);
- assert.equal(await page.locator('#animal-points [data-add-camp="Chicken:0"]').evaluate(el=>el.classList.contains('is-variant')),false);
- await clock(2,'day',100);
- // Locate a bear's region from the same shipped data, then confirm an activated nest.
- const region=await page.evaluate(()=>erWildlifeCamps().find(c=>c.id==='Bear:0').region);
- await page.locator('#hunt-start').selectOption(region);await page.locator('[data-variant="Bear:0"]').selectOption('2');
- assert.equal(await page.locator('#animal-points [data-add-camp="Bear:0"]').count(),1);
- await page.locator('[data-kill="Bear:0"]').click();
- assert.match(await page.locator('[data-kill="Bear:0"]').locator('xpath=../..').innerText(),/자동 재생성 없음/);
+ await clock(1,'day',1);assert.equal(await page.locator('#animal-points .is-variant').count(),0);
+ await clock(1,'night',110);assert.equal(await page.locator('#animal-points .is-variant').count(),11);
+ await clock(2,'day',140);assert.equal(await page.locator('#animal-points .is-variant').count(),13);
+ await clock(2,'night',130);assert.equal(await page.locator('#animal-points .is-variant').count(),16);
+ assert.equal(await page.locator('[data-variant]').count(),0);
+ await page.locator('#animal-points [data-add-camp="Mutant:Bear:0"]').click({force:true});
+ await page.locator('[data-kill="Mutant:Bear:0"]').click();
  await page.locator('#hunt-share').click();await page.reload();
- await clock(3,'night',90);
- assert.equal(await page.locator('#animal-points [data-add-camp="Bear:0"]').count(),0);
+ assert.equal(await page.locator('#animal-points [data-add-camp="Mutant:Bear:0"]').count(),0);
+ await clock(3,'day',21);assert.equal(await page.locator('#animal-points [data-add-camp="Mutant:Bear:0"]').count(),0);
+ await clock(3,'day',20);assert.equal(await page.locator('#animal-points [data-add-camp="Mutant:Bear:0"].is-variant').count(),1);
  await page.locator('#hunt-recommend').click();
- const ids=await page.locator('#animal-points .is-selected').evaluateAll(els=>els.map(e=>e.dataset.addCamp));assert.equal(ids.length,new Set(ids).size);assert(!ids.includes('Bear:0'));
+ const ids=await page.locator('#animal-points .is-selected').evaluateAll(els=>els.map(e=>e.dataset.addCamp));assert.equal(ids.length,new Set(ids).size);
  await page.setViewportSize({width:390,height:844});
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'no mobile page overflow');
  assert.deepEqual(errors,[]);
- console.log('PASS browser: kill/respawn boundary, rewind, share reload, exclusion, purple variants, activated nests, recommendation, mobile width; external images intentionally not loaded');
+ console.log('PASS browser: kill/respawn boundary, rewind, share reload, exclusion, fixed mutant spawns and respawns, recommendation, mobile width; external images intentionally not loaded');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

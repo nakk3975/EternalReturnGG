@@ -18,35 +18,40 @@ for(const [type,delay,time] of [['Chicken',120,t(1,'day',90)],['Bat',150,t(1,'da
  assert(!c.erHuntAvailable(restored,at(k+delay+1)));
  a.cleared=true;assert(!c.erHuntAvailable(a,at(k+2*delay)),'persistent exclusion survives respawn');
 }
-for(const [type,kill,next] of [['Wolf',t(1,'day',50),t(2,'day',130)],['Bear',t(1,'night',100),t(2,'night',130)]]){
+for(const [type,kill,next] of [['Wolf',t(1,'day',50),t(2,'day',140)],['Bear',t(1,'night',100),t(2,'night',130)]]){
  const a=camp(type),boundary=c.erHuntSeconds(next);assert(c.erHuntRecord(a,kill,'kill'));
  assert(!c.erHuntAvailable(a,{...at(boundary-1),survivors:true}),'survivor option cannot undo a recorded kill');
  assert(c.erHuntAvailable(a,next));assert(c.erHuntRecord(a,next,'kill'));
  assert(!c.erHuntAvailable(a,{...next,remaining:129}),'kill at wave boundary waits for a later wave');
 }
-const purple=t(1,'day',90,{weather:'purple'}),mutant=camp('Chicken');
-assert(!c.erHuntRecord(mutant,t(1,'day',90),'variant',1));
-assert(c.erHuntRecord(mutant,purple,'variant',1));assert.equal(c.erHuntState(mutant,purple).variant,1);
-assert(c.erHuntRecord(mutant,purple,'kill'));assert.equal(mutant.events.length,2,'same-time observation is retained before kill');
-assert.equal(c.erHuntState(mutant,{...at(c.erHuntSeconds(purple)+120),weather:'purple'}).variant,0,'next spawn is not automatically a mutant');
-const nest=camp('Bear'),nestTime=t(2,'day',100);
-assert(c.erHuntRecord(nest,nestTime,'variant',2));assert(c.erHuntAvailable(nest,nestTime),'confirmed nest overrides ordinary bear phase visibility');
-assert(c.erHuntRecord(nest,nestTime,'kill'));assert(!c.erHuntAvailable(nest,t(4,'night',0)),'fog nest does not use normal bear respawn');
-const restoredNest=camp('Bear');c.erHuntRestoreCamp(restoredNest,JSON.parse(JSON.stringify(nest)),nestTime,3);
-assert(!c.erHuntAvailable(restoredNest,t(4,'night',0)),'nest kill survives sharing');
-assert(c.erHuntRecord(nest,t(3,'night',80),'variant',2),'a later manually confirmed activated nest can appear');
-assert(c.erHuntAvailable(nest,t(3,'night',80)));
-assert(!c.erHuntRecord(camp('Boar'),nestTime,'variant',2),'unsupported variant rejected');
+// Guaranteed groups: first-spawn and kill-relative respawn boundaries for every species.
+for(const [type,first,delay] of [['Chicken',140,180],['Boar',140,180],['Dog',140,180],['Wolf',250,210],['Bear',390,240]]){
+ const a={...camp(type),id:'Mutant:'+type+':0',fixedVariant:1};
+ assert(!c.erHuntAvailable(a,at(first-1)));assert(c.erHuntAvailable(a,at(first)));
+ assert(c.erHuntRecord(a,at(first+5),'kill'));assert(!c.erHuntAvailable(a,at(first+delay+4)));
+ assert(c.erHuntAvailable(a,at(first+delay+5)));assert.equal(c.erHuntState(a,at(first+delay+5)).variant,1);
+ const restored={...camp(type),fixedVariant:1};c.erHuntRestoreCamp(restored,JSON.parse(JSON.stringify(a)),at(first+6),3);
+ assert(!c.erHuntAvailable(restored,at(first+6)));assert(c.erHuntAvailable(restored,at(first+delay+5)));
+ assert.equal(c.erRecommendHunt({x:0,y:0},[a],{time:at(first),steps:8}).credits,c.erHuntValue({...a,variant:1}));
+ assert(!c.erHuntRecord(a,at(first),'variant',2));
+}
+assert.equal(c.erHuntSeconds(t(2,'night',130)),390);
+const fixedWolf={...camp('Wolf'),fixedVariant:1};
+assert(c.erHuntAvailable(fixedWolf,t(2,'night',130)),'un-killed mutant wolf survives into night without survivor option');
+assert(!c.erHuntRecord(camp('Chicken'),t(1,'day',90),'variant',1));
 const a=camp('Chicken');c.erHuntRecord(a,t(1,'day',90),'kill');c.erHuntRecord(a,t(2,'day',80),'kill');
 assert(c.erHuntRecord(a,t(1,'day',100),'kill'));assert.equal(a.events.length,1,'historical edits remove conflicting later history');
 const legacy=camp('Wolf');c.erHuntRestoreCamp(legacy,{count:2,variant:1,cleared:true},t(2,'day',90),2);
 assert(legacy.cleared,'legacy combined kill/exclude remains a persistent exclusion');
 const invalid=camp('Bat');c.erHuntRestoreCamp(invalid,{events:[null,{at:-1,kind:'kill',variant:0},{at:1,kind:'kill',variant:0},{at:999999,kind:'kill',variant:0},{at:50,kind:'variant',variant:99}]},t(1,'day',90),3);
 assert.equal(invalid.events.length,0,'malformed events and pre-spawn kills rejected');
-const eligible=camp('Chicken');c.erHuntRecord(eligible,purple,'variant',1);
-const recommendation=c.erRecommendHunt({x:0,y:0},[eligible],{time:purple,steps:8});
-assert.equal(recommendation.credits,2,'recommendation values resolved variant, not stale camp.variant');assert.equal(recommendation.route.length,1);
-c.erHuntRecord(eligible,purple,'kill');assert.equal(c.erRecommendHunt({x:0,y:0},[eligible],{time:purple}).route.length,0);
 assert.equal(c.erHuntTime({day:8,phase:'night',remaining:999}).phase,'day');
 assert.equal(c.erHuntTime(t(7,'day',999)).remaining,200);
-console.log('PASS: recorded kills, all interval respawns, phase boundaries, rewind, variants/nests, migration, invalid imports and recommendation consistency');
+console.log('PASS: recorded kills, all interval respawns, phase boundaries, rewind, fixed mutants, migration, invalid imports and recommendation consistency');
+
+vm.runInContext(fs.readFileSync('src/main/resources/static/js/routePlanner.js','utf8'),c);
+const all=c.erWildlifeCamps(),fixed=all.filter(a=>a.fixedVariant===1);
+assert.equal(all.length,179);assert.equal(fixed.length,16);assert.equal(new Set(all.map(a=>a.id)).size,179);
+for(const [time,count] of [[t(1,'day',1),0],[t(1,'night',110),11],[t(2,'day',140),13],[t(2,'night',130),16]])assert.equal(fixed.filter(a=>c.erHuntAvailable(a,time)).length,count);
+assert.equal(fixed.reduce((sum,a)=>sum+a.count,0),58);
+const forged=all.find(a=>a.id==='Chicken:0');c.erHuntRestoreCamp(forged,{variant:1,events:[{at:50,kind:'variant',variant:1}]},t(2,'day',140),3);assert.equal(c.erHuntState(forged,t(2,'day',140)).variant,0);

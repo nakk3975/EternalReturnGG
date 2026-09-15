@@ -6,15 +6,15 @@ const erAnimalRegionIds={'항구':'10','창고':'20','연못':'30','개울':'40'
 // DAK.GG's day/night icons are significant: bear and drone first spawn at NIGHT 1 01:50.
 // Countdown thresholds, not time elapsed since match start. Other players' kills are a planning assumption.
 const erAnimalSpawns={Chicken:{phase:'day',remaining:140,respawn:120},Bat:{phase:'day',remaining:120,respawn:150},Boar:{phase:'day',remaining:90,respawn:130},Dog:{phase:'day',remaining:120,respawn:140},Wolf:{phase:'day',remaining:60,wave:'day'},Bear:{phase:'night',remaining:110,wave:'night'},AttackDrone:{phase:'night',remaining:110,respawn:210}};
-// Squad phase durations assembled from official 1.43, 11.0 and 12.0 patch notes.
+// Squad phase durations assembled from official 1.43, 1.45, 11.0 and 12.0 patch notes.
 // Keep this table versioned: countdowns must not be treated as elapsed match time.
-const erHuntClockVersion='squad-12.0';
-const erHuntPhases=[140,110,130,130,130,110,100,110,80,80,70,50,200,60,150];
+const erHuntClockVersion='squad-12.0-fixed-20260915';
+const erHuntPhases=[140,110,140,130,130,110,100,110,80,80,70,50,200,60,150];
 function erHuntTime(value={}){
  const number=(v,fallback,min,max)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Math.floor(Number(v)))):fallback;
  const day=number(value.day??1,1,1,8),phase=day===8?'day':value.phase==='night'?'night':'day';
  const duration=erHuntPhases[(day-1)*2+(phase==='night'?1:0)];
- return {day,phase,remaining:number(value.remaining??90,90,0,duration),survivors:value.survivors===true,weather:value.weather==='purple'?'purple':'normal'};
+ return {day,phase,remaining:number(value.remaining??90,90,0,duration),survivors:value.survivors===true};
 }
 function erHuntPhaseIndex(value){const t=erHuntTime(value);return (t.day-1)*2+(t.phase==='night'?1:0);}
 function erHuntSeconds(value){const t=erHuntTime(value),i=erHuntPhaseIndex(t);return erHuntPhases.slice(0,i+1).reduce((a,b)=>a+b,0)-t.remaining;}
@@ -24,8 +24,7 @@ function erHuntAt(seconds){
 }
 function erHuntLabel(t){return `${t.day}일차 ${t.phase==='day'?'낮':'밤'} ${Math.floor(t.remaining/60)}:${String(t.remaining%60).padStart(2,'0')} 남음`;}
 function erHuntFirst(type){const r=erAnimalSpawns[type];return erHuntSeconds({day:1,phase:r.phase,remaining:r.remaining});}
-function erHuntRespawn(type,at,variant=0){
- if(variant===2)return Infinity; // A triggered fog nest is not a normal repeating camp.
+function erHuntRespawn(type,at){
  const r=erAnimalSpawns[type];if(!r.wave)return at+r.respawn;
  // Strictly later boundary: a kill at the start of a wave waits for the next wave.
  let boundary=0;
@@ -37,65 +36,41 @@ function erHuntSpawned(type,value){
  if(erHuntSeconds(time)<erHuntFirst(type))return false;
  return time.survivors||!rule.wave||time.phase===rule.wave;
 }
-function erHuntVariantAllowed(type,variant,value){
- if(variant===0)return true;
- if(!erAnimals[type]||erAnimals[type].credits[variant]==null)return false;
- const time=erHuntTime(value),rule=erAnimalSpawns[type];
- if(variant===2)return time.day>=2; // Only a manually confirmed, activated nest.
- if(time.weather==='purple')return erHuntSeconds(time)>=erHuntFirst(type);
- const first=erHuntFirst(type);
- return erHuntSeconds(time)>=erHuntRespawn(type,first);
-}
+// Guaranteed groups have independent timers, including mutant wolves and bears.
+// Squad baseline: official 1.43 / 1.45 / 8.4 notes; 10.0 preserves mutant timers.
+const erFixedMutantRules={Chicken:{first:140,respawn:180},Boar:{first:140,respawn:180},Dog:{first:140,respawn:180},Wolf:{first:250,respawn:210},Bear:{first:390,respawn:240}};
 function erHuntState(camp,value){
- const time=erHuntTime(value),now=erHuntSeconds(time),rule=erAnimalSpawns[camp.type];
+ const time=erHuntTime(value),now=erHuntSeconds(time),fixed=camp.fixedVariant===1;
+ const rule=fixed?erFixedMutantRules[camp.type]:erAnimalSpawns[camp.type];
  if(!rule)return {available:false,variant:0,waiting:false,next:Infinity};
- let next=erHuntFirst(camp.type),variant=0,observedAt=-1,lastKill=null;
- const events=(camp.events||[]).filter(e=>e.at<=now).slice().sort((a,b)=>a.at-b.at);
- for(const event of events){
-  if(event.kind==='variant'){
-   const when={...erHuntAt(event.at),weather:time.weather};
-   if(!erHuntVariantAllowed(camp.type,event.variant,when))continue;
-   if(event.variant===2){next=event.at;lastKill=null;}
-   else if(event.at<next)continue;
-   variant=event.variant;observedAt=event.at;
-  }else if(event.kind==='kill'&&event.at>=next){
-   next=erHuntRespawn(camp.type,event.at,event.variant);lastKill=event.at;variant=0;observedAt=-1;
-  }
- }
- // An unobserved next generation is ordinary until the user confirms a variant.
- if(variant!==2&&rule.wave&&!time.survivors&&observedAt>=0){
-  if(now>=erHuntRespawn(camp.type,observedAt))variant=0;
+ let next=fixed?rule.first:erHuntFirst(camp.type),lastKill=null;
+ for(const event of (camp.events||[]).filter(e=>e.at<=now).slice().sort((a,b)=>a.at-b.at)){
+  if(event.kind==='kill'&&event.at>=next){next=fixed?event.at+rule.respawn:erHuntRespawn(camp.type,event.at);lastKill=event.at;}
  }
  const waiting=lastKill!==null&&now<next;
- return {available:!camp.cleared&&!waiting&&now>=next&&(variant===2||erHuntSpawned(camp.type,time)),variant,waiting,next,lastKill};
+ return {available:!camp.cleared&&!waiting&&now>=next&&(fixed||erHuntSpawned(camp.type,time)),variant:fixed?1:0,waiting,next,lastKill};
 }
-function erHuntRecord(camp,value,kind,variant=0){
- const time=erHuntTime(value),state=erHuntState(camp,time),at=erHuntSeconds(time);
- if(kind==='kill'&&!state.available)return false;
- if(kind==='variant'&&(!erHuntVariantAllowed(camp.type,variant,time)||(variant!==2&&!state.available)))return false;
- if(kind!=='kill'&&kind!=='variant')return false;
- camp.events=camp.events||[];
- if(camp.events.length>=200)return false;
- // Editing an earlier moment replaces later history, rather than leaving contradictory kills.
- camp.events=camp.events.filter(e=>e.at<at||(kind==='kill'&&e.at===at&&e.kind==='variant'));
- camp.events.push({at,kind,variant:kind==='kill'?state.variant:variant});return true;
+function erHuntRecord(camp,value,kind){
+ const state=erHuntState(camp,value),at=erHuntSeconds(value);
+ if(kind!=='kill'||!state.available)return false;
+ camp.events=camp.events||[];if(camp.events.length>=200)return false;
+ // Editing an earlier moment replaces later history.
+ camp.events=camp.events.filter(e=>e.at<at);
+ camp.events.push({at,kind:'kill',variant:state.variant});return true;
 }
 function erHuntRestoreCamp(camp,saved,time,version){
- camp.count=Math.max(1,Math.min(10,Math.floor(Number(saved.count)||1)));camp.cleared=saved.cleared===true;camp.events=[];
+ camp.count=Math.max(1,Math.min(10,Math.floor(Number(saved.count)||camp.defaultCount||1)));camp.cleared=saved.cleared===true;camp.events=[];
  if(version>=3){
   const total=erHuntPhases.reduce((a,b)=>a+b,0);
-  const events=(Array.isArray(saved.events)?saved.events:[]).slice(0,200).filter(e=>e&&Number.isInteger(e.at)&&e.at>=0&&e.at<=total&&['kill','variant'].includes(e.kind)&&[0,1,2].includes(e.variant)).sort((a,b)=>a.at-b.at);
-  // Ignore malformed or impossible observations; the replay never trusts imported availability.
+  const events=(Array.isArray(saved.events)?saved.events:[]).slice(0,200).filter(e=>e&&Number.isInteger(e.at)&&e.at>=0&&e.at<=total&&e.kind==='kill'&&e.variant===(camp.fixedVariant===1?1:0)).sort((a,b)=>a.at-b.at);
   for(const e of events){
    const wasExcluded=camp.cleared;camp.cleared=false;
-   const when={...erHuntAt(e.at),survivors:true,weather:'purple'};
-   if(e.kind==='kill'){
-    if(erHuntState(camp,when).available)camp.events.push({...e,variant:erHuntState(camp,when).variant});
-   }else if(erHuntVariantAllowed(camp.type,e.variant,when)&&(e.variant===2||erHuntState(camp,when).available))camp.events.push(e);
+   if(erHuntState(camp,{...erHuntAt(e.at),survivors:true}).available)camp.events.push({...e});
    camp.cleared=wasExcluded;
   }
- }else if([1,2].includes(saved.variant)&&erHuntVariantAllowed(camp.type,saved.variant,time))camp.events.push({at:erHuntSeconds(time),kind:'variant',variant:saved.variant});
- camp.variant=erHuntState(camp,time).variant;return camp;
+ }
+ // Imported variant flags cannot turn ordinary camps into random variants or nests.
+ camp.variant=camp.fixedVariant===1?1:0;return camp;
 }
 function erHuntAvailable(camp,time,blocked=[]){
  return !blocked.includes(camp.region)&&(time?erHuntState(camp,time).available:!camp.cleared);
@@ -111,14 +86,22 @@ const erWildlifePoints={
  Bear:[[414,195],[454,249],[567,150],[262,267],[321,303],[344,320],[522,289],[610,246],[582,286],[694,231],[776,284],[321,438],[282,497],[235,594],[257,611],[389,534],[613,415],[701,435,2],[629,498],[562,572],[720,514],[611,651],[703,610],[755,700],[712,780],[339,737],[422,788,2],[512,852],[555,848],[555,905]],
  AttackDrone:[[484,405],[417,473],[549,473]]
 };
+// Fixed mutant camps: visible DAK.GG map, 2026-09-15; same coordinate reference.
+const erFixedMutantPoints={
+ Chicken:[[531,412,6],[651,668,6],[477,716,6]],
+ Boar:[[452,134,3],[608,170,3],[644,344,3],[416,436,3]],
+ Dog:[[210,440,4],[796,540,4],[467,578,4],[298,704,4]],
+ Wolf:[[268,300,3],[746,742,3]],
+ Bear:[[801,334,2],[202,552,2],[578,925,2]]
+};
 function erPointInRegion(x,y,polygon){
  let inside=false;for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){const a=polygon[i],b=polygon[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])inside=!inside;}return inside;
 }
-function erWildlifeCamps(){return Object.entries(erWildlifePoints).flatMap(([type,points])=>points.map(([sx,sy,count],i)=>{
+function erWildlifeCamps(){return [[erWildlifePoints,0],[erFixedMutantPoints,1]].flatMap(([data,fixedVariant])=>Object.entries(data).flatMap(([type,points])=>points.map(([sx,sy,count],i)=>{
  const x=(sx-134)/732*100,y=(sy-58)/926*100;
  const region=Object.entries(erAnimalRegionIds).find(([,id])=>erPointInRegion(x*9.03,y*9.36,erRoutePolygons[id]))?.[0]||Object.keys(erAnimalRegionIds).sort((a,b)=>Math.hypot(x-erRoutePositions[a][0],y-erRoutePositions[a][1])-Math.hypot(x-erRoutePositions[b][0],y-erRoutePositions[b][1]))[0];
- return {id:type+':'+i,region,type,count:count||erAnimals[type].count,variant:0,x,y,cleared:false,events:[]};
-}));}
+ return {id:(fixedVariant?'Mutant:':'')+type+':'+i,region,type,count:count||erAnimals[type].count,defaultCount:count||erAnimals[type].count,fixedVariant,variant:fixedVariant,x,y,cleared:false,events:[]};
+})));}
 function erHuntValue(camp){return Math.max(0,Number(camp.count)||0)*(erAnimals[camp.type]?.credits[camp.variant||0]||0);}
 // Compare credit per estimated effort. Coordinates are region centers, not walkable paths.
 function erRecommendHunt(start,camps,{steps=5,travelWeight=1,killCost=8,blocked=[],time=null}={}){
@@ -136,7 +119,7 @@ async function startAnimalMap(){
  let start=null,route=[],blocked=[],active=new Set(Object.keys(erAnimals)),time=erHuntTime(),selectedRegion='';
  const camps=erWildlifeCamps();
  const icon=type=>'https://cdn.dak.gg/er/images/assets/animal-map-icon/Ico_DetailedMap_'+erAnimals[type].icon+'.png';
- const variants=['일반','변이체','잠식 변이체'];
+ const variants=['일반','확정 변이체'];
  root.innerHTML=`<p class="animal-scope">동물 아이콘을 누르면 사냥 동선에 추가됩니다. 지도 빈 곳을 누르면 그 위치에서 출발합니다.</p>
  <section class="surface hunt-clock" aria-label="사냥 시간 설정">
   <div class="hunt-clock-heading"><strong>사냥 시점</strong><span id="hunt-clock-summary" aria-live="polite"></span></div>
@@ -145,24 +128,23 @@ async function startAnimalMap(){
    <label>시간대<select id="hunt-phase"><option value="day">낮</option><option value="night">밤</option></select></label>
    <fieldset class="hunt-countdown"><legend>남은 시간</legend><label><input id="hunt-minute" type="number" min="0" max="9" value="1" aria-label="남은 분"><span>분</span></label><label><input id="hunt-second" type="number" min="0" max="59" value="30" aria-label="남은 초"><span>초</span></label></fieldset>
    <label class="hunt-survivors">이전 시간대 늑대·곰<select id="hunt-survivors"><option value="false">처치된 것으로 가정</option><option value="true">살아 있으면 포함</option></select></label>
-   <label>날씨<select id="hunt-weather"><option value="normal">일반</option><option value="purple">자색 안개</option></select></label>
   </div>
   <div class="hunt-presets"><button data-hunt-preset="early">1일차 낮 1:30</button><button data-hunt-preset="wolf">늑대 출현 · 낮 1:00</button><button data-hunt-preset="bear">곰 출현 · 밤 1:50</button></div>
-  <p class="data-note">게임에 표시되는 남은 시간을 입력하세요. 기본 설정은 이전 시간대의 늑대·곰을 처치했다고 가정합니다. 실제 생존 여부는 자동으로 알 수 없습니다. 시간을 되돌려 처치나 종류를 수정하면 해당 캠프의 이후 기록이 교체됩니다.</p>
+  <p class="data-note">게임에 표시되는 남은 시간을 입력하세요. 기본 설정은 이전 시간대의 늑대·곰을 처치했다고 가정합니다. 실제 생존 여부는 자동으로 알 수 없습니다. 시간을 되돌려 처치를 수정하면 해당 캠프의 이후 기록이 교체됩니다.</p>
  </section>
  <div class="animal-layout"><section class="surface animal-main"><div class="animal-toolbar"><button id="hunt-undo">되돌리기</button><button id="hunt-clear">동선 초기화</button><button id="hunt-share">동선 링크 복사</button><button id="hunt-zoom-out" aria-label="지도 축소">−</button><button id="hunt-zoom-in" aria-label="지도 확대">＋</button><button id="hunt-reset-camps">처치 기록 초기화</button><span id="hunt-status" role="status">지도에서 출발 위치를 선택하세요.</span></div>
  <div class="animal-map-scroll"><div class="planner-map animal-map"><img class="planner-map-image" src="https://cdn.dak.gg/er/images/routes/map_v2.png?q=20260430" alt="루미아 섬 지도"><svg class="animal-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg><div id="animal-points"></div><div id="hunt-start-pin"></div></div></div><ol id="hunt-route"></ol></section>
  <aside class="animal-settings surface"><h2>추천 사냥 동선</h2><label>시작 지역<select id="hunt-start"><option value="">지도에서 선택</option>${Object.keys(erAnimalRegionIds).map(n=>'<option>'+erText(n)+'</option>').join('')}</select></label><label>사냥 목표 수<select id="hunt-steps"><option>3</option><option selected>5</option><option>8</option></select></label><label>추천 성향<select id="hunt-weight"><option value="1">균형</option><option value="3">이동 최소화</option><option value="0.3">크레딧 우선</option></select></label><button id="hunt-recommend" class="hunt-primary">사냥 동선 추천</button>
  <h3>동물 필터</h3><div id="animal-filters">${Object.entries(erAnimals).map(([key,a])=>`<label><input type="checkbox" data-animal-filter="${key}" checked><img alt="" src="${icon(key)}">${a.name}</label>`).join('')}</div>
  <h3 id="hunt-region-title">지역을 선택하세요</h3><div id="hunt-camps"></div><label class="hunt-check hunt-block-label"><input id="hunt-block" type="checkbox" disabled><span>선택 지역 제외 <small>금지 구역·경쟁</small></span></label><p id="hunt-total">계획 크레딧 0</p></aside></div>
- <section class="surface animal-reference"><h2>동물 정보</h2><div class="animal-table-scroll"><table class="data-table"><thead><tr><th>동물</th><th>일반</th><th>변이체</th><th>잠식 변이체</th><th>최초 생성</th><th>재생성</th></tr></thead><tbody>${Object.entries(erAnimals).map(([type,a])=>'<tr><td>'+a.name+'</td>'+a.credits.map(v=>'<td>'+(v??'—')+'</td>').join('')+'<td>1일차 '+(erAnimalSpawns[type].phase==='night'?'밤':'낮')+' '+a.first.split(' ')[1]+'</td><td>'+a.respawn+'</td></tr>').join('')}</tbody></table></div>
- <p class="data-note">크레딧은 1마리 기준입니다. 변이체는 일반 날씨의 재생성 가능 시점부터, 자색 안개에서는 최초 생성부터 변이체를 직접 지정할 수 있습니다. 잠식 변이체는 2일차부터 실제 활성화한 안개 둥지에만 지정하세요. 배치 위치·확률은 자동 추정하지 않습니다. 캠프 전체 처치를 기록하면 재생성 후 일반 개체로 다시 표시하며, 잠식 변이체는 자동 재생성하지 않습니다. 개별 제외는 직접 해제할 때까지 유지됩니다. 시간은 스쿼드 기준이며 패치에 따라 달라질 수 있습니다. 캠프 좌표는 근사치이며 추천선은 방문 순서입니다. 벽을 따라 이동하는 길찾기와 실시간 생존 상태는 제공하지 않습니다. <a href="https://dak.gg/er/guide/animal-map?hl=ko" target="_blank" rel="noopener">출현 시간 참고: DAK.GG</a> · <a href="https://event.playeternalreturn.com/S10/Royal/Roadmap?hl=ko-KR" target="_blank" rel="noopener">낮·밤 재생성 및 변이 규칙: 공식 안내</a></p></section>`;
+ <section class="surface animal-reference"><h2>동물 정보</h2><div class="animal-table-scroll"><table class="data-table"><thead><tr><th>동물</th><th>일반</th><th>변이체</th><th>잠식 변이체</th><th>일반 최초 생성</th><th>일반 재생성</th></tr></thead><tbody>${Object.entries(erAnimals).map(([type,a])=>'<tr><td>'+a.name+'</td>'+a.credits.map(v=>'<td>'+(v??'—')+'</td>').join('')+'<td>1일차 '+(erAnimalSpawns[type].phase==='night'?'밤':'낮')+' '+a.first.split(' ')[1]+'</td><td>'+a.respawn+'</td></tr>').join('')}</tbody></table></div>
+ <p class="data-note">크레딧은 1마리 기준입니다. 확정 변이체 캠프만 표시합니다. 닭·멧돼지·들개 무리는 1일차 밤부터 생성되어 처치 후 180초, 변이체 늑대는 2일차 낮부터 210초, 변이체 곰은 2일차 밤부터 240초 후 재생성됩니다. 변이체는 시간대가 바뀌어도 처치 전까지 유지됩니다. 랜덤 변이와 안개 둥지는 포함하지 않습니다. 개별 제외는 직접 해제할 때까지 유지됩니다. 시간은 스쿼드 기준이며 패치에 따라 달라질 수 있습니다. 캠프 좌표는 근사치이며 추천선은 방문 순서입니다. 벽을 따라 이동하는 길찾기와 실시간 생존 상태는 제공하지 않습니다. <a href="https://dak.gg/er/guide/animal-map?hl=ko" target="_blank" rel="noopener">출현 시간 참고: DAK.GG</a> · <a href="https://event.playeternalreturn.com/S10/Royal/Roadmap?hl=ko-KR" target="_blank" rel="noopener">낮·밤 재생성 및 변이 규칙: 공식 안내</a></p></section>`;
  const info=root.querySelector('#hunt-status');
  const isVisible=c=>active.has(c.type)&&erHuntAvailable(c,time,blocked);
  const timeLabel=()=>erHuntLabel(time);
  function syncClock(){
   root.querySelector('#hunt-day').value=String(time.day);root.querySelector('#hunt-phase').value=time.phase;
-  root.querySelector('#hunt-minute').value=Math.floor(time.remaining/60);root.querySelector('#hunt-second').value=time.remaining%60;root.querySelector('#hunt-survivors').value=String(time.survivors);root.querySelector('#hunt-weather').value=time.weather;root.querySelector('#hunt-phase').disabled=time.day===8;
+  root.querySelector('#hunt-minute').value=Math.floor(time.remaining/60);root.querySelector('#hunt-second').value=time.remaining%60;root.querySelector('#hunt-survivors').value=String(time.survivors);root.querySelector('#hunt-phase').disabled=time.day===8;
  }
  function setRegion(region){
   selectedRegion=region;root.querySelector('#hunt-region-title').textContent=region+' 사냥 목표';
@@ -170,7 +152,7 @@ async function startAnimalMap(){
   const targets=camps.filter(c=>c.region===region&&active.has(c.type));
   root.querySelector('#hunt-camps').innerHTML=targets.map(c=>`<article class="hunt-camp ${!isVisible(c)?'is-cleared':''}">
    <div class="hunt-camp-heading"><img src="${icon(c.type)}" alt=""><strong>${erAnimals[c.type].name}</strong><span>+${erHuntValue(c)} 크레딧</span></div>
-   <div class="hunt-camp-fields"><label>개체 수<input type="number" min="1" max="10" value="${c.count}" data-count="${c.id}" aria-label="${erAnimals[c.type].name} ${c.id} 목표 개체 수"></label><label>종류<select data-variant="${c.id}" aria-label="${erAnimals[c.type].name} ${c.id} 종류">${variants.map((n,i)=>erHuntVariantAllowed(c.type,i,time)?`<option value="${i}" ${c.variant===i?'selected':''}>${i===2?'잠식 · 둥지 출현 확인':n}</option>`:'').join('')}</select></label></div>
+   <div class="hunt-camp-fields"><label>개체 수<input type="number" min="1" max="10" value="${c.count}" data-count="${c.id}" aria-label="${erAnimals[c.type].name} ${c.id} 목표 개체 수"></label><span>${variants[c.fixedVariant||0]}</span></div>
    <p class="hunt-camp-state">${campStatus(c)}</p>
    <div class="hunt-camp-actions"><button data-kill="${c.id}" ${!isVisible(c)?'disabled':''}>현재 시점 처치</button><button data-reset-history="${c.id}" ${!c.events.length?'disabled':''}>기록 지우기</button></div>
    <div class="hunt-camp-actions"><label class="hunt-check"><input type="checkbox" data-cleared="${c.id}" ${c.cleared?'checked':''}><span>계속 제외</span></label><button data-add-camp="${c.id}" ${!isVisible(c)||route.includes(c)?'disabled':''}>${route.includes(c)?'추가됨':'동선 추가'}</button></div></article>`).join('')||'<p class="empty-state">현재 시간과 필터에 맞는 동물이 없습니다.</p>';
@@ -180,7 +162,7 @@ async function startAnimalMap(){
   if(c.cleared)return '직접 제외됨';
   if(state.waiting)return `처치: ${erHuntLabel(erHuntAt(state.lastKill))} · ${Number.isFinite(state.next)?'재생성: '+erHuntLabel(erHuntAt(state.next)):'자동 재생성 없음'}`;
   if(!state.available)return '현재 시점에 표시되지 않음';
-  return state.lastKill!==null?'재생성됨 · 변이 여부는 다시 확인하세요':'생성 가능 · 실제 생존 여부는 직접 확인하세요';
+  return state.lastKill!==null?'재생성 가능 · 실제 생존 여부는 직접 확인하세요':'생성 가능 · 실제 생존 여부는 직접 확인하세요';
  }
  function draw(){
   camps.forEach(c=>{c.variant=erHuntState(c,time).variant;});
@@ -192,7 +174,7 @@ async function startAnimalMap(){
   const points=start?[start,...route]:route;root.querySelector('.animal-lines').innerHTML='<polyline points="'+points.map(p=>p.x+','+p.y).join(' ')+'"/>';
   root.querySelector('#hunt-route').innerHTML=route.map((c,i)=>'<li><b>'+(i+1)+'</b><span>'+erText(c.region)+' · '+(c.variant?variants[c.variant]+' ':'')+erAnimals[c.type].name+' '+c.count+'마리</span><strong>+'+erHuntValue(c)+'</strong><button data-remove-hunt="'+i+'" aria-label="'+(i+1)+'번째 목표 삭제">×</button></li>').join('');
   root.querySelector('#hunt-total').textContent='계획 크레딧 '+route.reduce((n,c)=>n+erHuntValue(c),0)+' · '+route.reduce((n,c)=>n+c.count,0)+'마리';root.querySelector('#hunt-undo').disabled=!route.length;
-  root.querySelectorAll('[data-animal-filter]').forEach(el=>{el.closest('label').classList.toggle('is-unavailable',!erHuntSpawned(el.dataset.animalFilter,time));});
+  root.querySelectorAll('[data-animal-filter]').forEach(el=>{el.closest('label').classList.toggle('is-unavailable',!camps.some(c=>c.type===el.dataset.animalFilter&&erHuntAvailable(c,time,blocked)));});
   if(selectedRegion)setRegion(selectedRegion);
  }
  function changeTime(next){
@@ -219,16 +201,16 @@ async function startAnimalMap(){
  });
  root.addEventListener('change',e=>{
   const t=e.target;
-  if(['hunt-day','hunt-phase','hunt-minute','hunt-second','hunt-survivors','hunt-weather'].includes(t.id)){
+  if(['hunt-day','hunt-phase','hunt-minute','hunt-second','hunt-survivors'].includes(t.id)){
    const clamp=(value,max)=>Math.max(0,Math.min(max,Number(value)||0));
    const remaining=t.id==='hunt-phase'?erHuntPhases[(Number(root.querySelector('#hunt-day').value)-1)*2+(t.value==='night'?1:0)]:clamp(root.querySelector('#hunt-minute').value,9)*60+clamp(root.querySelector('#hunt-second').value,59);
-   changeTime({day:root.querySelector('#hunt-day').value,phase:root.querySelector('#hunt-phase').value,remaining,survivors:root.querySelector('#hunt-survivors').value==='true',weather:root.querySelector('#hunt-weather').value});return;
+   changeTime({day:root.querySelector('#hunt-day').value,phase:root.querySelector('#hunt-phase').value,remaining,survivors:root.querySelector('#hunt-survivors').value==='true'});return;
   }
   if(t.dataset.animalFilter){t.checked?active.add(t.dataset.animalFilter):active.delete(t.dataset.animalFilter);draw();}
-  for(const field of ['count','variant','cleared'])if(t.dataset[field]){const c=camps.find(c=>c.id===t.dataset[field]);if(c){if(field==='variant'){if(!erHuntRecord(c,time,'variant',Number(t.value)))info.textContent='현재 시점에 확인할 수 없는 종류이거나 기록 한도(200건)에 도달했습니다.';else info.textContent='현재 시점의 종류를 기록했습니다. 이후 시점의 기존 기록은 다시 입력하세요.';}else c[field]=field==='cleared'?t.checked:Math.max(1,Math.min(10,Math.floor(Number(t.value)||1)));draw();}}
+  for(const field of ['count','cleared'])if(t.dataset[field]){const c=camps.find(c=>c.id===t.dataset[field]);if(c){c[field]=field==='cleared'?t.checked:Math.max(1,Math.min(10,Math.floor(Number(t.value)||1)));draw();}}
  });
  root.querySelector('#hunt-share').onclick=async()=>{
-  const url=new URL(location.href);url.hash='hunt='+encodeURIComponent(JSON.stringify({version:3,clock:erHuntClockVersion,time,active:[...active],start:start?.region,point:start?{x:start.x,y:start.y}:null,blocked,route:route.map(c=>({id:c.id,count:c.count,variant:c.variant})),camps:camps.filter(c=>c.cleared||c.events.length||c.variant||c.count!==(erWildlifePoints[c.type][Number(c.id.split(':')[1])][2]||erAnimals[c.type].count)).map(c=>({id:c.id,count:c.count,variant:c.variant,cleared:c.cleared,events:c.events}))}));if(url.hash.length>=200000){info.textContent='공유 기록이 너무 깁니다. 필요 없는 캠프 기록을 지운 뒤 다시 공유하세요.';return;}history.replaceState(null,'',url);
+  const url=new URL(location.href);url.hash='hunt='+encodeURIComponent(JSON.stringify({version:3,clock:erHuntClockVersion,time,active:[...active],start:start?.region,point:start?{x:start.x,y:start.y}:null,blocked,route:route.map(c=>({id:c.id,count:c.count,variant:c.variant})),camps:camps.filter(c=>c.cleared||c.events.length||c.count!==c.defaultCount).map(c=>({id:c.id,count:c.count,variant:c.variant,cleared:c.cleared,events:c.events}))}));if(url.hash.length>=200000){info.textContent='공유 기록이 너무 깁니다. 필요 없는 캠프 기록을 지운 뒤 다시 공유하세요.';return;}history.replaceState(null,'',url);
   try{await navigator.clipboard.writeText(url.href);info.textContent='시간 설정과 동선을 함께 복사했습니다.';}catch(_){info.textContent='주소창의 링크를 복사해 공유하세요.';}
  };
  try{if(location.hash.startsWith('#hunt=')&&location.hash.length<200000){
