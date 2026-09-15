@@ -1,0 +1,11 @@
+{
+  "name": "eternal-return-gg-verification",
+  "private": true,
+  "scripts": {
+    "test:js": "node --test src/test/js/*.test.cjs",
+    "perf:browser": "node scripts/performance-browser.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0"
+  }
+}

@@ -1,0 +1,52 @@
+name: Browser performance
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Deployed service origin
+        required: true
+        default: https://eternalreturngg.onrender.com
+      runs:
+        description: Samples per menu and phase
+        required: true
+        default: '20'
+      menu:
+        description: Optional single menu name
+        required: false
+        default: ''
+      render_cold:
+        description: Single request after separately verified 15m idle
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Measure deployed pages
+        env:
+          BASE_URL: ${{ inputs.base_url }}
+          RUNS: ${{ inputs.runs }}
+          MENU: ${{ inputs.menu }}
+          RENDER_COLD: ${{ inputs.render_cold }}
+        run: |
+          args=(--base-url "$BASE_URL" --runs "$RUNS" --output performance-report.json)
+          if [ -n "$MENU" ]; then args+=(--menu "$MENU"); fi
+          if [ "$RENDER_COLD" = "true" ]; then args+=(--render-cold); fi
+          node scripts/performance-browser.cjs "${args[@]}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: performance-report-${{ github.run_id }}
+          path: performance-report.json
+          if-no-files-found: error
+          retention-days: 30
