@@ -75,6 +75,16 @@ node --test src/test/js/*.test.cjs
 bash gradlew test bootWar
 ```
 
+11개 메뉴의 브라우저 cold/warm, 화면 완료와 데이터 응답 p50/p95는 Playwright 하네스로 측정합니다. Render 절전 후 첫 요청은 15분 무접속을 로그로 확인한 뒤 별도 단일 회차로 실행합니다.
+
+```bash
+npm install
+npx playwright install chromium
+npm run perf:browser -- --runs 20 --output performance-report.json
+```
+
+정확한 지표 정의와 Render cold 측정 절차는 [성능 검증 실행 기준](docs/verification/PERFORMANCE.md)을 참고하세요.
+
 PR #3~#5에서 Java 테스트/bootWar와 JS 17개 파일이 통과했습니다. 로컬 Java 검사는 Gradle 다운로드 제한으로 실행하지 못해 CI 결과를 근거로 사용했습니다. `live` workflow는 자동 실행에서 skipped이며, 공식 API 직접 실행 완료로 간주하지 않습니다. [재현 스크립트와 실제 API 검증 범위](docs/verification/2026-09-14.md)를 참고하세요.
 
 ## 코드와 운영 문서
