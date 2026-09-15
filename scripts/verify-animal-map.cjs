@@ -18,7 +18,7 @@ const {chromium}=require('playwright'),fs=require('node:fs'),assert=require('nod
   if(day<8)await page.locator('#hunt-phase').selectOption(phase);
   await page.locator('#hunt-minute').fill(String(Math.floor(remaining/60)));
   await page.locator('#hunt-second').fill(String(remaining%60));
-  await page.locator('#hunt-second').dispatchEvent('change');
+  await page.locator('#hunt-second').press('Tab');
  };
  await page.goto('http://hunt.test/');
  assert.equal(await page.locator('#animal-points [data-add-camp^="Wolf:"]').count(),0);
@@ -50,9 +50,9 @@ const {chromium}=require('playwright'),fs=require('node:fs'),assert=require('nod
  await page.locator('#hunt-start').selectOption(region);await page.locator('[data-variant="Bear:0"]').selectOption('2');
  assert.equal(await page.locator('#animal-points [data-add-camp="Bear:0"]').count(),1);
  await page.locator('[data-kill="Bear:0"]').click();
- console.log('nest after kill',await page.locator('[data-kill="Bear:0"]').locator('xpath=../..').innerText());
- await page.locator('#hunt-share').click();console.log('nest saved',JSON.parse(decodeURIComponent(new URL(page.url()).hash.slice(6))).camps.find(c=>c.id==='Bear:0'));
- await clock(3,'night',90);console.log('nest later',await page.locator('[data-kill="Bear:0"]').locator('xpath=../..').innerText());
+ assert.match(await page.locator('[data-kill="Bear:0"]').locator('xpath=../..').innerText(),/자동 재생성 없음/);
+ await page.locator('#hunt-share').click();await page.reload();
+ await clock(3,'night',90);
  assert.equal(await page.locator('#animal-points [data-add-camp="Bear:0"]').count(),0);
  await page.locator('#hunt-recommend').click();
  const ids=await page.locator('#animal-points .is-selected').evaluateAll(els=>els.map(e=>e.dataset.addCamp));assert.equal(ids.length,new Set(ids).size);assert(!ids.includes('Bear:0'));

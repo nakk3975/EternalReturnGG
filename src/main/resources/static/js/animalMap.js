@@ -196,7 +196,8 @@ async function startAnimalMap(){
   if(selectedRegion)setRegion(selectedRegion);
  }
  function changeTime(next){
-  time=erHuntTime(next);syncClock();
+  const normalized=erHuntTime(next);if(JSON.stringify(normalized)===JSON.stringify(time))return;
+  time=normalized;syncClock();
   const before=route.length;draw();info.textContent=timeLabel()+' 기준으로 갱신했습니다.'+(before>route.length?' 현재 사냥할 수 없는 목표는 동선에서 제외했습니다.':'');
  }
  function chooseStart(region){const p=erRoutePositions[region];if(!p)return;start={region,x:p[0],y:p[1]};root.querySelector('#hunt-start').value=region;selectedRegion=region;info.textContent=region+'에서 출발 · 추천 버튼을 누르세요.';draw();}
