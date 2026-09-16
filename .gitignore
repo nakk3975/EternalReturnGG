@@ -39,3 +39,8 @@ out/
 # Generated, checksum-verified OCR build assets
 src/main/resources/static/vendor/tesseract-7/tesseract-core-lstm.wasm.js
 src/main/resources/static/vendor/tesseract-7/eng.traineddata*
+
+# Desktop generated dependencies and packages
+/desktop/node_modules/
+/desktop/static/
+/desktop/dist/
