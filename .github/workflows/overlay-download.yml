@@ -1,0 +1,52 @@
+name: Publish tested overlay download
+on:
+  push:
+    branches: [codex/overlay-download]
+    paths: ['.github/workflows/overlay-download.yml']
+permissions:
+  actions: read
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: nakk3975/EternalReturnGG
+    steps:
+      - name: Download and verify the tested Windows archive
+        run: |
+          set -euo pipefail
+          gh api repos/$GH_REPO/actions/runs/35068627305 --jq '.conclusion' | grep -qx success
+          gh api repos/$GH_REPO/actions/artifacts/10434224946/zip > package.zip
+          echo 'eff0e0bb458cbfbc3ac91eec2d4b895265f17457566697a1d8b4088b5d635d21  package.zip' | sha256sum -c -
+          python3 - <<'PY'
+          import pathlib, zipfile
+          out = pathlib.Path('release')
+          out.mkdir()
+          expected = {'ERGG-Overlay-0.1.0-Windows-x64.exe', 'README.md'}
+          with zipfile.ZipFile('package.zip') as archive:
+              for item in archive.infolist():
+                  name = pathlib.PurePosixPath(item.filename).name
+                  if name in expected:
+                      (out / name).write_bytes(archive.read(item))
+                      expected.remove(name)
+          assert not expected, expected
+          PY
+          cd release
+          sha256sum ERGG-Overlay-0.1.0-Windows-x64.exe > SHA256SUMS.txt
+      - name: Publish portable executable and instructions
+        run: |
+          cat > notes.md <<'EOF'
+          Windows x64 실험 버전: 팀 랭크, 동물 추천 동선, 재생성 타이머 오버레이.
+          
+          아래 Assets의 ERGG-Overlay-0.1.0-Windows-x64.exe를 다운로드해 실행하세요. 별도 설치는 필요하지 않습니다.
+          게임은 테두리 없는 창모드로 실행하세요. 사용법은 README.md에 있습니다.
+          
+          Ctrl+Shift+F8: 표시 전환 / F9: 이동·크기 편집 / F10: 설정.
+          일반 동물은 캠프 전체 처치를 수동 기록합니다. 화면 OCR는 실험 단계입니다.
+          코드 서명은 되어 있지 않습니다. 실제 게임 호환성은 사용자 환경에서 확인이 필요합니다.
+          
+          Windows 빌드·패키지 실행 검사를 통과한 기존 산출물이며, 원본 ZIP의 SHA-256을 확인한 뒤 게시했습니다.
+          EOF
+          gh release create overlay-v0.1.0 release/ERGG-Overlay-0.1.0-Windows-x64.exe release/README.md release/SHA256SUMS.txt --target 09d1d3b8f6b53c3a6fd5d69a8387b367798cef67 --title "ERGG Overlay 0.1.0 — Windows" --notes-file notes.md --prerelease
