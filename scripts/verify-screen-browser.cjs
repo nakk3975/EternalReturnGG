@@ -4,9 +4,9 @@ const {chromium}=require('playwright'),http=require('node:http'),fs=require('nod
  const base=path.resolve('src/main/resources/static');
  const server=http.createServer((req,res)=>{
   const u=new URL(req.url,'http://localhost').pathname;
-  if(u==='/'){res.setHeader('Content-Type','text/html');return res.end('<main><section class="hunt-clock"></section><div class="animal-map" style="width:400px;height:240px;background:#ddd"></div></main><script src="/static/js/animalMap.js"></script><script src="/static/js/animalTimer.js"></script><script src="/static/js/animalScreen.js"></script>');}
+  if(u==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');return res.end('<!doctype html><meta charset="utf-8"><main><section class="hunt-clock"></section><div class="animal-map" style="width:400px;height:240px;background:#ddd"></div></main><script src="/static/js/animalMap.js"></script><script src="/static/js/animalTimer.js"></script><script src="/static/js/animalScreen.js"></script>');}
   const file=path.resolve(base,'.'+u.replace(/^\/static/,''));if(!file.startsWith(base+path.sep)||!fs.existsSync(file)){res.statusCode=404;return res.end();}
-  res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':'application/octet-stream');res.end(fs.readFileSync(file));
+  res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript; charset=utf-8':'application/octet-stream');res.end(fs.readFileSync(file));
  });await new Promise(r=>server.listen(0,'127.0.0.1',r));
  let browser;
  try{
