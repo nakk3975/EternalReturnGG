@@ -9,7 +9,7 @@ const {chromium}=require('playwright'),fs=require('node:fs'),assert=require('nod
  await page.route('**/*',route=>{
   const u=new URL(route.request().url());
   if(u.hostname!=='hunt.test')return route.abort();
-  if(u.pathname==='/')return route.fulfill({contentType:'text/html',body:`<!doctype html><meta charset="utf-8"><style>:root{--line:#ccc;--ink:#eee;--muted:#aaa;--panel:#202228;--panel-alt:#303238}body{background:#181a20;color:#eee;margin:20px}.surface{background:#202228}.planner-map-image{width:100%}</style><link rel="stylesheet" href="/css/animalMap.css"><div id="explorer-status"></div><main id="root"></main><script>function erPageShell(){return document.querySelector('#root')} function erText(v){return String(v).replaceAll('&','&amp;').replaceAll('<','&lt;')}</script><script src="/js/routePlanner.js"></script><script src="/js/animalMap.js"></script><script>startAnimalMap()</script>`});
+  if(u.pathname==='/')return route.fulfill({contentType:'text/html',body:`<!doctype html><meta charset="utf-8"><style>:root{--line:#ccc;--ink:#eee;--muted:#aaa;--panel:#202228;--panel-alt:#303238}body{background:#181a20;color:#eee;margin:20px}.surface{background:#202228}.planner-map-image{width:100%}</style><link rel="stylesheet" href="/css/animalMap.css"><div id="explorer-status"></div><main id="root"></main><script>function erPageShell(){return document.querySelector('#root')} function erText(v){return String(v).replaceAll('&','&amp;').replaceAll('<','&lt;')}</script><script src="/js/routePlanner.js"></script><script src="/js/animalTimer.js"></script><script src="/js/animalScreen.js"></script><script src="/js/animalMap.js"></script><script>startAnimalMap()</script>`});
   const path='src/main/resources/static'+u.pathname;
   return route.fulfill({contentType:u.pathname.endsWith('.js')?'text/javascript':'text/css',body:fs.readFileSync(path,'utf8')});
  });
@@ -21,6 +21,8 @@ const {chromium}=require('playwright'),fs=require('node:fs'),assert=require('nod
   await page.locator('#hunt-second').press('Tab');
  };
  await page.goto('http://hunt.test/');
+ assert.equal(await page.locator('[data-screen=timer-camp] option').count(),16);
+ assert(await page.locator('[data-screen=timer-camp] option').evaluateAll(els=>els.every(e=>e.value.startsWith('Mutant:'))));
  assert.equal(await page.locator('#animal-points [data-add-camp^="Wolf:"]').count(),0);
  assert.equal(await page.locator('#animal-points [data-add-camp^="Bear:"]').count(),0);
  await page.locator('#animal-points [data-add-camp="Chicken:0"]').click({force:true});

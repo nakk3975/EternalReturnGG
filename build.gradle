@@ -44,3 +44,9 @@ tasks.named('test') {
 tasks.named('bootWar') {
 	archiveFileName = 'ergg.war'
 }
+
+// Verify/fetch pinned OCR assets before packaging; runtime stays same-origin.
+tasks.register('prepareOcr', Exec) {
+    commandLine 'java', 'scripts/PrepareOcr.java'
+}
+tasks.named('processResources') { dependsOn 'prepareOcr' }
