@@ -52,8 +52,9 @@ const {chromium}=require('playwright'),http=require('node:http'),fs=require('nod
   await page.waitForFunction(()=>timerObservations.length>0,null,{timeout:30000});
   const observation=await page.evaluate(()=>timerObservations[0]);assert.equal(observation.campId,'Mutant:Dog:0');assert(Math.abs(observation.respawnAt-169)<=3);
   await page.locator('[data-screen=track]').click();
-  await page.evaluate(()=>{clearInterval(fixtureTimer);const c=fixtureCanvas.getContext('2d');c.fillStyle='white';c.fillRect(0,0,400,240);});
-  await page.waitForFunction(()=>document.querySelector('[data-screen=position]').textContent.includes('지도 변경'));
+  assert.equal(await page.locator('[data-screen=track]').innerText(),'위치 추적 멈춤');
+  await page.evaluate(()=>{clearInterval(fixtureTimer);window.paintFixture=()=>{const c=fixtureCanvas.getContext('2d');c.fillStyle='white';c.fillRect(0,0,400,240);};paintFixture();window.fixtureTimer=setInterval(paintFixture,100);});
+  try { await page.waitForFunction(()=>document.querySelector('[data-screen=position]').textContent.includes('지도 변경')); } catch(e) { console.error(await page.evaluate(()=>({position:document.querySelector('[data-screen=position]').textContent,status:document.querySelector('[data-screen=status]').textContent,track:document.querySelector('[data-screen=track]').textContent,freeze:document.querySelector('[data-screen=freeze]').textContent,videoTime:document.querySelector('[data-screen=video]').currentTime,pixel:Array.from(document.querySelector('[data-screen=canvas]').getContext('2d').getImageData(40,70,1,1).data)}))); throw e; }
   await page.locator('[data-screen=stop]').click();assert(await page.locator('[data-screen=read]').isDisabled());assert(await page.evaluate(()=>fixtureStream.getTracks().every(t=>t.readyState==='ended')));
   assert.deepEqual(errors,[]);console.log('PASS browser: synthetic video, 60-second continuous icon tracking, bundled clock and camp timer OCR, map-change stop, stream cleanup');
  }finally{await browser?.close();await new Promise(r=>server.close(r));}
