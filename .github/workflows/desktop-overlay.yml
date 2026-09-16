@@ -27,6 +27,9 @@ jobs:
         working-directory: desktop
       - run: npm test
         working-directory: desktop
+      - name: Smoke test Electron runtime
+        working-directory: desktop
+        run: ./node_modules/.bin/electron.cmd . --smoke
       - run: npm run dist:win
         working-directory: desktop
         env:
@@ -34,8 +37,9 @@ jobs:
       - name: Smoke test packaged application
         shell: pwsh
         run: |
-          $proc = Start-Process -FilePath "desktop/dist/win-unpacked/ERGG Overlay.exe" -ArgumentList "--smoke" -PassThru
+          $proc = Start-Process -FilePath "desktop/dist/win-unpacked/ERGG Overlay.exe" -ArgumentList "--smoke" -RedirectStandardOutput "smoke-out.log" -RedirectStandardError "smoke-error.log" -PassThru
           if (-not $proc.WaitForExit(45000)) { $proc.Kill(); throw "Packaged app smoke timed out" }
+          Get-Content smoke-out.log, smoke-error.log
           if ($proc.ExitCode -ne 0) { throw "Packaged app smoke failed: $($proc.ExitCode)" }
       - uses: actions/upload-artifact@v4
         with:

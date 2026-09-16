@@ -15,7 +15,7 @@ app.whenReady().then(async()=>{
  overlay=new BrowserWindow({width:360,height:650,minWidth:300,minHeight:400,x:area.x+area.width-380,y:area.y+30,frame:false,transparent:true,hasShadow:false,alwaysOnTop:true,skipTaskbar:true,focusable:false,webPreferences});
  overlay.setAlwaysOnTop(true,'screen-saver');overlay.setIgnoreMouseEvents(true,{forward:true});
  overlay.setContentProtection(true);
- for(const win of [control,overlay]){win.setMenuBarVisibility(false);win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',e=>e.preventDefault());}
+ for(const win of [control,overlay]){win.setMenuBarVisibility(false);if(smoke)win.webContents.on('console-message',(_e,details)=>console.log('renderer:',details));win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',e=>e.preventDefault());}
  const isControl=e=>e.sender===control.webContents&&e.senderFrame?.url.startsWith('ergg://app/ui/index.html');
  const notify=()=>{for(const win of [control,overlay])win.webContents.send('mode',{editing,visible:overlay.isVisible()});};
  const edit=()=>{editing=!editing;overlay.setIgnoreMouseEvents(!editing,{forward:true});overlay.setFocusable(editing);if(editing){overlay.show();overlay.focus();}notify();};
@@ -48,7 +48,7 @@ app.whenReady().then(async()=>{
  overlay.on('close',e=>{if(!quitting){e.preventDefault();overlay.hide();notify();}});
  await Promise.all([control.loadURL('ergg://app/ui/index.html?view=settings'),overlay.loadURL('ergg://app/ui/index.html?view=overlay')]);notify();
  if(failed.length)control.webContents.send('warning','단축키 등록 실패: '+failed.join(', ')+' · 트레이 메뉴를 사용하세요.');
- if(smoke){await new Promise(r=>setTimeout(r,1800));const result=await control.webContents.executeJavaScript('({camps:document.querySelectorAll("#camp option").length,ready:!!window.overlayReady})');if(!result.ready||result.camps!==179)throw Error('Renderer smoke failed');edit();if(!overlay.isFocusable())throw Error('Edit mode failed');edit();if(overlay.isFocusable())throw Error('Click-through mode failed');console.log('PASS packaged app: local scheme, renderer, 179 camps, overlay edit mode');quitting=true;app.exit(0);}
+ if(smoke){await new Promise(r=>setTimeout(r,1800));const result=await control.webContents.executeJavaScript('({camps:document.querySelectorAll("#camp option").length,ready:!!window.overlayReady})');if(!result.ready||result.camps!==179)throw Error('Renderer smoke failed: '+JSON.stringify(result));edit();if(!overlay.isFocusable())throw Error('Edit mode failed');edit();if(overlay.isFocusable())throw Error('Click-through mode failed');console.log('PASS packaged app: local scheme, renderer, 179 camps, overlay edit mode');quitting=true;app.exit(0);}
 }).catch(error=>{console.error(error);app.exit(1);});
 app.on('before-quit',()=>{quitting=true;});app.on('will-quit',()=>globalShortcut.unregisterAll());
 }
