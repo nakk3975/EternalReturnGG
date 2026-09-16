@@ -48,15 +48,28 @@ function erHuntState(camp,value){
   if(event.kind==='kill'&&event.at>=next){next=fixed?event.at+rule.respawn:erHuntRespawn(camp.type,event.at);lastKill=event.at;}
  }
  const waiting=lastKill!==null&&now<next;
- return {available:!camp.cleared&&!waiting&&now>=next&&(fixed||erHuntSpawned(camp.type,time)),variant:fixed?1:0,waiting,next,lastKill};
+ const observations=(camp.timerObservations||[]).filter(o=>o.observedAt<=now&&o.respawnAt>now);
+ const dead=observations.length?camp.count:0,remainingCount=dead?0:camp.count;
+ return {available:!camp.cleared&&!waiting&&remainingCount>0&&now>=next&&(fixed||erHuntSpawned(camp.type,time)),variant:fixed?1:0,waiting,next,lastKill,remainingCount,timerDead:dead,timerNext:observations.length?Math.min(...observations.map(o=>o.respawnAt)):null};
 }
+function erHuntTimerSupported(camp){return camp.fixedVariant===1&&Object.hasOwn(erFixedMutantRules,camp.type);}
+function erHuntObserveTimer(camp,observation){
+ if(!erHuntTimerSupported(camp))return false;
+ const {observedAt,respawnAt}=observation||{},total=erHuntPhases.reduce((a,b)=>a+b,0);
+ if(!Number.isFinite(observedAt)||!Number.isFinite(respawnAt)||observedAt<erFixedMutantRules[camp.type].first||respawnAt<=observedAt||respawnAt-observedAt>erFixedMutantRules[camp.type].respawn+2||respawnAt>total)return false;
+ // The game shows this timer only after the entire camp is cleared.
+ // Preserve the observed deadline without inventing an exact historical kill time.
+ const old=camp.timerObservations?.[0];if(old&&old.observedAt>=observedAt)return false;
+ camp.timerObservations=[{observedAt,respawnAt}];return true;
+}
+function erHuntCount(camp,time){return erHuntState(camp,time).remainingCount??camp.count;}
 function erHuntRecord(camp,value,kind){
  const state=erHuntState(camp,value),at=erHuntSeconds(value);
  if(kind!=='kill'||!state.available)return false;
  camp.events=camp.events||[];if(camp.events.length>=200)return false;
  // Editing an earlier moment replaces later history.
  camp.events=camp.events.filter(e=>e.at<at);
- camp.events.push({at,kind:'kill',variant:state.variant});return true;
+ camp.events.push({at,kind:'kill',variant:state.variant});camp.timerObservations=[];return true;
 }
 function erHuntRestoreCamp(camp,saved,time,version){
  camp.count=Math.max(1,Math.min(10,Math.floor(Number(saved.count)||camp.defaultCount||1)));camp.cleared=saved.cleared===true;camp.events=[];
@@ -102,13 +115,13 @@ function erWildlifeCamps(){return [[erWildlifePoints,0],[erFixedMutantPoints,1]]
  const region=Object.entries(erAnimalRegionIds).find(([,id])=>erPointInRegion(x*9.03,y*9.36,erRoutePolygons[id]))?.[0]||Object.keys(erAnimalRegionIds).sort((a,b)=>Math.hypot(x-erRoutePositions[a][0],y-erRoutePositions[a][1])-Math.hypot(x-erRoutePositions[b][0],y-erRoutePositions[b][1]))[0];
  return {id:(fixedVariant?'Mutant:':'')+type+':'+i,region,type,count:count||erAnimals[type].count,defaultCount:count||erAnimals[type].count,fixedVariant,variant:fixedVariant,x,y,cleared:false,events:[]};
 })));}
-function erHuntValue(camp){return Math.max(0,Number(camp.count)||0)*(erAnimals[camp.type]?.credits[camp.variant||0]||0);}
+function erHuntValue(camp,time){return Math.max(0,Number(time?erHuntCount(camp,time):camp.count)||0)*(erAnimals[camp.type]?.credits[camp.variant||0]||0);}
 // Compare credit per estimated effort. Coordinates are region centers, not walkable paths.
 function erRecommendHunt(start,camps,{steps=5,travelWeight=1,killCost=8,blocked=[],time=null}={}){
- const values=new Map(camps.map(c=>[c,erHuntValue(time?{...c,variant:erHuntState(c,time).variant}:c)]));
+ const values=new Map(camps.map(c=>[c,erHuntValue(time?{...c,variant:erHuntState(c,time).variant}:c,time)]));
  const available=camps.filter(c=>erHuntAvailable(c,time,blocked)&&values.get(c)>0);let beam=[{route:[],point:start,credits:0,cost:0}];
  for(let depth=0;depth<Math.min(10,Math.max(1,steps));depth++){
-  const next=[];for(const state of beam)for(const c of available){if(state.route.some(v=>v.id===c.id))continue;const distance=Math.hypot(c.x-state.point.x,c.y-state.point.y);next.push({route:[...state.route,c],point:c,credits:state.credits+values.get(c),cost:state.cost+distance*Math.max(.1,travelWeight)+Math.max(1,killCost)*c.count});}
+  const next=[];for(const state of beam)for(const c of available){if(state.route.some(v=>v.id===c.id))continue;const distance=Math.hypot(c.x-state.point.x,c.y-state.point.y);next.push({route:[...state.route,c],point:c,credits:state.credits+values.get(c),cost:state.cost+distance*Math.max(.1,travelWeight)+Math.max(1,killCost)*(time?erHuntCount(c,time):c.count)});}
   if(!next.length)break;next.sort((a,b)=>b.credits/Math.max(1,b.cost)-a.credits/Math.max(1,a.cost)||b.credits-a.credits);beam=next.slice(0,80);
  }
  return beam[0]||{route:[],credits:0,cost:0};
@@ -117,10 +130,10 @@ async function startAnimalMap(){
  const root=erPageShell('야생동물 지도 · 사냥 동선','게임 시간과 출발 위치를 정하고 사냥할 동물을 선택하세요.');root.className='animal-page';
  document.title='야생동물 지도 · ER.GG';document.querySelector('#explorer-status').textContent='';
  let start=null,route=[],blocked=[],active=new Set(Object.keys(erAnimals)),time=erHuntTime(),selectedRegion='';
- const camps=erWildlifeCamps();
+ const camps=erWildlifeCamps();let screenAssist=null;
  const icon=type=>'https://cdn.dak.gg/er/images/assets/animal-map-icon/Ico_DetailedMap_'+erAnimals[type].icon+'.png';
  const variants=['일반','확정 변이체'];
- root.innerHTML=`<p class="animal-scope">동물 아이콘을 누르면 사냥 동선에 추가됩니다. 지도 빈 곳을 누르면 그 위치에서 출발합니다.</p>
+ root.innerHTML=`<p class="animal-scope">동물 아이콘을 누르면 해당 지역의 사냥 목표가 열리고 동선에 추가됩니다. 일반 동물은 목표 카드에서 캠프 전체 처치를 기록하세요. 한 마리만 처치했을 때는 전체 처치를 기록하지 마세요. 지도 빈 곳을 누르면 그 위치에서 출발합니다.</p>
  <section class="surface hunt-clock" aria-label="사냥 시간 설정">
   <div class="hunt-clock-heading"><strong>사냥 시점</strong><span id="hunt-clock-summary" aria-live="polite"></span></div>
   <div class="hunt-clock-fields">
@@ -151,29 +164,30 @@ async function startAnimalMap(){
   const block=root.querySelector('#hunt-block');block.disabled=false;block.checked=blocked.includes(region);
   const targets=camps.filter(c=>c.region===region&&active.has(c.type));
   root.querySelector('#hunt-camps').innerHTML=targets.map(c=>`<article class="hunt-camp ${!isVisible(c)?'is-cleared':''}">
-   <div class="hunt-camp-heading"><img src="${icon(c.type)}" alt=""><strong>${erAnimals[c.type].name}</strong><span>+${erHuntValue(c)} 크레딧</span></div>
+   <div class="hunt-camp-heading"><img src="${icon(c.type)}" alt=""><strong>${erAnimals[c.type].name}</strong><span>+${erHuntValue(c,time)} 크레딧</span></div>
    <div class="hunt-camp-fields"><label>개체 수<input type="number" min="1" max="10" value="${c.count}" data-count="${c.id}" aria-label="${erAnimals[c.type].name} ${c.id} 목표 개체 수"></label><span>${variants[c.fixedVariant||0]}</span></div>
-   <p class="hunt-camp-state">${campStatus(c)}</p>
-   <div class="hunt-camp-actions"><button data-kill="${c.id}" ${!isVisible(c)?'disabled':''}>현재 시점 처치</button><button data-reset-history="${c.id}" ${!c.events.length?'disabled':''}>기록 지우기</button></div>
+   <p class="hunt-camp-state">${campStatus(c)}</p><p class="data-note">${erHuntTimerSupported(c)?'고정 변이체 · 화면 타이머 연결 가능':'수동 보정 · 전체 처치를 직접 확인한 경우에만 기록'}</p>
+   <div class="hunt-camp-actions"><button data-kill="${c.id}" ${!isVisible(c)?'disabled':''}>캠프 전체 처치 기록</button><button data-reset-history="${c.id}" ${!c.events.length&&!c.timerObservations?.length?'disabled':''}>기록 지우기</button></div>
    <div class="hunt-camp-actions"><label class="hunt-check"><input type="checkbox" data-cleared="${c.id}" ${c.cleared?'checked':''}><span>계속 제외</span></label><button data-add-camp="${c.id}" ${!isVisible(c)||route.includes(c)?'disabled':''}>${route.includes(c)?'추가됨':'동선 추가'}</button></div></article>`).join('')||'<p class="empty-state">현재 시간과 필터에 맞는 동물이 없습니다.</p>';
  }
  function campStatus(c){
   const state=erHuntState(c,time);
   if(c.cleared)return '직접 제외됨';
+  if(state.timerDead)return `타이머 관측: 캠프 전체 ${c.count}마리 처치됨 · 재생성 ${erHuntLabel(erHuntAt(state.timerNext))}`;
   if(state.waiting)return `처치: ${erHuntLabel(erHuntAt(state.lastKill))} · ${Number.isFinite(state.next)?'재생성: '+erHuntLabel(erHuntAt(state.next)):'자동 재생성 없음'}`;
   if(!state.available)return '현재 시점에 표시되지 않음';
-  return state.lastKill!==null?'재생성 가능 · 실제 생존 여부는 직접 확인하세요':'생성 가능 · 실제 생존 여부는 직접 확인하세요';
+  return state.lastKill!==null?'재생성 예상 · 현재 상태 미확인':'생성 예상 · 현재 상태 미확인';
  }
  function draw(){
   camps.forEach(c=>{c.variant=erHuntState(c,time).variant;});
   route=route.filter(isVisible);
   const shown=camps.filter(isVisible);
   root.querySelector('#hunt-clock-summary').textContent=timeLabel()+' · '+shown.length+'개 캠프';
-  root.querySelector('#animal-points').innerHTML=shown.map(c=>`<button class="animal-point ${route.includes(c)?'is-selected':''} ${c.variant?'is-variant':''}" data-add-camp="${c.id}" style="left:${c.x}%;top:${c.y}%" aria-label="${erText(c.region)} ${variants[c.variant]} ${erAnimals[c.type].name} ${c.count}마리 동선 추가" title="${erText(c.region)} · ${variants[c.variant]} ${erAnimals[c.type].name} ${c.count}마리 · ${erHuntValue(c)} 크레딧"><img alt="" src="${icon(c.type)}"><b>${route.includes(c)?route.indexOf(c)+1:c.count>1?c.count:''}</b></button>`).join('');
+  root.querySelector('#animal-points').innerHTML=shown.map(c=>`<button class="animal-point ${route.includes(c)?'is-selected':''} ${c.variant?'is-variant':''}" data-add-camp="${c.id}" style="left:${c.x}%;top:${c.y}%" aria-label="${erText(c.region)} ${variants[c.variant]} ${erAnimals[c.type].name} ${erHuntCount(c,time)}마리 동선 추가" title="${erText(c.region)} · ${variants[c.variant]} ${erAnimals[c.type].name} ${erHuntCount(c,time)}마리 · ${erHuntValue(c,time)} 크레딧"><img alt="" src="${icon(c.type)}"><b>${route.includes(c)?route.indexOf(c)+1:erHuntCount(c,time)>1?erHuntCount(c,time):''}</b></button>`).join('');
   root.querySelector('#hunt-start-pin').innerHTML=start?'<span class="hunt-start-pin" style="left:'+start.x+'%;top:'+start.y+'%">출발</span>':'';
   const points=start?[start,...route]:route;root.querySelector('.animal-lines').innerHTML='<polyline points="'+points.map(p=>p.x+','+p.y).join(' ')+'"/>';
-  root.querySelector('#hunt-route').innerHTML=route.map((c,i)=>'<li><b>'+(i+1)+'</b><span>'+erText(c.region)+' · '+(c.variant?variants[c.variant]+' ':'')+erAnimals[c.type].name+' '+c.count+'마리</span><strong>+'+erHuntValue(c)+'</strong><button data-remove-hunt="'+i+'" aria-label="'+(i+1)+'번째 목표 삭제">×</button></li>').join('');
-  root.querySelector('#hunt-total').textContent='계획 크레딧 '+route.reduce((n,c)=>n+erHuntValue(c),0)+' · '+route.reduce((n,c)=>n+c.count,0)+'마리';root.querySelector('#hunt-undo').disabled=!route.length;
+  root.querySelector('#hunt-route').innerHTML=route.map((c,i)=>'<li><b>'+(i+1)+'</b><span>'+erText(c.region)+' · '+(c.variant?variants[c.variant]+' ':'')+erAnimals[c.type].name+' '+erHuntCount(c,time)+'마리</span><strong>+'+erHuntValue(c,time)+'</strong><button data-remove-hunt="'+i+'" aria-label="'+(i+1)+'번째 목표 삭제">×</button></li>').join('');
+  root.querySelector('#hunt-total').textContent='계획 크레딧 '+route.reduce((n,c)=>n+erHuntValue(c,time),0)+' · '+route.reduce((n,c)=>n+erHuntCount(c,time),0)+'마리';root.querySelector('#hunt-undo').disabled=!route.length;
   root.querySelectorAll('[data-animal-filter]').forEach(el=>{el.closest('label').classList.toggle('is-unavailable',!camps.some(c=>c.type===el.dataset.animalFilter&&erHuntAvailable(c,time,blocked)));});
   if(selectedRegion)setRegion(selectedRegion);
  }
@@ -194,14 +208,15 @@ async function startAnimalMap(){
  root.querySelector('#hunt-block').onchange=e=>{blocked=blocked.filter(v=>v!==selectedRegion);if(e.target.checked)blocked.push(selectedRegion);draw();};
  root.addEventListener('click',e=>{
   const kill=e.target.closest('[data-kill]');if(kill){const c=camps.find(c=>c.id===kill.dataset.kill);if(c&&isVisible(c)&&erHuntRecord(c,time,'kill')){info.textContent=timeLabel()+' · 캠프 전체 처치를 기록했습니다. 이후 시점의 기존 기록은 다시 입력하세요.';draw();}}
-  const reset=e.target.closest('[data-reset-history]');if(reset){const c=camps.find(c=>c.id===reset.dataset.resetHistory);if(c){c.events=[];draw();}}
-  const preset=e.target.closest('[data-hunt-preset]');if(preset){const key=preset.dataset.huntPreset;changeTime({...time,day:1,phase:key==='bear'?'night':'day',remaining:key==='early'?90:key==='wolf'?60:110});}
+  const reset=e.target.closest('[data-reset-history]');if(reset){const c=camps.find(c=>c.id===reset.dataset.resetHistory);if(c){c.events=[];c.timerObservations=[];draw();}}
+  const preset=e.target.closest('[data-hunt-preset]');if(preset){screenAssist?.invalidateTime();const key=preset.dataset.huntPreset;changeTime({...time,day:1,phase:key==='bear'?'night':'day',remaining:key==='early'?90:key==='wolf'?60:110});}
   const add=e.target.closest('[data-add-camp]');if(add){const c=camps.find(c=>c.id===add.dataset.addCamp);if(c&&isVisible(c)&&!route.includes(c)){if(!start)chooseStart(c.region);route.push(c);selectedRegion=c.region;}draw();}
   const remove=e.target.closest('[data-remove-hunt]');if(remove){route.splice(Number(remove.dataset.removeHunt),1);draw();}
  });
  root.addEventListener('change',e=>{
   const t=e.target;
   if(['hunt-day','hunt-phase','hunt-minute','hunt-second','hunt-survivors'].includes(t.id)){
+   screenAssist?.invalidateTime();
    const clamp=(value,max)=>Math.max(0,Math.min(max,Number(value)||0));
    const remaining=t.id==='hunt-phase'?erHuntPhases[(Number(root.querySelector('#hunt-day').value)-1)*2+(t.value==='night'?1:0)]:clamp(root.querySelector('#hunt-minute').value,9)*60+clamp(root.querySelector('#hunt-second').value,59);
    changeTime({day:root.querySelector('#hunt-day').value,phase:root.querySelector('#hunt-phase').value,remaining,survivors:root.querySelector('#hunt-survivors').value==='true'});return;
@@ -226,12 +241,23 @@ async function startAnimalMap(){
  let zoom=1;
  const zoomMap=delta=>{zoom=Math.max(1,Math.min(2.5,zoom+delta));root.querySelector('.animal-map').style.width=(zoom*100)+'%';};
  root.querySelector('#hunt-zoom-in').onclick=()=>zoomMap(.25);root.querySelector('#hunt-zoom-out').onclick=()=>zoomMap(-.25);
- root.querySelector('#hunt-reset-camps').onclick=()=>{camps.forEach(c=>c.events=[]);draw();};
+ root.querySelector('#hunt-reset-camps').onclick=()=>{camps.forEach(c=>{c.events=[];c.timerObservations=[];});draw();};
  root.querySelector('.animal-map').addEventListener('click',e=>{
+  if(screenAssist?.mapClick(e))return;
   if(e.target.closest('button'))return;
   const box=e.currentTarget.getBoundingClientRect(),x=(e.clientX-box.left)/box.width*100,y=(e.clientY-box.top)/box.height*100;
   const region=Object.entries(erAnimalRegionIds).find(([,id])=>erPointInRegion(x*9.03,y*9.36,erRoutePolygons[id]))?.[0]||Object.keys(erAnimalRegionIds).sort((a,b)=>Math.hypot(x-erRoutePositions[a][0],y-erRoutePositions[a][1])-Math.hypot(x-erRoutePositions[b][0],y-erRoutePositions[b][1]))[0];
   chooseStart(region);start={region,x,y};info.textContent=region+' 근처 선택 위치에서 출발';draw();
  });
+ screenAssist=typeof erStartScreenAssist==='function'?erStartScreenAssist(root,{
+  getTime:()=>({...time}),onTime:changeTime,
+  getCamps:()=>camps.filter(erHuntTimerSupported).map(c=>({id:c.id,count:c.count,label:c.region+' · '+(c.fixedVariant?'변이체 ':'')+erAnimals[c.type].name+' · '+c.id})),
+  onTimer:o=>{const c=camps.find(c=>c.id===o.campId);if(c&&erHuntObserveTimer(c,{observedAt:o.observedAt,respawnAt:o.respawnAt})){draw();info.textContent=erAnimals[c.type].name+' 캠프 전체 처치와 재생성 타이머를 반영했습니다.';return true;}return false;},
+  onPosition:p=>{
+   const region=Object.entries(erAnimalRegionIds).find(([,id])=>erPointInRegion(p.x*9.03,p.y*9.36,erRoutePolygons[id]))?.[0];
+   if(!region)return;
+   start={region,x:p.x,y:p.y};root.querySelector('#hunt-start').value=region;draw();
+  }
+ }):null;
  syncClock();draw();
 }

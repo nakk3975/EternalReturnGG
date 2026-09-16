@@ -1,0 +1,36 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const c=vm.createContext({});vm.runInContext(fs.readFileSync('src/main/resources/static/js/animalTimer.js','utf8'),c);
+assert.equal(c.erAnimalTimerSeconds('01:59'),119);
+assert.equal(c.erAnimalTimerSeconds('119s'),119);
+assert.equal(c.erAnimalTimerSeconds('119초'),119);
+for(const value of ['119','1:9','01:60','HP 119','-1s','01:59 2',''])assert.equal(c.erAnimalTimerSeconds(value),null);
+const o=c.erAnimalTimerObserver();
+const read=(remaining,at,extra={})=>o.observe({text:remaining+'s',at,confidence:90,campId:'Bear:0',session:'a',...extra});
+assert.equal(read(120,10),null);assert.equal(read(119,11),null);
+let result=read(118,12);assert.equal(result.respawnAt,130);assert.equal(result.observedAt,12);assert.equal(result.killAt,undefined);
+assert.equal(read(117,13),null,'same countdown cannot record repeated kills');
+o.reset();read(120,10);read(120,11);assert.equal(read(120,12),null,'frozen countdown is not evidence');
+o.reset();read(120,10);read(119,11);assert.equal(read(118,12,{confidence:30}),null);assert.equal(read(117,13),null);
+o.reset();read(120,10);read(119,11);assert.equal(read(110,20),null,'gap requires a new sequence');
+o.reset();read(120,10);read(119,11);assert.equal(read(118,12,{campId:'Bear:1'}),null,'different camps must not share evidence');
+o.reset();read(120,10);read(119,11);assert.equal(read(118,12,{session:'b'}),null,'source change invalidates evidence');
+o.reset();read(120,10);read(119,11);assert.equal(read(118,10),null,'out-of-order response rejected');
+o.reset();assert.equal(read(301,10),null);assert.equal(read(0,11),null);
+console.log('PASS: explicit timer formats, continuous countdown evidence, per-camp isolation, frozen/noisy/gapped/stale input rejection and deadline deduplication');
+vm.runInContext(fs.readFileSync('src/main/resources/static/js/animalMap.js','utf8'),c);
+const camp={id:'Mutant:Dog:0',type:'Dog',count:3,fixedVariant:1,events:[],cleared:false};
+assert(c.erHuntObserveTimer(camp,{observedAt:150,respawnAt:330}));
+let state=c.erHuntState(camp,c.erHuntAt(151));assert.equal(state.available,false);assert.equal(state.remainingCount,0);assert.equal(c.erHuntValue(camp,c.erHuntAt(151)),0);
+assert.equal(c.erHuntState(camp,c.erHuntAt(329)).available,false);
+assert.equal(c.erHuntState(camp,c.erHuntAt(330)).remainingCount,3);
+assert.equal(c.erHuntState(camp,c.erHuntAt(330)).available,true);
+assert.equal(c.erHuntState(camp,c.erHuntAt(149)).remainingCount,3,'future observation cannot change history');
+assert(!c.erHuntObserveTimer(camp,{observedAt:149,respawnAt:330}));
+assert(!c.erHuntObserveTimer(camp,{observedAt:152,respawnAt:152}));
+assert.equal(camp.events.length,0,'timer must not fabricate a kill timestamp');
+console.log('PASS: whole-camp timer clears all three animals, zero credits, complete respawn boundary, rewind and invalid observations');
+
+for(const type of ['Chicken','Dog','Boar','Bat','AttackDrone','Wolf','Bear'])assert.equal(c.erHuntObserveTimer({type,count:3,fixedVariant:0},{observedAt:150,respawnAt:330}),false,'no timer evidence allowed for unsupported '+type);
+
+assert(!c.erHuntObserveTimer({...camp,timerObservations:[]},{observedAt:100,respawnAt:280}),'reject pre-spawn mutant timer');
+assert(!c.erHuntObserveTimer({...camp,timerObservations:[]},{observedAt:150,respawnAt:400}),'reject timer longer than the camp respawn interval');
