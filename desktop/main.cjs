@@ -15,7 +15,7 @@ app.whenReady().then(async()=>{
  overlay=new BrowserWindow({width:360,height:650,minWidth:300,minHeight:400,x:area.x+area.width-380,y:area.y+30,frame:false,transparent:true,hasShadow:false,alwaysOnTop:true,skipTaskbar:true,focusable:false,webPreferences});
  overlay.setAlwaysOnTop(true,'screen-saver');overlay.setIgnoreMouseEvents(true,{forward:true});
  overlay.setContentProtection(true);
- for(const win of [control,overlay]){win.setMenuBarVisibility(false);if(smoke)win.webContents.on('console-message',(_e,details)=>console.log('renderer:',details));win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',e=>e.preventDefault());}
+ for(const win of [control,overlay]){win.setMenuBarVisibility(false);if(smoke)win.webContents.on('console-message',event=>console.log('renderer:',event.message));win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',e=>e.preventDefault());}
  const isControl=e=>e.sender===control.webContents&&e.senderFrame?.url.startsWith('ergg://app/ui/index.html');
  const notify=()=>{for(const win of [control,overlay])win.webContents.send('mode',{editing,visible:overlay.isVisible()});};
  const edit=()=>{editing=!editing;overlay.setIgnoreMouseEvents(!editing,{forward:true});overlay.setFocusable(editing);if(editing){overlay.show();overlay.focus();}notify();};

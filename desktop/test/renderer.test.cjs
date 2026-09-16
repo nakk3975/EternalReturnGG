@@ -3,6 +3,7 @@ const {JSDOM}=require('jsdom');
 test('settings publishes route, manual death, reset and team rank without raw stats',async()=>{
  const root=path.resolve(__dirname,'..'),dom=new JSDOM(fs.readFileSync(path.join(root,'ui/index.html'),'utf8'),{url:'https://app/ui/index.html?view=settings',runScripts:'outside-only'}),w=dom.window;
  let last;w.desktop={publish:d=>last=d,onMode(){},onWarning(){},action:async()=>{},sources:async()=>[],selectSource:async()=>{},team:async()=>[{nickname:'tester',stats:{mmr:2000,totalGames:10}}]};
+ Object.defineProperty(w,'desktop',{configurable:false});
  w.requestAnimationFrame=()=>1;w.cancelAnimationFrame=()=>{};w.HTMLCanvasElement.prototype.getContext=()=>({clearRect(){}});w.HTMLMediaElement.prototype.pause=()=>{};w.HTMLMediaElement.prototype.load=()=>{};
  for(const name of ['siteData','routePlanner','animalMap','animalTimer','animalScreen'])vm.runInContext(fs.readFileSync(path.join(root,'static/js',name+'.js'),'utf8'),dom.getInternalVMContext());
  vm.runInContext(fs.readFileSync(path.join(root,'ui/renderer.js'),'utf8'),dom.getInternalVMContext());
