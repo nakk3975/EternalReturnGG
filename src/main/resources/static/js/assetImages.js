@@ -1,8 +1,18 @@
 let erAssetBase = '';
 let erAssetRequest;
 function loadAssetConfig() {
-    if(!erAssetRequest)erAssetRequest=erFetchAssetConfig();
+    if(!erAssetRequest)erAssetRequest=erFetchAssetConfig().then(()=>erHydrateAssets());
     return erAssetRequest;
+}
+function erHydrateAssets() {
+    if (!erAssetBase) return;
+    document.querySelectorAll('img[src*="asset-placeholder.svg?erAsset="]').forEach(img => {
+        const file = new URL(img.src, location.href).searchParams.get('erAsset');
+        if (/^[A-Za-z0-9_-]+\.png$/.test(file)) {
+            delete img.dataset.fallback;
+            img.src = erAssetBase + file;
+        }
+    });
 }
 async function erFetchAssetConfig() {
     if (typeof erLoadWeaponMetadata === 'function') void erLoadWeaponMetadata();

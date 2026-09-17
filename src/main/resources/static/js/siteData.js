@@ -1,8 +1,18 @@
 'use strict';
 const erText = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const erNumber = (value, digits = 0) => value == null || value === '' || !Number.isFinite(Number(value)) ? '—' : Number(value).toLocaleString('ko-KR', {maximumFractionDigits:digits});
+const erNumberFormats = new Map();
+const erNumber = (value, digits = 0) => value == null || value === '' || !Number.isFinite(Number(value)) ? '—' : (erNumberFormats.get(digits) || erNumberFormats.set(digits, new Intl.NumberFormat('ko-KR', {maximumFractionDigits:digits})).get(digits)).format(Number(value));
 const erStaticRequests = new Map();
-async function erRequest(url) {
+const erPendingRequests = new Map();
+// Share concurrent reads only; a later refresh always fetches new dynamic data.
+function erRequest(url) {
+    if (!erPendingRequests.has(url)) {
+        const request = erFetchJson(url).finally(() => erPendingRequests.delete(url));
+        erPendingRequests.set(url, request);
+    }
+    return erPendingRequests.get(url);
+}
+async function erFetchJson(url) {
     const response = await fetch(url, {signal:AbortSignal.timeout(15000)});
     let data;
     try { data=await response.json(); } catch (_) { throw new Error('서버가 응답을 준비 중이거나 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'); }
@@ -43,12 +53,16 @@ function erDictionary() {
     }).catch(() => {erDictionaryRequest=null;return new Map();});
     return erDictionaryRequest;
 }
+function erAssetImage(file) {
+    if (!/^[A-Za-z0-9_-]+\.png$/.test(file)) return '/static/images/asset-placeholder.svg';
+    return erAssetBase ? erAssetBase + file : '/static/images/asset-placeholder.svg?erAsset=' + encodeURIComponent(file);
+}
 function erItemHtml(code) {
     if (!/^\d+$/.test(String(code)) || !Number(code)) return '<span class="item-slot empty-slot" title="빈 장비 칸"></span>';
-    return '<span class="item-slot" data-item-code="'+code+'"><img loading="lazy" alt="아이템 '+code+'" src="'+erText(erAssetBase ? erAssetBase+'ItemIcon_'+code+'.png' : '/static/images/asset-placeholder.svg')+'"></span>';
+    return '<span class="item-slot" data-item-code="'+code+'"><img loading="lazy" alt="아이템 '+code+'" src="'+erText(erAssetImage('ItemIcon_'+code+'.png'))+'"></span>';
 }
 function erEquipmentHtml(equipment) { return '<div class="item-slots">'+Array.from({length:5},(_,i)=>erItemHtml(equipment?.[i])).join('')+'</div>'; }
-function erCharacterImage(name, skin = 0) { return name && erAssetBase ? erAssetBase+'CharProfile_'+name+'_S'+String(skin || 0).slice(-3).padStart(3,'0')+'.png' : '/static/images/asset-placeholder.svg'; }
+function erCharacterImage(name, skin = 0) { return name ? erAssetImage('CharProfile_'+name+'_S'+String(skin || 0).slice(-3).padStart(3,'0')+'.png') : '/static/images/asset-placeholder.svg'; }
 
 const erFinite = value => value != null && value !== '' && Number.isFinite(Number(value));
 // RP bands: official ranked FAQ, updated 2026-08-19 (article 21812479709081).
@@ -63,9 +77,9 @@ function erTier(row) {
 }
 
 function erSkillImage(code, name) {
-    if(!/^\d+$/.test(String(code)) || !erAssetBase)return '';
+    if(!/^\d+$/.test(String(code)))return '';
     const prefix=Number(code)>=7000000?'TraitSkillIcon_':Number(code)>=4000000?'VSkillIcon_':Number(code)>=2000000?'WeaponSkillIcon_':'SkillIcon_';
-    return '<img class="skill-icon" data-skill-code="'+code+'" tabindex="0" loading="lazy" src="'+erText(erAssetBase+prefix+code+'.png')+'" alt="'+erText(name||'스킬 '+code)+'">';
+    return '<img class="skill-icon" data-skill-code="'+code+'" tabindex="0" loading="lazy" src="'+erText(erAssetImage(prefix+code+'.png'))+'" alt="'+erText(name||'스킬 '+code)+'">';
 }
 
 const erTraitGroups={Havoc:'파괴',Fortification:'저항',Support:'지원',Chaos:'혼돈'};

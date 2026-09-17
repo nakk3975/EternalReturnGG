@@ -1,0 +1,22 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+(async()=>{
+ let calls=0,finish;
+ const context=vm.createContext({AbortSignal,document:{addEventListener(){}},fetch:()=>{calls++;return new Promise(resolve=>finish=resolve);}});
+ vm.runInContext(fs.readFileSync('src/main/resources/static/js/siteData.js','utf8'),context);
+ const requests=Array.from({length:30},()=>context.erRequest('/er/userRank?userNum=42'));
+ assert.equal(calls,1);finish({ok:true,json:async()=>({code:200,userStats:[]})});await Promise.all(requests);
+ const next=context.erRequest('/er/userRank?userNum=42');assert.equal(calls,2);
+ finish({ok:false,json:async()=>({message:'retry'})});await assert.rejects(next,/retry/);
+ const retry=context.erRequest('/er/userRank?userNum=42');assert.equal(calls,3);
+ finish({ok:true,json:async()=>({userStats:[]})});await retry;
+ for(const v of [null,'',0,-1,12345.678,Infinity])for(const digits of [0,1,2,3])assert.equal(vm.runInContext(`erNumber(${JSON.stringify(v)},${digits})`,context),v==null||v===''||!Number.isFinite(v)?'—':v.toLocaleString('ko-KR',{maximumFractionDigits:digits}));
+ let resolveConfig;const images=[];
+ const assets=vm.createContext({URL,AbortSignal,location:{href:'https://ergg.test/er/items'},sessionStorage:{getItem(){return null},setItem(){}},document:{addEventListener(){},querySelectorAll:()=>images},fetch:()=>new Promise(r=>resolveConfig=r)});
+ vm.runInContext(fs.readFileSync('src/main/resources/static/js/assetImages.js','utf8'),assets);
+ vm.runInContext(fs.readFileSync('src/main/resources/static/js/siteData.js','utf8'),assets);
+ const ready=assets.loadAssetConfig();const pending=assets.erCharacterImage('Jackie');assert.match(pending,/erAsset=CharProfile_Jackie/);
+ images.push({src:pending,dataset:{}},{src:'/static/images/asset-placeholder.svg?erAsset=..%2Fsecret',dataset:{}});
+ resolveConfig({ok:true,json:async()=>({baseUrl:'https://cdn.dak.gg/assets/er/game-assets/12.3.0/'})});await ready;
+ assert.match(images[0].src,/12\.3\.0\/CharProfile_Jackie_S000.png$/);assert.match(images[1].src,/erAsset=/);
+ console.log('PASS: concurrent dynamic request sharing, subsequent refresh, retry, numeric parity and delayed image hydration');
+})().catch(e=>{console.error(e);process.exitCode=1;});

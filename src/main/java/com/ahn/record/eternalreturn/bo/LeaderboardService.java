@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Serve a last-known-good ranking without blocking HTTP threads on the upstream API. */
@@ -32,7 +33,10 @@ public class LeaderboardService {
         Snapshot current = snapshot;
         long now = System.currentTimeMillis();
         boolean stale = current == null || now - current.updatedAt > 300_000;
-        if (stale && now >= retryAt && !refreshing.get()) worker.execute(this::refresh);
+        if (stale && now >= retryAt && refreshing.compareAndSet(false, true)) {
+            try { worker.execute(this::refreshClaimed); }
+            catch (RejectedExecutionException stopped) { refreshing.set(false); }
+        }
         // Do not silently serve arbitrarily old rankings during extended API outages.
         boolean usable = current != null && now - current.updatedAt < 1_800_000;
         ObjectNode body = usable ? current.body.deepCopy() : mapper.createObjectNode();
@@ -46,6 +50,9 @@ public class LeaderboardService {
     }
     void refresh() {
         if (System.currentTimeMillis() < retryAt || !refreshing.compareAndSet(false, true)) return;
+        refreshClaimed();
+    }
+    private void refreshClaimed() {
         try {
             JsonNode result = mapper.readTree(api.leaderboard());
             if (!result.isObject() || !result.path("topRanks").isArray() || (result.has("code") && result.path("code").asInt() != 200 && result.path("code").asInt() != 0)) throw new IllegalStateException("Invalid ranking response");
