@@ -209,7 +209,7 @@ function erStartScreenAssist(root,{onPosition,getTime,onTime,getCamps=()=>[],onT
   if(!source)return;
   const width=source.videoWidth||source.naturalWidth,height=source.videoHeight||source.naturalHeight;if(!width||!height)return;
   const key=width+'x'+height;if(lastFrameSize&&key!==lastFrameSize){invalidate();roi=null;clockROI=null;clearClock();q('read').disabled=true;say('화면 해상도가 바뀌었습니다. 인식 영역을 다시 지정하세요.');}lastFrameSize=key;
-  if(!frozen||!frame){const scale=Math.min(1,1280/width);const w=Math.round(width*scale),h=Math.round(height*scale);if(raw.width!==w)raw.width=w;if(raw.height!==h)raw.height=h;rx.drawImage(source,0,0,raw.width,raw.height);frame=rx.getImageData(0,0,raw.width,raw.height);if(canvas.width!==raw.width)canvas.width=raw.width;if(canvas.height!==raw.height)canvas.height=raw.height;}
+  if(!frozen||!frame){const scale=Math.min(1,1280/width);const w=Math.round(width*scale),h=Math.round(height*scale);if(raw.width!==w)raw.width=w;if(raw.height!==h)raw.height=h;rx.clearRect(0,0,raw.width,raw.height);rx.drawImage(source,0,0,raw.width,raw.height);frame=rx.getImageData(0,0,raw.width,raw.height);if(canvas.width!==raw.width)canvas.width=raw.width;if(canvas.height!==raw.height)canvas.height=raw.height;}
   ctx.putImageData(frame,0,0);ctx.lineWidth=2;
   for(const [r,color] of [[roi,'#38bdf8'],[clockROI,'#fbbf24'],[timerROI,'#a78bfa']])if(r){ctx.strokeStyle=color;ctx.strokeRect(r.x,r.y,r.w,r.h);}
   for(const p of pairs){ctx.fillStyle='#fbbf24';ctx.fillRect(p.source.x-3,p.source.y-3,6,6);}
