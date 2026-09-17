@@ -18,7 +18,7 @@ class PersistentCacheTests {
         try {
             ReflectionTestUtils.setField(cache,"url","https://cache.test");
             ReflectionTestUtils.setField(cache,"token","test");
-            var server=MockRestServiceServer.bindTo((RestTemplate)ReflectionTestUtils.getField(cache,"client")).build();
+            var server=MockRestServiceServer.bindTo((RestTemplate)ReflectionTestUtils.getField(cache,"statisticsClient")).build();
             server.expect(requestTo("https://cache.test"))
                 .andExpect(org.springframework.test.web.client.match.MockRestRequestMatchers.content().json("{\"scope\":\"items\",\"character\":0}"))
                 .andRespond(withSuccess("{\"body\":{\"rows\":[],\"items\":[1]}}",MediaType.APPLICATION_JSON));
@@ -44,7 +44,7 @@ class PersistentCacheTests {
             var old=new com.fasterxml.jackson.databind.ObjectMapper().readTree("{\"rows\":[{\"games\":1}]}");
             ReflectionTestUtils.setField(cache,"statistics",old);
             ReflectionTestUtils.setField(cache,"statisticsExpires",System.currentTimeMillis()-1000);
-            var server=MockRestServiceServer.bindTo((RestTemplate)ReflectionTestUtils.getField(cache,"client")).build();
+            var server=MockRestServiceServer.bindTo((RestTemplate)ReflectionTestUtils.getField(cache,"statisticsClient")).build();
             server.expect(requestTo("https://cache.test")).andRespond(request->{
                 entered.countDown();
                 try { release.await(3,java.util.concurrent.TimeUnit.SECONDS); }catch(InterruptedException e){Thread.currentThread().interrupt();}
