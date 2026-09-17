@@ -20,7 +20,8 @@ Deno.serve(async (req: Request) => {
     if (input.action === 'get' && input.key === '/v2/data/statistics' && input.scope) {
       if (!['overview','items','character'].includes(input.scope) || !Number.isInteger(input.character ?? 0) || (input.character ?? 0) < 0 || (input.character ?? 0) > 10000) return json({error:'Invalid scope'},400);
       const response = await fetch(Deno.env.get('SUPABASE_URL')+'/rest/v1/rpc/er_statistics_snapshot', {
-        method:'POST',headers,body:JSON.stringify({p_scope:input.scope,p_character:input.character ?? 0}),signal:AbortSignal.timeout(2500)
+        method:'POST',headers,// Statistics can exceed the normal cache budget as the archive grows.
+        body:JSON.stringify({p_scope:input.scope,p_character:input.character ?? 0}),signal:AbortSignal.timeout(7500)
       });
       if (!response.ok) return json({error:'Statistics unavailable'},503);
       return json(await response.json());

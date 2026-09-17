@@ -14,18 +14,27 @@ public class PersistentApiCache {
     @Value("${ER_CACHE_URL:}") private String url;
     @Value("${ER_CACHE_TOKEN:}") private String token;
     private final RestTemplate client;
+    private final RestTemplate statisticsClient;
     public PersistentApiCache() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(1000);
         factory.setReadTimeout(3500);
         client = new RestTemplate(factory);
+        // Large statistics projections need a separate budget; ordinary cache reads stay fast.
+        SimpleClientHttpRequestFactory statisticsFactory = new SimpleClientHttpRequestFactory();
+        statisticsFactory.setConnectTimeout(1000);
+        statisticsFactory.setReadTimeout(10000);
+        statisticsClient = new RestTemplate(statisticsFactory);
     }
     private JsonNode call(Map<String,Object> body) {
+        return call(body, client);
+    }
+    private JsonNode call(Map<String,Object> body, RestTemplate transport) {
         if(url.isBlank() || token.isBlank())return null;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("x-cache-token", token);
-        return client.postForObject(url, new HttpEntity<>(body,headers),JsonNode.class);
+        return transport.postForObject(url, new HttpEntity<>(body,headers),JsonNode.class);
     }
     private volatile JsonNode statistics;
     private volatile long statisticsExpires;
@@ -55,7 +64,7 @@ public class PersistentApiCache {
     }
     private synchronized JsonNode refreshStatistics() {
         if(statistics!=null && statisticsExpires>System.currentTimeMillis())return statistics;
-        JsonNode result = call(Map.of("action","get","key","/v2/data/statistics","scope","overview"));
+        JsonNode result = call(Map.of("action","get","key","/v2/data/statistics","scope","overview"), statisticsClient);
         if(result != null)result=result.path("body");
         if(result == null || !result.path("rows").isArray())throw new IllegalStateException("통계를 불러오지 못했습니다.");
         statisticsExpires=System.currentTimeMillis()+300000;
@@ -83,7 +92,7 @@ public class PersistentApiCache {
         synchronized(projectionLocks[(key.hashCode() & Integer.MAX_VALUE)%projectionLocks.length]) {
             Projection cached=projections.get(key);
             if(cached!=null && cached.expires()>System.currentTimeMillis())return cached.body();
-            JsonNode result=call(Map.of("action","get","key","/v2/data/statistics","scope",scope,"character",character));
+            JsonNode result=call(Map.of("action","get","key","/v2/data/statistics","scope",scope,"character",character), statisticsClient);
             if(result==null || !result.path("body").path("rows").isArray())throw new IllegalStateException("통계 조회 실패");
             if(projections.size()>=100)projections.keySet().stream().limit(20).forEach(projections::remove);
             result=result.path("body");projections.put(key,new Projection(result,System.currentTimeMillis()+300000));return result;
