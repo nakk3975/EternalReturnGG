@@ -21,6 +21,7 @@ public class MatchCollector {
     @Value("${ER_COLLECTOR_ENABLED:true}") private boolean enabled;
     @Value("${ER_COLLECTOR_DAILY_LIMIT:200}") private int dailyLimit;
     private State state;
+    private String lastCheckpoint;
     public MatchCollector(EternalReturnBO api,PersistentApiCache cache){this.api=api;this.cache=cache;}
     @EventListener(ApplicationReadyEvent.class) public void start(){if(enabled)worker.scheduleWithFixedDelay(this::tick,15,20,TimeUnit.SECONDS);}
     @PreDestroy public void stop(){worker.shutdownNow();}
@@ -89,5 +90,12 @@ public class MatchCollector {
             if(id>0&&started<=now&&started>=now-90L*86400000&&!s.seen.contains(id)&&s.pending.size()<2000)s.pending.add(id);
         }
     }
-    private void checkpoint(){cache.writeChecked(KEY,json.valueToTree(state),86400000);}
+    private void checkpoint(){
+        JsonNode body=json.valueToTree(state);
+        String serialized=body.toString();
+        if(serialized.equals(lastCheckpoint))return;
+        cache.writeChecked(KEY,body,86400000);
+        // Only a confirmed durable write may suppress subsequent idle writes.
+        lastCheckpoint=serialized;
+    }
 }

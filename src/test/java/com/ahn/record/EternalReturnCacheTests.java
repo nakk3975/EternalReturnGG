@@ -13,6 +13,27 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 class EternalReturnCacheTests {
     @Test
+    void prefetchDeduplicatesAndBoundsPendingWork() throws Exception {
+        EternalReturnBO bo = new EternalReturnBO();
+        var entered = new java.util.concurrent.CountDownLatch(6);
+        var release = new java.util.concurrent.CountDownLatch(1);
+        var pool = (java.util.concurrent.ThreadPoolExecutor) ReflectionTestUtils.getField(bo, "prefetchExecutor");
+        try {
+            for (int i=0;i<6;i++) pool.execute(() -> {
+                entered.countDown();
+                try { release.await(); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+            });
+            assertTrue(entered.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            for (int i=0;i<100;i++) ReflectionTestUtils.invokeMethod(bo,"prefetchStatic","/v2/data/Character",1000L);
+            assertEquals(1,pool.getQueue().size(),"identical lookups should share one pending task");
+            for (int i=0;i<100;i++) ReflectionTestUtils.invokeMethod(bo,"prefetchStatic","/v1/user/games/uid/"+i,1000L);
+            assertEquals(64,pool.getQueue().size());
+            var pending=(java.util.Set<?>)ReflectionTestUtils.getField(bo,"prefetching");
+            assertEquals(64,pending.size(),"rejected work must release its deduplication key");
+        } finally { bo.shutdownPrefetchExecutor(); release.countDown(); }
+    }
+
+    @Test
     void refreshReplacesOldSnapshotAndSharesRapidRepeat() throws Exception {
         EternalReturnBO bo=new EternalReturnBO();
         try {

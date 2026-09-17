@@ -1,6 +1,6 @@
-# ERGG Overlay 0.1 — Windows x64
+# ERGG Overlay 0.1.1 — Windows x64
 
-설치 없이 실행하는 실험용 Windows 오버레이입니다. 압축을 풀고 `ERGG-Overlay-0.1.0-Windows-x64.exe`를 실행하세요. 코드 서명은 되어 있지 않습니다. 배포 출처와 파일을 확인하고, 조직이나 게임의 실행 제한을 우회하지 마세요.
+설치 없이 실행하는 실험용 Windows 오버레이입니다. 압축을 풀고 `ERGG-Overlay-0.1.1-Windows-x64.exe`를 실행하세요. 코드 서명은 되어 있지 않습니다. 배포 출처와 파일을 확인하고, 조직이나 게임의 실행 제한을 우회하지 마세요.
 
 ## 사용
 

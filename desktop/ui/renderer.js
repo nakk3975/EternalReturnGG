@@ -2,14 +2,16 @@
 const $=id=>document.getElementById(id),bridge=window.desktop;
 const isSettings=new URLSearchParams(location.search).get('view')==='settings';
 const esc=erText;
-function mapSvg(data){return Object.entries(erRoutePolygons).map(([,points])=>'<polygon points="'+points.map(([x,y])=>x/9.03+','+y/9.36).join(' ')+'" fill="#172b40" stroke="#344960" stroke-width=".25"/>').join('')+'<polyline points="'+[data.start,...data.route].map(p=>p.x+','+p.y).join(' ')+'" fill="none" stroke="#5eead4" stroke-width=".7"/>'+data.route.map((p,i)=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="2.5" fill="#5eead4"/><text x="'+p.x+'" y="'+(p.y+1)+'" text-anchor="middle" fill="#071322" font-size="3">'+(i+1)+'</text>').join('')+'<circle cx="'+data.start.x+'" cy="'+data.start.y+'" r="2" fill="#fbbf24"/>';}
-function renderHud(data){if(!data)return;$('hud-body').innerHTML='<div>'+data.team.map(p=>'<div class="team-row"><strong>'+esc(p.nickname)+'</strong><span>'+esc(p.error||p.rank)+'</span></div>').join('')+'</div><div class="hud-clock">'+esc(data.clock)+'</div><svg class="mini-map" viewBox="0 0 100 100">'+mapSvg(data)+'</svg>'+data.route.map((c,i)=>'<div class="route-row"><b>'+(i+1)+'</b><span>'+esc(c.label)+'</span><em>+'+c.credits+'</em></div>').join('')+'<p class="hint">'+(data.route.length?'생존 미확인 · 예상 동선':'설정 창에서 출발점과 동선을 선택하세요.')+'</p>'+data.timers.slice(0,5).map(t=>'<div class="timer-row"><span>'+esc(t.label)+'</span><strong>'+esc(t.remaining)+'초</strong></div>').join('');}
+const mapBackground=Object.entries(erRoutePolygons).map(([,points])=>'<polygon points="'+points.map(([x,y])=>x/9.03+','+y/9.36).join(' ')+'" fill="#172b40" stroke="#344960" stroke-width=".25"/>').join('');
+function mapSvg(data){return mapBackground+'<polyline points="'+[data.start,...data.route].map(p=>p.x+','+p.y).join(' ')+'" fill="none" stroke="#5eead4" stroke-width=".7"/>'+data.route.map((p,i)=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="2.5" fill="#5eead4"/><text x="'+p.x+'" y="'+(p.y+1)+'" text-anchor="middle" fill="#071322" font-size="3">'+(i+1)+'</text>').join('')+'<circle cx="'+data.start.x+'" cy="'+data.start.y+'" r="2" fill="#fbbf24"/>';}
+let hudSignature='';
+function renderHud(data){if(!data)return;const signature=JSON.stringify(data);if(signature===hudSignature)return;hudSignature=signature;$('hud-body').innerHTML='<div>'+data.team.map(p=>'<div class="team-row"><strong>'+esc(p.nickname)+'</strong><span>'+esc(p.error||p.rank)+'</span></div>').join('')+'</div><div class="hud-clock">'+esc(data.clock)+'</div><svg class="mini-map" viewBox="0 0 100 100">'+mapSvg(data)+'</svg>'+data.route.map((c,i)=>'<div class="route-row"><b>'+(i+1)+'</b><span>'+esc(c.label)+'</span><em>+'+c.credits+'</em></div>').join('')+'<p class="hint">'+(data.route.length?'생존 미확인 · 예상 동선':'설정 창에서 출발점과 동선을 선택하세요.')+'</p>'+data.timers.slice(0,5).map(t=>'<div class="timer-row"><span>'+esc(t.label)+'</span><strong>'+esc(t.remaining)+'초</strong></div>').join('');}
 bridge.onMode(m=>{document.body.classList.toggle('editing',m.editing);$('mode').textContent=m.editing?'위치·크기 편집':'클릭 통과';});
 if(!isSettings){bridge.onSnapshot(renderHud);bridge.snapshot().then(renderHud);}
 else{
  document.body.classList.add('settings');$('settings').hidden=false;
  const camps=erWildlifeCamps();let time=erHuntTime(),start={x:50,y:50},route=[],team=[],running=false,base=0,baseAt=0,assist,lastAuto=0;
- const active=new Set(Object.keys(erAnimals));
+ const active=new Set(Object.keys(erAnimals));let publishedSignature='',mapSignature='';
  const notice=text=>$('notice').textContent=text;
  for(let day=1;day<=8;day++)$('day').add(new Option(day+'일차',day));
  for(const name of Object.keys(erRoutePositions))$('region').add(new Option(name,name));
@@ -20,7 +22,10 @@ else{
  function publish(){const now=erHuntSeconds(time);route=route.filter(c=>active.has(c.type)&&erHuntAvailable(c,time));
   const timers=camps.map(c=>{const s=erHuntState(c,time),deadline=s.timerNext??(s.waiting?s.next:null);return deadline!==null&&Number.isFinite(deadline)&&deadline>now?{label:label(c),remaining:Math.ceil(deadline-now)}:null;}).filter(Boolean).sort((a,b)=>a.remaining-b.remaining);
   const data={clock:erHuntLabel(time)+(running?' · 진행':''),start,team,route:route.map(c=>({x:c.x,y:c.y,label:label(c),credits:erHuntValue(c,time)})),timers};
-  $('clock-label').textContent=data.clock;document.querySelector('#map svg').innerHTML=mapSvg(data);bridge.publish(data);renderHud(data);
+  const signature=JSON.stringify(data);if(signature===publishedSignature)return;publishedSignature=signature;
+  $('clock-label').textContent=data.clock;const geometry=JSON.stringify([data.start,data.route.map(c=>[c.x,c.y])]);
+  if(geometry!==mapSignature){mapSignature=geometry;document.querySelector('#map svg').innerHTML=mapSvg(data);}
+  bridge.publish(data);renderHud(data);
  }
  function recommend(){route=erRecommendHunt(start,camps.filter(c=>active.has(c.type)),{time,steps:Number($('steps').value)}).route;publish();}
  function pause(){running=false;$('clock-run').textContent='시계 시작';}
@@ -38,6 +43,6 @@ else{
  $('sources').onclick=async()=>{try{const sources=await bridge.sources();$('source').replaceChildren(new Option('공유할 창 선택',''));sources.forEach(s=>$('source').add(new Option(s.name,s.id)));await bridge.selectSource('');}catch(e){notice(e.message);}};
  $('source').onchange=()=>bridge.selectSource($('source').value).catch(e=>notice(e.message));bridge.onWarning(notice);
  function startAssist(){assist=erStartScreenAssist($('settings'),{getTime:()=>({...time}),onTime:t=>{pause();time=erHuntTime(t);syncInputs();publish();},onPosition:p=>{start=p;if($('follow').checked&&performance.now()-lastAuto>3000){lastAuto=performance.now();recommend();}else publish();},getCamps:()=>camps.filter(erHuntTimerSupported).map(c=>({id:c.id,count:c.count,label:label(c)+' · '+c.id})),onTimer:o=>{const c=camps.find(c=>c.id===o.campId);const accepted=c&&erHuntObserveTimer(c,o);if(accepted)publish();return !!accepted;}});}
- setInterval(()=>{if(running){const total=erHuntPhases.reduce((a,b)=>a+b,0),now=Math.min(total,base+Math.floor((performance.now()-baseAt)/1000));time=erHuntAt(now);if(now===total)pause();syncInputs();}publish();},1000);
+ setInterval(()=>{if(!running)return;{const total=erHuntPhases.reduce((a,b)=>a+b,0),now=Math.min(total,base+Math.floor((performance.now()-baseAt)/1000));time=erHuntAt(now);if(now===total)pause();syncInputs();}publish();},1000);
  syncInputs();startAssist();publish();window.overlayReady=true;
 }

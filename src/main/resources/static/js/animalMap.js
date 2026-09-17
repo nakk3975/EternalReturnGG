@@ -118,10 +118,16 @@ function erWildlifeCamps(){return [[erWildlifePoints,0],[erFixedMutantPoints,1]]
 function erHuntValue(camp,time){return Math.max(0,Number(time?erHuntCount(camp,time):camp.count)||0)*(erAnimals[camp.type]?.credits[camp.variant||0]||0);}
 // Compare credit per estimated effort. Coordinates are region centers, not walkable paths.
 function erRecommendHunt(start,camps,{steps=5,travelWeight=1,killCost=8,blocked=[],time=null}={}){
- const values=new Map(camps.map(c=>[c,erHuntValue(time?{...c,variant:erHuntState(c,time).variant}:c,time)]));
- const available=camps.filter(c=>erHuntAvailable(c,time,blocked)&&values.get(c)>0);let beam=[{route:[],point:start,credits:0,cost:0}];
+ // A recommendation uses one immutable time snapshot; evaluate each camp once.
+ const counts=new Map(),values=new Map(),available=[];
+ for(const c of camps){
+  const state=time?erHuntState(c,time):null,count=state?.remainingCount??c.count;
+  const value=Math.max(0,Number(count)||0)*(erAnimals[c.type]?.credits[(state?state.variant:c.variant)||0]||0);
+  counts.set(c,count);values.set(c,value);
+  if(!blocked.includes(c.region)&&(state?state.available:!c.cleared)&&value>0)available.push(c);
+ }let beam=[{route:[],point:start,credits:0,cost:0}];
  for(let depth=0;depth<Math.min(10,Math.max(1,steps));depth++){
-  const next=[];for(const state of beam)for(const c of available){if(state.route.some(v=>v.id===c.id))continue;const distance=Math.hypot(c.x-state.point.x,c.y-state.point.y);next.push({route:[...state.route,c],point:c,credits:state.credits+values.get(c),cost:state.cost+distance*Math.max(.1,travelWeight)+Math.max(1,killCost)*(time?erHuntCount(c,time):c.count)});}
+  const next=[];for(const state of beam)for(const c of available){if(state.route.some(v=>v.id===c.id))continue;const distance=Math.hypot(c.x-state.point.x,c.y-state.point.y);next.push({route:[...state.route,c],point:c,credits:state.credits+values.get(c),cost:state.cost+distance*Math.max(.1,travelWeight)+Math.max(1,killCost)*counts.get(c)});}
   if(!next.length)break;next.sort((a,b)=>b.credits/Math.max(1,b.cost)-a.credits/Math.max(1,a.cost)||b.credits-a.credits);beam=next.slice(0,80);
  }
  return beam[0]||{route:[],credits:0,cost:0};
