@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +56,9 @@ public class EternalReturnBO {
         return factory;
     }
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final ExecutorService prefetchExecutor = Executors.newFixedThreadPool(6);
+    private final ExecutorService prefetchExecutor = new java.util.concurrent.ThreadPoolExecutor(
+            6, 6, 0L, java.util.concurrent.TimeUnit.MILLISECONDS, new java.util.concurrent.ArrayBlockingQueue<>(64));
+    private final java.util.Set<String> prefetching = ConcurrentHashMap.newKeySet();
 
     @Autowired(required = false) private PersistentApiCache persistentCache;
     private final java.util.Set<String> refreshing = ConcurrentHashMap.newKeySet();
@@ -289,23 +290,23 @@ public class EternalReturnBO {
     }
 
     private void prefetchUserInfo(String userId) {
-        prefetchExecutor.submit(() -> {
-            try {
-                userInfo(userId);
-            } catch (Exception e) {
-                // 선조회 실패는 실제 /er/user/detail 요청에서 다시 시도한다.
-            }
-        });
+        prefetchStatic("/v1/user/games/uid/" + encodePathSegment(userId), USER_CACHE_MS);
     }
 
     private void prefetchStatic(String path, long ttlMillis) {
-        prefetchExecutor.submit(() -> {
-            try {
-                requestCached(path, false, ttlMillis);
-            } catch (Exception e) {
-                // 정적 데이터 선조회 실패 시 실제 요청에서 다시 시도한다.
-            }
-        });
+        CacheEntry cached = responseCache.get(path);
+        if (cached != null && cached.expiresAt > System.currentTimeMillis()) return;
+        if (!prefetching.add(path)) return;
+        try {
+            prefetchExecutor.execute(() -> {
+                try { requestCached(path, false, ttlMillis); }
+                catch (Exception ignored) { /* The actual request can retry. */ }
+                finally { prefetching.remove(path); }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException ignored) {
+            // Prefetch is optional: never queue unbounded work or block an HTTP thread.
+            prefetching.remove(path);
+        }
     }
 
     private String requestCached(String path, boolean useMetaHash, long ttlMillis) throws URISyntaxException {
@@ -425,59 +426,6 @@ public class EternalReturnBO {
 
     private String encodePathSegment(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
-    }
-
-    private void prefetchRecentGames(String userGameResponse) {
-        List<Integer> gameIds = extractRecentGameIds(userGameResponse, 10);
-
-        for(Integer gameId : gameIds) {
-            String path = "/v1/games/" + gameId;
-            CacheEntry cached = responseCache.get(path);
-
-            if(cached != null && cached.expiresAt > System.currentTimeMillis()) {
-                continue;
-            }
-
-            prefetchExecutor.submit(() -> {
-                try {
-                    requestCached(path, true, GAME_CACHE_MS);
-                } catch (Exception e) {
-                    // 선조회 실패는 실제 /er/game 요청에서 다시 시도한다.
-                }
-            });
-        }
-    }
-
-    private List<Integer> extractRecentGameIds(String response, int limit) {
-        List<Integer> gameIds = new ArrayList<>();
-
-        if(!StringUtils.hasText(response)) {
-            return gameIds;
-        }
-
-        try {
-            JsonNode root = objectMapper.readTree(response);
-            JsonNode userGames = root.path("userGames");
-
-            if(!userGames.isArray()) {
-                return gameIds;
-            }
-
-            for(JsonNode game : userGames) {
-                JsonNode gameIdNode = game.path("gameId");
-                if(gameIdNode.canConvertToInt()) {
-                    gameIds.add(gameIdNode.asInt());
-                }
-
-                if(gameIds.size() >= limit) {
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            // 선조회용 파싱 실패는 기존 조회 기능에 영향을 주지 않도록 무시한다.
-        }
-
-        return gameIds;
     }
 
     public synchronized ResponseEntity<byte[]> loadTextFile() throws IOException, URISyntaxException {
