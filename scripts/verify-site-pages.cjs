@@ -35,6 +35,7 @@ const payload={
    return r.fulfill({json:payload[u.pathname]||{data:[]}});
   });
   const start=Date.now();await page.goto(origin+path,{waitUntil:'domcontentloaded'});
+  if(path.startsWith('/er/multi'))await page.locator('#multi-form button[type=submit]').click();
   await page.locator(selector).first().waitFor({timeout:5000});
   const readyMs=Date.now()-start;
   if(!path.includes('animal-map'))assert(!requests.some(p=>/animal(Screen|Map|Timer)\.js/.test(p)),path+' loaded wildlife code');
