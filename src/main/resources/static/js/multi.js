@@ -15,10 +15,10 @@ async function startMulti() {
     const detail=document.createElement('section');detail.className='multi-detail surface';detail.hidden=true;results.after(detail);
     let players=[],mode='3',selected=0,generation=0,characters=new Map(),names=new Map();
     status.textContent='조회된 전적 중 모드별 최근 10경기를 비교합니다.';
-    const assetReady=loadAssetConfig();
-    Promise.allSettled([assetReady,erStatic('/er/character'),erDictionary()]).then(values=>{
-        if(values[1].status==='fulfilled')characters=new Map((values[1].value.data||[]).map(c=>[String(c.code),c]));
-        if(values[2].status==='fulfilled')names=values[2].value;
+    void loadAssetConfig();
+    Promise.allSettled([erStatic('/er/character'),erDictionary()]).then(values=>{
+        if(values[0].status==='fulfilled')characters=new Map((values[0].value.data||[]).map(c=>[String(c.code),c]));
+        if(values[1].status==='fulfilled')names=values[1].value;
         render();
     });
     const characterName=code=>names.get('Character/Name/'+code)||characters.get(String(code))?.name||'실험체';

@@ -1,6 +1,8 @@
 package com.ahn.record.eternalreturn;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -9,7 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class EternalReturnController {
 
 	@GetMapping({"/characters", "/characters/{name}", "/items", "/items/{code}", "/routes", "/leaderboard", "/guide", "/favorites", "/multi", "/statistics", "/route-planner", "/animal-map"})
-	public String explorerView() {
+	public String explorerView(HttpServletRequest request, Model model) {
+        String path = request.getServletPath();
+        model.addAttribute("explorerMenu", path.split("/")[2]);
 		return "main/explorer";
 	}
 	

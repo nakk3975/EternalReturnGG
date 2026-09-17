@@ -250,7 +250,12 @@ async function startPlayer() {
     const prefetchNext=()=>{if(next)getPage(next).catch(()=>{});};
     const assets=loadAssetConfig();
     // Paint ready metadata independently: a slow trait/equipment response must not hide the hero.
-    const repaint=()=>{erEnhancePlayer(document);updateHero();};
+    let repaintPending=false;
+    const repaint=()=>{
+        if(repaintPending)return;
+        repaintPending=true;
+        requestAnimationFrame(()=>{repaintPending=false;erEnhancePlayer(document);updateHero();});
+    };
     const characterData=erStatic('/er/character').then(body=>{for(const c of body.data||[])erPlayerCharacters.set(String(c.code),c);repaint();});
     const namesData=erDictionary().then(names=>{erPlayerNames=names;repaint();renderCharacters();});
     assets.then(repaint).catch(()=>{});
@@ -258,7 +263,7 @@ async function startPlayer() {
     erStatic('/er/tacticalSkill').then(body=>{erTactical=new Map((body.data||[]).map(s=>[String(s.group),s]));repaint();}).catch(()=>{});
     erStatic('/er/trait').then(body=>{erTraits=new Map((body.data||[]).map(s=>[String(s.code),s]));repaint();}).catch(()=>{});
     erLoadWeaponMetadata().then(repaint).catch(()=>{});
-    const metadata=Promise.allSettled([assets,characterData,namesData]);
+    void Promise.allSettled([characterData,namesData]);
     const render=()=>{
         const filtered=rows.filter(r=>!selectedMode || String(r.matchingMode)===selectedMode);
         records.innerHTML=filtered.length ? filtered.map(r=>erPlayerCard(r)).join('') : '<p class="empty-state">이 모드의 최근 전적이 없습니다.</p>';
@@ -291,7 +296,6 @@ async function startPlayer() {
         const tier=erTier(row);
         rankPanel.innerHTML='<div class="rank-score">'+(tier?'<img class="tier-emblem" src="https://cdn.dak.gg/er/images/tier/full/'+tier.image+'.png" alt="'+tier.name+'">':'')+'<div><strong>'+erNumber(row.mmr)+' <span>RP</span></strong><small>'+(tier?tier.name:'랭크 · 스쿼드')+'</small><p>순위 '+(Number(row.rank)>0?erNumber(row.rank)+'위':'—')+'</p></div></div><div class="profile-metrics">'+metric('평균 TK',row.totalGames?erNumber(row.totalTeamKills/row.totalGames,2):'—')+metric('승률',row.totalGames && erFinite(row.totalWins)?erNumber(row.totalWins/row.totalGames*100,1)+'%':'—')+metric('게임 수',erNumber(row.totalGames))+metric('평균 킬',erNumber(row.averageKills,2))+metric('TOP 2',row.top2==null?'—':erNumber(row.top2*100,1)+'%')+metric('평균 어시스트',erNumber(row.averageAssistants,2))+metric('평균 동물 킬',erNumber(row.averageHunts,2))+metric('TOP 3',row.top3==null?'—':erNumber(row.top3*100,1)+'%')+metric('평균 순위',erNumber(row.averageRank,1))+'</div>';
         document.querySelector('#rp-history').innerHTML=erRpGraph([...graphRows,...rows],rankSeason);
-        await metadata;
         const stats=Array.isArray(row.characterStats)?row.characterStats:[];
         heroStats=stats;updateHero();
         renderCharacters();

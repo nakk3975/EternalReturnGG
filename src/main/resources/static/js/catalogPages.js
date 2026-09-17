@@ -47,7 +47,7 @@ async function erCharacterPage() {
     const root=erPageShell('실험체 분석','실험체별 능력치와 추천 루트, 스킬 정보를 확인하세요.');
     root.innerHTML='<aside class="database-sidebar surface"><h2>실험체</h2><input id="character-search" aria-label="실험체 검색" placeholder="실험체 검색"><div id="character-picker" class="character-picker"></div></aside><div class="database-content" id="character-content"><p class="empty-state">실험체 정보를 불러오는 중입니다.</p></div>';
     const status=document.querySelector('#explorer-status');
-    const assets = loadAssetConfig();
+    void loadAssetConfig();
     const [body,names]=await Promise.all([erStatic('/er/character'),erDictionary()]);
     if(!Array.isArray(body.data))throw new Error('실험체 응답을 확인할 수 없습니다.');
     const chars=body.data.slice().sort((a,b)=>(names.get('Character/Name/'+a.code)||a.name).localeCompare(names.get('Character/Name/'+b.code)||b.name,'ko'));
@@ -103,7 +103,6 @@ async function erCharacterPage() {
     root.onclick=e=>{const link=e.target.closest('a[href^="/er/characters/"]');if(!link||!erIsPlainClick(e))return;e.preventDefault();history.pushState(null,'',link.href);select(decodeURIComponent(location.pathname.split('/')[3]),new URLSearchParams(location.search).get('tab'));};
     root.querySelector('input').oninput=drawPicker;
     const initial=decodeURIComponent(location.pathname.split('/')[3]||'');
-    await assets;
     await select(initial||chars[0]?.name,new URLSearchParams(location.search).get('tab'),!initial);
 
     window.addEventListener('popstate',()=>select(decodeURIComponent(location.pathname.split('/')[3]||''),new URLSearchParams(location.search).get('tab')));
@@ -124,7 +123,7 @@ function erRoutesMarkup(routes,names) {
 async function erRoutesPage() {
     const root=erPageShell('루트 검색','실험체와 루트 이름으로 추천 빌드를 찾아보세요.');root.className='route-browser';
     root.innerHTML='<div class="catalog-toolbar surface"><label>실험체 <select id="route-character"><option value="">전체 실험체</option></select></label><input id="route-query" aria-label="루트 검색" placeholder="루트 이름 / 제작자 / 번호"></div><div id="route-results"></div>';
-    const assets=loadAssetConfig();const [data,characters,names]=await Promise.all([erStatic('/er/main'),erStatic('/er/character'),erDictionary()]);await assets;
+    void loadAssetConfig();const [data,characters,names]=await Promise.all([erStatic('/er/main'),erStatic('/er/character'),erDictionary()]);
     const select=root.querySelector('select');for(const c of characters.data||[])select.add(new Option(names.get('Character/Name/'+c.code)||c.name,String(c.code)));
     const routes=(data.result||[]).map(v=>v.recommendWeaponRoute).filter(Boolean);
     select.value=new URLSearchParams(location.search).get('character')||'';
@@ -140,8 +139,9 @@ async function erItemsPage() {
     filterToggle.onclick=()=>{const open=filterToggle.getAttribute('aria-expanded')!=='true';filterToggle.setAttribute('aria-expanded',String(open));filterToggle.textContent=open?'필터 접기':'필터 펼치기';};
     const statsRequest=erStatic('/er/statistics/data?scope=items').then(data=>({data}),error=>({error}));
     let samples={items:[]},statsState='loading';
-    const assets=loadAssetConfig();const [weapons,armor,names,materials]=await Promise.all([erStatic('/er/weapon'),erStatic('/er/armor'),erDictionary(),erStatic('/er/materials').catch(()=>({data:[]}))]);await assets;
-    const rows=[...(weapons.data||[]).map(r=>({...r,category:'weapon'})),...(armor.data||[]).map(r=>({...r,category:'armor'}))];const catalog=new Map([...rows,...(materials.data||[])].map(r=>[String(r.code),r]));let selected=location.pathname.split('/')[3];let limit=40;
+    void loadAssetConfig();const materialsRequest=erStatic('/er/materials').catch(()=>({data:[]}));
+    const [weapons,armor,names]=await Promise.all([erStatic('/er/weapon'),erStatic('/er/armor'),erDictionary()]);
+    const rows=[...(weapons.data||[]).map(r=>({...r,category:'weapon'})),...(armor.data||[]).map(r=>({...r,category:'armor'}))];const catalog=new Map(rows.map(r=>[String(r.code),r]));let selected=location.pathname.split('/')[3];let limit=40;
     root.querySelector('#item-filter-options').insertAdjacentHTML('beforeend','<div id="item-stat-controls"><p class="data-note">통계 불러오는 중…</p></div>');
     let filteredSamples=erFilterStatistics(samples,{});
     let itemSamples=new Map(filteredSamples.items.map(r=>[String(r.code),r]));
@@ -161,6 +161,7 @@ async function erItemsPage() {
     root.querySelector('#item-all').onclick=()=>{selectedType='';syncFilters();limit=40;render();};
     root.onclick=e=>{const link=e.target.closest('[data-select-item]');if(link&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey&&!e.altKey&&e.button===0){e.preventDefault();detail(link.dataset.selectItem,true);render();const panel=root.querySelector('#item-detail');if(window.matchMedia('(max-width:1180px)').matches){panel.focus({preventScroll:true});panel.scrollIntoView({block:'start'});}}};
     root.querySelectorAll('input,select').forEach(el=>el.addEventListener(el.tagName==='INPUT'?'input':'change',()=>{limit=40;render();}));root.querySelector('#more-items').onclick=()=>{limit+=40;render();};detail(selected||rows[0]?.code);render();window.addEventListener('popstate',()=>{detail(location.pathname.split('/')[3]);render();});
+    void materialsRequest.then(materials=>{for(const row of materials.data||[])catalog.set(String(row.code),row);detail(selected);}).catch(()=>{});
     // Item search/filtering is usable even while the independent statistics request is pending.
     void statsRequest.then(result=>{
         const controls=root.querySelector('#item-stat-controls');
@@ -200,9 +201,11 @@ async function erRankingPage() {
     root.innerHTML='<aside class="surface ranking-guide"><h2>랭킹</h2><p class="selected">스쿼드 · 현재 시즌</p><p>순위는 제공된 RP 랭킹 기준입니다.</p><a href="/er/multi">플레이어 전적 비교 →</a></aside><section class="surface ranking-main"><div class="ranking-toolbar"><h2>RP 랭킹</h2><input id="rank-query" aria-label="랭킹 닉네임 검색" placeholder="목록에서 닉네임 검색"><button id="rank-retry">새로고침</button></div><div id="rank-table"><p class="empty-state">랭킹을 불러오는 중입니다.</p></div><div class="pagination"><button id="rank-prev">이전</button><span id="rank-page"></span><button id="rank-next">다음</button></div></section>';
     const status=document.querySelector('#explorer-status');let rows=[];let page=0;let busy=false;let updated='';
     const profiles=new Map(),requested=new Set(),queue=[];let active=0;
-    const metadata=Promise.all([erStatic('/er/character'),erDictionary(),loadAssetConfig()]);
+    void loadAssetConfig();
+    const metadata=Promise.all([erStatic('/er/character'),erDictionary()]).then(([body,names])=>({chars:new Map((body.data||[]).map(c=>[Number(c.code),c])),names}));
+    void metadata.catch(()=>{});
     const paint=async(uid,stats)=>{
-        const [body,names]=await metadata;const chars=new Map((body.data||[]).map(c=>[Number(c.code),c]));
+        const {chars,names}=await metadata;
         const top=erRankingCharacters(stats),first=top[0];
         root.querySelectorAll('[data-rank-id]').forEach(tr=>{if(tr.dataset.rankId!==uid)return;
             const picture=c=>erCharacterImage(chars.get(c.code)?.name);
@@ -236,11 +239,14 @@ document.addEventListener('click',async e=>{const button=e.target.closest('.copy
 
 async function erStatisticsPage() {
     const root=erPageShell('실험체 통계','티어 · 시즌 · 모드 · 기간별 수집 경기 통계');root.className='statistics-page surface';
-    const [data,chars,names]=await Promise.all([erRequest('/er/statistics/data'),erStatic('/er/character'),erDictionary(),loadAssetConfig()]);
+    void loadAssetConfig();
+    const [data,chars,names]=await Promise.all([erRequest('/er/statistics/data'),erStatic('/er/character'),erDictionary()]);
     const characters=new Map((chars.data||[]).map(c=>[Number(c.code),c]));
     root.innerHTML=erStatisticsControls(data)+'<div class="catalog-toolbar"><label>정렬 <select id="stats-sort"><option value="games">플레이 수</option><option value="winrate">승률</option><option value="toprate">TOP 3</option><option value="damage">평균 딜량</option><option value="rank">평균 순위</option></select></label></div><div id="stats-table"></div>';
+    let filterKey='',filtered;
     const render=()=>{
-        const filters=erReadStatisticsControls(root),filtered=erFilterStatistics(data,filters),sort=root.querySelector('#stats-sort').value;
+        const filters=erReadStatisticsControls(root),key=JSON.stringify(filters)+new Date(Date.now()+9*3600000).toISOString().slice(0,10),sort=root.querySelector('#stats-sort').value;
+        if(key!==filterKey){filtered=erFilterStatistics(data,filters);filterKey=key;}
         const all=filtered.rows,season=Number(filters.season);
         const rows=all.filter(r=>r.season===season).map(r=>({...r,winrate:r.wins/r.games*100,toprate:r.top3/r.games*100})).sort((a,b)=>sort==='rank'?a.rank-b.rank:b[sort]-a[sort]);
         const total=rows.reduce((n,r)=>n+r.games,0);

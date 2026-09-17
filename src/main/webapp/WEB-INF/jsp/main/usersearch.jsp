@@ -32,12 +32,12 @@
 <c:import url="/WEB-INF/jsp/include/footer.jsp" />
 </div>
 <script src="/static/js/weaponMetadata.js?v=20260914-contract2"></script>
-<script src="/static/js/assetImages.js?v=20260914-fast-tier"></script>
+<script src="/static/js/assetImages.js?v=20260917-site-performance"></script>
 <script src="/static/js/itemSlots.js?v=20260914-speed"></script>
-<script src="/static/js/siteData.js?v=20260914-performance4"></script>
+<script src="/static/js/siteData.js?v=20260917-site-performance"></script>
 <script src="/static/js/matchDetails.js"></script>
 <script src="/static/js/profileTabs.js?v=20260914-profile"></script>
-<script src="/static/js/player.js?v=20260914-release3"></script>
+<script src="/static/js/player.js?v=20260917-site-performance"></script>
 <script src="/static/js/matchTabs.js?v=20260914-fast-tier"></script>
-<script src="/static/js/seasonHistory.js?v=20260912-season-names"></script>
+<script src="/static/js/seasonHistory.js?v=20260917-site-performance"></script>
 </body></html>

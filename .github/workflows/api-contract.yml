@@ -44,6 +44,27 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
       - run: bash gradlew test bootWar
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --package-lock=false playwright@1.62.1
+      - run: npx playwright install --with-deps chromium
+      - name: Verify all website pages with slow optional services
+        env:
+          SPRING_PROFILES_ACTIVE: render
+          ER_COLLECTOR_ENABLED: 'false'
+        run: |
+          java -jar build/libs/ergg.war > /tmp/ergg-site.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" || true' EXIT
+          for attempt in {1..60}; do
+            if curl --silent --fail http://127.0.0.1:10000/er/search/view > /dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/verify-site-pages.cjs
+      - name: Server output on failure
+        if: failure()
+        run: tail -80 /tmp/ergg-site.log || true
   live:
     if: github.event_name == 'workflow_dispatch' && inputs.nickname != ''
     runs-on: ubuntu-latest

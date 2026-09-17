@@ -47,7 +47,7 @@ function erStatHtml(row) {
 }
 async function startExplorer() {
     const page = location.pathname.split('/').filter(Boolean)[1];
-    const special = {'animal-map':startAnimalMap, 'route-planner':startRoutePlanner, characters: erCharacterPage, items: erItemsPage, routes: erRoutesPage, leaderboard: erRankingPage, statistics: erStatisticsPage};
+    const special = {'animal-map':()=>startAnimalMap(), 'route-planner':()=>startRoutePlanner(), characters: ()=>erCharacterPage(), items: ()=>erItemsPage(), routes: ()=>erRoutesPage(), leaderboard: ()=>erRankingPage(), statistics: ()=>erStatisticsPage()};
     if (special[page]) return special[page]();
     const info = ER_PAGES[page];
     if (!info) return;

@@ -20,7 +20,8 @@ async function erStartSeasonHistory(){
     try{
         if(!uid&&params.get('nickname')){const d=await erRequest('/er/search/nickname?nickname='+encodeURIComponent(params.get('nickname')));uid=d.user?.userId||d.user?.uid;}
         if(!uid)return;
-        const [data,characters,names]=await Promise.all([erRequest('/er/seasons'),erStatic('/er/character'),erDictionary(),loadAssetConfig()]);
+        void loadAssetConfig();
+        const [data,characters,names]=await Promise.all([erStatic('/er/seasons'),erStatic('/er/character'),erDictionary()]);
         const seasons=erSeasonOptions(data.data);if(!seasons.length)throw new Error('시즌 목록을 확인할 수 없습니다.');
         const current=seasons.find(s=>s.current)||seasons[0];
         const catalog=new Map((characters.data||[]).map(c=>[String(c.code),c]));
