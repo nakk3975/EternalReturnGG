@@ -79,6 +79,9 @@ async function measure(context, target, phase, iteration) {
   page.on('requestfailed', req => {
     if (!observing) return; // Closing the page cancels lazy images after screen completion.
     const item = { path: new URL(req.url()).pathname, error: req.failure()?.errorText || 'request failed' };
+    // Placeholder images are replaced when asset configuration arrives; Chromium
+    // reports their intentional cancellation as ERR_ABORTED even before readiness.
+    if (item.path === '/static/images/asset-placeholder.svg' && item.error === 'net::ERR_ABORTED') return;
     failedRequests.push(item);
     if (new URL(req.url()).origin === baseUrl && item.path.startsWith('/er/') && !req.isNavigationRequest()) dataRequests.push(item);
   });
