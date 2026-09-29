@@ -1,0 +1,51 @@
+name: Browser performance
+
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: Samples per menu and phase (at least 20 for a report)
+        required: true
+        default: '20'
+      menu:
+        description: Optional single menu (empty means all 11)
+        required: false
+        default: ''
+      render_cold:
+        description: Single menu after independently verified 15 minute idle
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Measure deployed pages
+        env:
+          RUNS: ${{ inputs.runs }}
+          MENU: ${{ inputs.menu }}
+          RENDER_COLD: ${{ inputs.render_cold }}
+        run: |
+          args=(--output performance-report.json)
+          if [ -n "$MENU" ]; then args+=(--menu "$MENU"); fi
+          if [ "$RENDER_COLD" = "true" ]; then
+            args+=(--render-cold --runs 1)
+          else
+            args+=(--runs "$RUNS" --require-20)
+          fi
+          node scripts/performance-browser.cjs "${args[@]}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-report-${{ github.run_id }}
+          path: performance-report.json
+          if-no-files-found: warn
+          retention-days: 30

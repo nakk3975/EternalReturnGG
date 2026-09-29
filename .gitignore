@@ -44,3 +44,7 @@ src/main/resources/static/vendor/tesseract-7/eng.traineddata*
 /desktop/node_modules/
 /desktop/static/
 /desktop/dist/
+
+# Browser verification dependencies and reports
+/node_modules/
+/performance-report*.json
