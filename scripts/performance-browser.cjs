@@ -74,13 +74,16 @@ async function measure(context, target, phase, iteration) {
   const page = await context.newPage();
   const failedRequests = [], dataRequests = [], errors = [];
   let navigationResponseMs = null, status = 'ok', screenCompleteMs = null;
+  let observing = true;
   page.on('pageerror', e => errors.push(e.message));
   page.on('requestfailed', req => {
+    if (!observing) return; // Closing the page cancels lazy images after screen completion.
     const item = { path: new URL(req.url()).pathname, error: req.failure()?.errorText || 'request failed' };
     failedRequests.push(item);
     if (new URL(req.url()).origin === baseUrl && item.path.startsWith('/er/') && !req.isNavigationRequest()) dataRequests.push(item);
   });
   page.on('response', response => {
+    if (!observing) return;
     const req = response.request(), url = new URL(response.url());
     if (url.origin !== baseUrl) return;
     if (response.status() >= 400) failedRequests.push({ path: url.pathname, status: response.status() });
@@ -104,6 +107,7 @@ async function measure(context, target, phase, iteration) {
     status = 'failed'; errors.push(e.message);
     screenCompleteMs = round(performance.now() - started);
   }
+  observing = false;
   const timing = await page.evaluate(() => ({
     navigation: performance.getEntriesByType('navigation').map(n => ({ responseMs: n.responseEnd - n.requestStart }))[0],
     resources: performance.getEntriesByType('resource').map(r => ({ name: r.name, durationMs: r.duration }))
