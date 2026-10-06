@@ -23,9 +23,10 @@ function arg(name, fallback) {
   if (!process.argv[i + 1] || process.argv[i + 1].startsWith('--')) throw new Error('Missing --' + name + ' value');
   return process.argv[i + 1];
 }
-const baseUrl = arg('base-url', 'https://eternalreturngg.onrender.com').replace(/\/$/, '');
-const runs = Number(arg('runs', '20'));
-const output = arg('output', 'performance-report.json');
+const baseUrl = arg('base-url', process.env.ER_PERF_BASE_URL || 'https://eternalreturngg.onrender.com').replace(/\/$/, '');
+const runs = Number(arg('runs', process.env.ER_PERF_RUNS || '20'));
+const output = arg('output', process.env.ER_PERF_REPORT || 'performance-report.json');
+const headed = process.argv.includes('--headed');
 const renderCold = process.argv.includes('--render-cold');
 const menu = arg('menu', '');
 const targets = MENUS.filter(([name]) => !menu || name === menu);
@@ -41,7 +42,8 @@ function percentile(values, fraction) {
   return round(sorted[Math.ceil(sorted.length * fraction) - 1]);
 }
 function summary(values) {
-  return { count: values.length, p50Ms: percentile(values, .5), p95Ms: percentile(values, .95) };
+  return { count: values.length, p50Ms: percentile(values, .5), p95Ms: percentile(values, .95),
+    minMs: values.length ? round(Math.min(...values)) : null, maxMs: values.length ? round(Math.max(...values)) : null };
 }
 function aggregate(samples) {
   const groups = {};
@@ -112,28 +114,39 @@ async function measure(context, target, phase, iteration) {
   }
   observing = false;
   const timing = await page.evaluate(() => ({
-    navigation: performance.getEntriesByType('navigation').map(n => ({ responseMs: n.responseEnd - n.requestStart }))[0],
-    resources: performance.getEntriesByType('resource').map(r => ({ name: r.name, durationMs: r.duration }))
+    navigation: performance.getEntriesByType('navigation').map(n => ({
+      dnsMs: n.domainLookupEnd - n.domainLookupStart,
+      connectMs: n.connectEnd - n.connectStart,
+      tlsMs: n.secureConnectionStart > 0 ? n.connectEnd - n.secureConnectionStart : 0,
+      ttfbMs: n.responseStart - n.requestStart,
+      responseMs: n.responseEnd - n.requestStart,
+      domContentLoadedMs: n.domContentLoadedEventEnd,
+      loadMs: n.loadEventEnd
+    }))[0],
+    resources: performance.getEntriesByType('resource').map(r => ({ name: r.name, durationMs: r.duration, transferSize: r.transferSize }))
   })).catch(() => ({ navigation: null, resources: [] }));
   navigationResponseMs = timing.navigation?.responseMs ?? null;
   const durations = new Map();
   for (const r of timing.resources) {
     const list = durations.get(r.name) || [];
-    list.push(round(r.durationMs)); durations.set(r.name, list);
+    list.push({ durationMs: round(r.durationMs), transferSize: r.transferSize }); durations.set(r.name, list);
   }
   for (const r of dataRequests) {
     const list = durations.get(baseUrl + r.path);
-    r.durationMs = list?.shift() ?? null;
+    const resource = list?.shift();
+    r.durationMs = resource?.durationMs ?? null;
+    r.transferSize = resource?.transferSize ?? null;
   }
   await page.close();
   return { menu, path, phase, iteration, status, screenCompleteMs, navigationResponseMs,
-    dataRequests, failedRequests, errors };
+    navigation: timing.navigation ?? null, dataRequests, failedRequests, errors };
 }
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: !headed });
   const samples = [];
-  const save = () => fs.writeFileSync(output, JSON.stringify({ measuredAt: new Date().toISOString(), baseUrl,
+  const save = () => fs.writeFileSync(output, JSON.stringify({ measuredAt: new Date().toISOString(), baseUrl, runs,
+    mode: renderCold ? 'render-cold-single-shot' : 'browser-cold-and-warm',
     definition: 'Fresh context cold; one warm-up then reused context warm. Ready selector and visible eager images; no forced network idle. Failed page samples excluded from latency percentile but included in rates.',
     renderIdleVerified: false, aggregates: aggregate(samples.filter(r => r.iteration > 0)), samples }, null, 2) + '\n');
   try {

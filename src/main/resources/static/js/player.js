@@ -184,6 +184,10 @@ function erMostPlayed(stats, recent) {
     for(const row of recent||[])if(erFinite(row.characterNum))counts.set(row.characterNum,(counts.get(row.characterNum)||0)+1);
     return [...counts].sort((a,b)=>b[1]-a[1]||Number(a[0])-Number(b[0]))[0]?.[0] ?? null;
 }
+// Recent damage uses the displayed match count, independently of rank response order.
+function erRecentDamageMetric(rows) {
+    return erMetric('평균 딜량', rows.length ? erNumber(rows.reduce((sum,row)=>sum+Number(row.damageToPlayer||0),0)/rows.length) : '—');
+}
 async function startPlayer() {
     const params=new URLSearchParams(location.search);
     let userId=params.get('userNum');
@@ -271,7 +275,7 @@ async function startPlayer() {
         erEnhancePlayer(records);
         const valid=filtered.filter(r=>erFinite(r.gameRank));
         document.querySelector('#recent-summary').innerHTML='<strong>'+filtered.length+'게임</strong> · '+filtered.filter(r=>Number(r.gameRank)===1).length+'승';
-        document.querySelector('#recent-overview').innerHTML='<div class="recent-metrics">'+erMetric('평균 순위',valid.length?'#'+erNumber(valid.reduce((s,r)=>s+Number(r.gameRank),0)/valid.length,1):'—')+erMetric('승리',erNumber(valid.filter(r=>Number(r.gameRank)===1).length))+erMetric('TOP 3',erNumber(valid.filter(r=>Number(r.gameRank)<=3).length))+erMetric('평균 TK',filtered.length?erNumber(filtered.reduce((s,r)=>s+Number(r.teamKill??r.totalFieldKill??0),0)/filtered.length,2):'—')+'</div><div class="placement-strip" aria-label="최근 20경기 등수">'+erPlacementHtml(placementRows,selectedMode)+'</div>';
+        document.querySelector('#recent-overview').innerHTML='<div class="recent-metrics">'+erMetric('평균 순위',valid.length?'#'+erNumber(valid.reduce((s,r)=>s+Number(r.gameRank),0)/valid.length,1):'—')+erMetric('승리',erNumber(valid.filter(r=>Number(r.gameRank)===1).length))+erMetric('TOP 3',erNumber(valid.filter(r=>Number(r.gameRank)<=3).length))+erMetric('평균 TK',filtered.length?erNumber(filtered.reduce((s,r)=>s+Number(r.teamKill??r.totalFieldKill??0),0)/filtered.length,2):'—')+erRecentDamageMetric(filtered)+'</div><div class="placement-strip" aria-label="최근 20경기 등수">'+erPlacementHtml(placementRows,selectedMode)+'</div>';
         document.querySelector('#rp-history').innerHTML=erRpGraph([...graphRows,...rows],rankSeason??rows.find(r=>Number(r.matchingMode)===3)?.seasonId);
         document.querySelector('#more-matches').hidden=!next;
 
@@ -321,7 +325,7 @@ async function startPlayer() {
             document.querySelector('#nickname').textContent=rows[0].nickname || '플레이어';
             document.querySelector('#userLevel').textContent='레벨 '+erNumber(rows[0].accountLevel);
             updateHero();
-            document.querySelector('#recent-summary').innerHTML='<strong>'+rows.length+'게임</strong> · '+rows.filter(r=>Number(r.gameRank)===1).length+'승 · 평균 피해 '+erNumber(rows.reduce((sum,r)=>sum+Number(r.damageToPlayer||0),0)/rows.length);
+            document.querySelector('#recent-summary').innerHTML='<strong>'+rows.length+'게임</strong> · '+rows.filter(r=>Number(r.gameRank)===1).length+'승';
         }
         render();
         erEnhancePlayer(document);
