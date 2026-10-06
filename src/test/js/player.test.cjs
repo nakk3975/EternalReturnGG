@@ -111,3 +111,9 @@ assert.equal(context.erIsAvailableTactical({active:false,equipWithStart:true,mod
 assert.equal(context.erIsAvailableTactical({active:true,equipWithStart:false,modeType:4}),false);
 assert.equal(context.erIsAvailableTactical({active:true,equipWithStart:true,modeType:'3'},'6'),false);
 console.log('PASS: basic attacks removed without removing weapon skills or renumbering; tactical availability uses API flags and mode');
+
+assert.match(context.erRecentDamageMetric([{damageToPlayer:1000},{damageToPlayer:3000}]), /<strong>2,000<\/strong><span>평균 딜량<\/span>/);
+assert.match(context.erRecentDamageMetric([{damageToPlayer:1000}]), /<strong>1,000<\/strong>/);
+assert.match(context.erRecentDamageMetric([]), /<strong>—<\/strong>/);
+assert.match(context.erRecentDamageMetric([{damageToPlayer:0}]), /<strong>0<\/strong>/);
+console.log('PASS: recent damage uses displayed rows including single/zero/empty histories without ranked stats');

@@ -3,6 +3,10 @@ name: Browser performance
 on:
   workflow_dispatch:
     inputs:
+      base_url:
+        description: Deployed service origin
+        required: true
+        default: https://eternalreturngg.onrender.com
       runs:
         description: Samples per menu and phase (at least 20 for a report)
         required: true
@@ -26,15 +30,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Measure deployed pages
         env:
+          BASE_URL: ${{ inputs.base_url }}
           RUNS: ${{ inputs.runs }}
           MENU: ${{ inputs.menu }}
           RENDER_COLD: ${{ inputs.render_cold }}
         run: |
-          args=(--output performance-report.json)
+          args=(--base-url "$BASE_URL" --output performance-report.json)
           if [ -n "$MENU" ]; then args+=(--menu "$MENU"); fi
           if [ "$RENDER_COLD" = "true" ]; then
             args+=(--render-cold --runs 1)

@@ -77,6 +77,8 @@ bash gradlew test bootWar
 
 PR #3~#5에서 Java 테스트/bootWar와 JS 17개 파일이 통과했습니다. 로컬 Java 검사는 Gradle 다운로드 제한으로 실행하지 못해 CI 결과를 근거로 사용했습니다. `live` workflow는 자동 실행에서 skipped이며, 공식 API 직접 실행 완료로 간주하지 않습니다. [재현 스크립트와 실제 API 검증 범위](docs/verification/2026-09-14.md)를 참고하세요.
 
+11개 메뉴의 브라우저 cold/warm p50/p95 측정은 `npm ci`, `npx playwright install chromium` 후 `npm run perf:browser -- --runs 20 --require-20`으로 실행합니다. 상세 지표와 Render 절전 단일 표본 절차는 [성능 검증 실행 기준](docs/verification/PERFORMANCE.md)을 참고하세요.
+
 ## 코드와 운영 문서
 
 - [EternalReturnBO](src/main/java/com/ahn/record/eternalreturn/bo/EternalReturnBO.java): 외부 API·캐시·선조회
