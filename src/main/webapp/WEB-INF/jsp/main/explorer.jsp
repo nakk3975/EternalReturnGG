@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ER.GG · 게임 정보</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/vendor/bootstrap-4.0.0/bootstrap.min.css">
     <link rel="stylesheet" href="/static/css/style.css?v=20260911-analysis-final">
     <link rel="stylesheet" href="/static/css/explorer.css">
 <link rel="stylesheet" href="/static/css/dataPages.css?v=20260914-route-copy">
