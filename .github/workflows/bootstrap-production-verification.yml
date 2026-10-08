@@ -1,0 +1,68 @@
+name: Bootstrap production verification
+on:
+  push:
+    branches: [codex/bootstrap-live-verification]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Wait for deployed pinned CSS
+        run: |
+          expected=f9f1ce2a9079ebe7445ff10ac12b8f049abc43c499f4978297ec5dd23283a2e5
+          for attempt in {1..90}; do
+            if curl --silent --show-error --fail --max-time 15 https://eternalreturngg.onrender.com/static/vendor/bootstrap-4.0.0/bootstrap.min.css -o /tmp/live-bootstrap.css; then
+              actual=$(sha256sum /tmp/live-bootstrap.css | cut -d' ' -f1)
+              if [ "$actual" = "$expected" ]; then
+                echo "Matched production CSS SHA-256: $actual"
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          echo "Pinned CSS did not become available"
+          exit 1
+      - name: Verify three JSP stylesheet loads
+        run: |
+          node <<'JS'
+          const {chromium}=require('playwright'),fs=require('node:fs'),assert=require('node:assert/strict'),crypto=require('node:crypto');
+          (async()=>{
+            const browser=await chromium.launch(),rows=[];
+            try{
+              for(const path of ['/er/search/view','/er/items','/er/user/detail/view?userNum=42']){
+                const context=await browser.newContext({serviceWorkers:'block'}),page=await context.newPage();
+                const failed=[],external=[],responses=[];
+                page.on('request',r=>{if(r.resourceType()==='stylesheet'&&new URL(r.url()).origin!=='https://eternalreturngg.onrender.com')external.push(r.url())});
+                page.on('requestfailed',r=>{if(r.resourceType()==='stylesheet')failed.push(r.failure())});
+                page.on('response',r=>{if(r.request().resourceType()==='stylesheet'&&r.status()>=400)failed.push({url:r.url(),status:r.status()});if(r.url().endsWith('/static/vendor/bootstrap-4.0.0/bootstrap.min.css'))responses.push(r.body().then(b=>({status:r.status(),sha256:crypto.createHash('sha256').update(b).digest('hex')})))});
+                const nav=await page.goto('https://eternalreturngg.onrender.com'+path,{waitUntil:'domcontentloaded',timeout:90000});
+                assert(nav.ok(),path+' navigation');
+                await page.waitForFunction(()=>[...document.styleSheets].some(s=>s.href?.endsWith('/static/vendor/bootstrap-4.0.0/bootstrap.min.css')&&s.cssRules.length));
+                const css=await Promise.all(responses);
+                assert.deepEqual(css,[{status:200,sha256:'f9f1ce2a9079ebe7445ff10ac12b8f049abc43c499f4978297ec5dd23283a2e5'}]);
+                assert.deepEqual(failed,[]);assert.deepEqual(external,[]);
+                rows.push({path,navigation:nav.status(),css,failed,external});
+                await context.close();
+              }
+            }finally{await browser.close();fs.writeFileSync('bootstrap-production-check.json',JSON.stringify({measuredAt:new Date().toISOString(),deployedCommit:'c64b479a3f41bb033040cec36d00d7701d171704',rows},null,2));}
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
+      - name: Measure deployed home 20 cold and 20 warm
+        run: node scripts/performance-browser.cjs --base-url https://eternalreturngg.onrender.com --menu home --runs 20 --require-20 --output performance-report-bootstrap.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bootstrap-production-verification-${{ github.run_id }}
+          path: |
+            bootstrap-production-check.json
+            performance-report-bootstrap.json
+          retention-days: 30
