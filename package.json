@@ -3,9 +3,12 @@
   "private": true,
   "scripts": {
     "test:js": "node --test src/test/js/*.test.cjs",
-    "perf:browser": "node scripts/performance-browser.cjs"
+    "perf:browser": "node scripts/performance-browser.cjs",
+    "verify:bootstrap": "node scripts/verify-bootstrap.cjs"
   },
   "devDependencies": {
-    "playwright": "1.63.0"
+    "pixelmatch": "7.1.0",
+    "playwright": "1.63.0",
+    "pngjs": "7.0.0"
   }
 }
